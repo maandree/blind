@@ -1,9 +1,19 @@
 RATIONALE
 
-Video editor's are embarrassingly bug, especially when
-the size of the project grows.
+Video editor's are embarrassingly bug, especially when the
+size of the project grows.
 
 Rendering takes a long time, with this approach you can
 leverage the power of Make.
 
 Source control friendly.
+
+
+FORMAT
+
+The utilities use raw RGBA video, parameters for ffmpeg are:
+
+	-f rawvideo
+	-pix_fmt rgba
+	-s:v ${WIDTH}x${HEIGHT}
+	-r ${FRAME_RATE}
