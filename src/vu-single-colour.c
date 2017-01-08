@@ -76,6 +76,5 @@ main(int argc, char *argv[])
 		}
 	}
 
-	efshut(stdout, "<stdout>");
 	return 0;
 }
