@@ -96,7 +96,6 @@ tollu(const char *s, unsigned long long int min, unsigned long long int max, uns
 int
 tolli(const char *s, long long int min, long long int max, long long int *out)
 {
-	char *end;
 	int sign = 1;
 	unsigned long long int inter;
 	errno = 0;
