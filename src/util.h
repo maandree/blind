@@ -1,5 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 
+#include <math.h>
 #include <stdio.h>
 
 #define ELEMENTSOF(ARRAY) (sizeof(ARRAY) / sizeof(*(ARRAY)))
@@ -33,3 +34,27 @@ DEF_STR_TO_INT(toi, int, tolli, long long int)
 int fshut(FILE *fp, const char *fname);
 void enfshut(int status, FILE *fp, const char *fname);
 void efshut(FILE *fp, const char *fname);
+
+static inline double
+srgb_encode(double t)
+{
+	double sign = 1;
+	if (t < 0) {
+		t = -t;
+		sign = -1;
+	}
+	t = t <= 0.0031306684425217108 ? 12.92 * t : 1.055 * pow(t, 1 / 2.4) - 0.055;
+	return t * sign;
+}
+
+static inline double
+srgb_decode(double t)
+{
+	double sign = 1;
+	if (t < 0) {
+		t = -t;
+		sign = -1;
+	}
+	t = t <= 0.0031306684425217108 * 12.92 ? t / 12.92 : pow((t + 0.055) / 1.055, 2.4);
+	return t * sign;
+}
