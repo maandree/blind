@@ -1,0 +1,14 @@
+vu-reverse		put frames in reverse order
+vu-transpose		transpose frames
+vu-cut			retain a segment of frames
+vu-set-saturation	multiply saturation, -w can be used to use the X and Z values as the whitepoint
+vu-blur			gaussian blur
+vu-transform		transformation by matrix multiplication
+vu-chroma-key		replace a chroma with transparency
+vu-convert		use ffmpeg to convert from or to another video format
+vu-primaries		given three selectable primaries split the video into three side-by-side which
+			      only one primary active
+vu-crop			crop video
+vu-extend		extend the video on which side with transparency
+vu-add			perform addition on each channel
+vu-distort-map		remap pixels using the X and Y values
