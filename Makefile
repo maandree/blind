@@ -14,6 +14,7 @@ BIN =\
 	vu-next-frame\
 	vu-read-head\
 	vu-repeat\
+	vu-reverse\
 	vu-set-alpha\
 	vu-set-luma\
 	vu-single-colour\
