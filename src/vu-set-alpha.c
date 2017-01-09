@@ -11,7 +11,7 @@
 static void
 usage(void)
 {
-	eprintf("usage: %s [-i] colour-stream alpha-stream\n", argv0);
+	eprintf("usage: %s [-i] alpha-stream\n", argv0);
 }
 
 static void
@@ -56,16 +56,14 @@ main(int argc, char *argv[])
 		usage();
 	} ARGEND;
 
-	if (argc != 2)
+	if (argc != 1)
 		usage();
 
-	colour.file = argv[0];
-	colour.fd = open(colour.file, O_RDONLY);
-	if (colour.fd < 0)
-		eprintf("open %s:", colour.file);
+	colour.file = "<stdin>";
+	colour.fd = STDIN_FILENO;
 	einit_stream(&colour);
 
-	alpha.file = argv[1];
+	alpha.file = argv[0];
 	alpha.fd = open(alpha.file, O_RDONLY);
 	if (alpha.fd < 0)
 		eprintf("open %s:", alpha.file);
@@ -88,7 +86,7 @@ main(int argc, char *argv[])
 			break;
 		}
 		if (alpha.ptr < sizeof(alpha.buf) && !eread_stream(&alpha, SIZE_MAX)) {
-			close(colour.fd);
+			close(alpha.fd);
 			alpha.fd = -1;
 			break;
 		}
