@@ -3,7 +3,7 @@ vu-transpose		transpose frames
 vu-cut			retain a segment of frames
 vu-set-saturation	multiply saturation, -w can be used to use the X and Z values as the whitepoint
 vu-blur			gaussian blur, -c to only blur chroma
-vu-transform		transformation by matrix multiplication
+vu-transform		transformation by matrix multiplication, -t for tiling
 vu-chroma-key		replace a chroma with transparency
 vu-from-video		use ffmpeg to convert from another format
 vu-to-video		use ffmpeg to convert to another format
