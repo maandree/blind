@@ -51,7 +51,7 @@ main(int argc, char *argv[])
 		}
 
 		for (; eread_stream(&stream, SIZE_MAX); stream.ptr = 0) {
-			for (ptr = 0;; ptr += (size_t)r) {
+			for (ptr = 0; ptr < stream.ptr; ptr += (size_t)r) {
 				r = write(STDOUT_FILENO, stream.buf + ptr, stream.ptr - ptr);
 				if (r < 0)
 					eprintf("write <stdout>");
