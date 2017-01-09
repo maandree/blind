@@ -17,8 +17,8 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	struct stream stream, refstream;
-	size_t ptr;
+	struct stream *streams;
+	size_t ptr, frames = 0;
 	ssize_t r;
 	int i;
 
@@ -30,35 +30,44 @@ main(int argc, char *argv[])
 	if (argc < 2)
 		usage();
 
-	for (i = 0; i < argc; i++) {
-		stream.file = argv[i];
-		stream.fd = open(stream.file, O_RDONLY);
-		if (stream.fd < 0)
-			eprintf("open %s:", stream.file);
-		einit_stream(&stream);
+	streams = malloc((size_t)argc * sizeof(*streams));
+	if (!streams)
+		eprintf("malloc:");
 
-		if (!i) {
-			memcpy(&refstream, &stream, sizeof(stream));
-			fprint_stream_head(stdout, &stream);
-			fflush(stdout);
-			if (ferror(stdout))
-				eprintf("<stdout>:");
-		} else {
-			if (stream.width != refstream.width || stream.height != refstream.height)
+	for (i = 0; i < argc; i++) {
+		streams[i].file = argv[i];
+		streams[i].fd = open(streams[i].file, O_RDONLY);
+		if (streams[i].fd < 0)
+			eprintf("open %s:", streams[i].file);
+		einit_stream(streams + i);
+
+		if (i) {
+			if (streams[i].width != streams->width || streams[i].height != streams->height)
 				eprintf("videos do not have the same geometry\n");
-			if (strcmp(stream.pixfmt, refstream.pixfmt))
+			if (strcmp(streams[i].pixfmt, streams->pixfmt))
 				eprintf("videos use incompatible pixel formats\n");
 		}
 
-		for (; eread_stream(&stream, SIZE_MAX); stream.ptr = 0) {
-			for (ptr = 0; ptr < stream.ptr; ptr += (size_t)r) {
-				r = write(STDOUT_FILENO, stream.buf + ptr, stream.ptr - ptr);
+		if (streams[i].frames > SIZE_MAX - frames)
+			eprintf("resulting video is too long\n");
+		frames += streams[i].frames;
+	}
+
+	streams->frames = frames;
+	fprint_stream_head(stdout, streams);
+	fflush(stdout);
+	if (ferror(stdout))
+		eprintf("<stdout>:");
+
+	for (i = 0; i < argc; i++) {
+		for (; eread_stream(streams + i, SIZE_MAX); streams[i].ptr = 0) {
+			for (ptr = 0; ptr < streams[i].ptr; ptr += (size_t)r) {
+				r = write(STDOUT_FILENO, streams[i].buf + ptr, streams[i].ptr - ptr);
 				if (r < 0)
 					eprintf("write <stdout>");
 			}
 		}
-
-		close(stream.fd);
+		close(streams[i].fd);
 	}
 
 	return 0;
