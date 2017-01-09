@@ -3,7 +3,8 @@ vu-transpose		transpose frames
 vu-cut			retain a segment of frames
 vu-set-saturation	multiply saturation, -w can be used to use the X and Z values as the whitepoint
 vu-blur			gaussian blur, -c to only blur chroma
-vu-transform		transformation by matrix multiplication, -t for tiling
+vu-transform		transformation by matrix multiplication, -t for tiling, -s for improve quality
+				on downscaling (pixels' neighbours must not change)
 vu-chroma-key		replace a chroma with transparency
 vu-from-video		use ffmpeg to convert from another format
 vu-to-video		use ffmpeg to convert to another format
@@ -11,5 +12,5 @@ vu-primaries		given three selectable primaries split the video into three side-b
 				only one primary active
 vu-crop			crop video
 vu-extend		extend the video on which side with transparency
-vu-distort-map		remap pixels using the X and Y values, -s for improve quality on downscaling
-				(pixels' neighbours must not change)
+vu-distort-map		remap pixels using the X and Y values, -t for tiling, -s for improve quality
+				on downscaling (pixels' neighbours must not change)
