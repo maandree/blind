@@ -56,7 +56,7 @@ main(int argc, char *argv[])
 		for (ptr = 0;;) {
 			r = pread(stream.fd, buf, sizeof(buf), ptr);
 			if (r < 0)
-				eprintf("pread %s:", argv[1]);
+				eprintf("pread %s:", stream.file);
 			else if (r == 0)
 				break;
 			ptr += n = (size_t)r;
