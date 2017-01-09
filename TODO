@@ -5,7 +5,8 @@ vu-set-saturation	multiply saturation, -w can be used to use the X and Z values 
 vu-blur			gaussian blur
 vu-transform		transformation by matrix multiplication
 vu-chroma-key		replace a chroma with transparency
-vu-convert		use ffmpeg to convert from or to another video format
+vu-from-video		use ffmpeg to convert from another format
+vu-to-video		use ffmpeg to convert to another format
 vu-primaries		given three selectable primaries split the video into three side-by-side which
 			      only one primary active
 vu-crop			crop video
