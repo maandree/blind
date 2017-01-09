@@ -46,6 +46,7 @@ main(int argc, char *argv[])
 		eprintf("<stdout>:");
 
 	while (count--) {
+		posix_fadvise(stream.fd, 0, 0, POSIX_FADV_SEQUENTIAL);
 		for (ptw = 0; ptw < stream.ptr;) {
 			r = write(STDOUT_FILENO, stream.buf + ptw, stream.ptr - ptw);
 			if (r < 0)
