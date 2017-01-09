@@ -1,4 +1,5 @@
-include config.mk
+CONFIGFILE = config.mk
+include $(CONFIGFILE)
 
 BIN =\
 	vu-colour-srgb\
