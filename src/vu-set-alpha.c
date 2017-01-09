@@ -46,7 +46,7 @@ main(int argc, char *argv[])
 	struct stream alpha;
 	ssize_t r;
 	size_t i, n;
-	void (*process)(struct stream *colour, struct stream *alpha, size_t n);
+	void (*process)(struct stream *colour, struct stream *alpha, size_t n) = NULL;
 
 	ARGBEGIN {
 	case 'i':

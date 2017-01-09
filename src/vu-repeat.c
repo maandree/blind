@@ -17,7 +17,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t count, ptr, n, ptw;
+	size_t count = 0, ptr, n, ptw;
 	ssize_t r;
 	char buf[BUFSIZ];
 
@@ -37,9 +37,9 @@ main(int argc, char *argv[])
 	if (stream.fd < 0)
 		eprintf("open %s:", stream.file);
 	einit_stream(&stream);
-	if (stream->frame > SIZE_MAX / count)
+	if (stream.frames > SIZE_MAX / count)
 		eprintf("%s: video too long\n", stream.file);
-	stream->frame *= count;
+	stream.frames *= count;
 	fprint_stream_head(stdout, &stream);
 	fflush(stdout);
 	if (ferror(stdout))

@@ -44,7 +44,7 @@ main(int argc, char *argv[])
 	size_t f, h, w;
 	size_t n, i, fm;
 	ssize_t r;
-	void (*process)(struct stream *stream, size_t n, size_t f, size_t fm);
+	void (*process)(struct stream *stream, size_t n, size_t f, size_t fm) = NULL;
 
 	ARGBEGIN {
 	case 'r':

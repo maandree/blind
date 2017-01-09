@@ -18,7 +18,7 @@ main(int argc, char *argv[])
 	char buf[2 + 3 * sizeof(size_t) + sizeof(((struct stream *)0)->pixfmt)];
 	char magic[] = {'\0', 'u', 'i', 'v', 'f'};
 	char b;
-	char *p, *end;
+	char *p;
 	size_t i, ptr;
 	ssize_t r;
 
@@ -42,6 +42,7 @@ main(int argc, char *argv[])
 	if (ptr == sizeof(buf))
 		goto bad_format;
 
+	p = buf;
 	for (i = 0; i < 5; i++) {
 		r = read(STDIN_FILENO, &b, 1);
 		if (r < 0)
@@ -50,7 +51,6 @@ main(int argc, char *argv[])
 			goto bad_format;
 	}
 
-	end = (p = buf) + ptr;
 	for (i = 0; i < 2; i++) {
 		if (!isdigit(*p))
 			goto bad_format;

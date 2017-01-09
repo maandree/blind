@@ -50,7 +50,7 @@ main(int argc, char *argv[])
 	struct stream mask;
 	ssize_t r;
 	size_t i, n;
-	void (*process)(struct stream *colour, struct stream *mask, size_t n);
+	void (*process)(struct stream *colour, struct stream *mask, size_t n) = NULL;
 
 	ARGBEGIN {
 	case 'i':

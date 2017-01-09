@@ -1,6 +1,4 @@
-CFLAGS   = -std=c99 -Wall -pedantic -O2
-CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=700 -D_FILE_OFFSET_BITS=64
-LDFLAGS  = -lm -s
+include config.mk
 
 BIN =\
 	vu-colour-srgb\

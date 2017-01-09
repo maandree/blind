@@ -80,7 +80,7 @@ main(int argc, char *argv[])
 	size_t i, j, n;
 	ssize_t r;
 	size_t closed;
-	void (*process)(struct stream *streams, size_t n_streams, size_t n);
+	void (*process)(struct stream *streams, size_t n_streams, size_t n) = NULL;
 
 	ARGBEGIN {
 	case 'b':

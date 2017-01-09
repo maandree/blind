@@ -115,6 +115,7 @@ main(int argc, char *argv[])
 		}
 	}
 header_done:
+	n = ptr;
 
 	if (!*width || !*height)
 		eprintf("convertion failed\n");
