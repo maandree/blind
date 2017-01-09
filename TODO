@@ -8,7 +8,7 @@ vu-chroma-key		replace a chroma with transparency
 vu-from-video		use ffmpeg to convert from another format
 vu-to-video		use ffmpeg to convert to another format
 vu-primaries		given three selectable primaries split the video into three side-by-side which
-			      only one primary active
+				only one primary active
 vu-crop			crop video
 vu-extend		extend the video on which side with transparency
 vu-add			perform addition on each channel
@@ -18,4 +18,5 @@ vu-div			perform division on each channel
 vu-exp			perform exponentiation on each channel
 vu-min			perform clipping to lower bound on each channel
 vu-max			perform clipping to upper bound on each channel
-vu-distort-map		remap pixels using the X and Y values
+vu-distort-map		remap pixels using the X and Y values, -s for improve quality on downscaling
+				(pixels' neighbours must not change)
