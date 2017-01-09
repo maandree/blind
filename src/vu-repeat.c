@@ -37,6 +37,9 @@ main(int argc, char *argv[])
 	if (stream.fd < 0)
 		eprintf("open %s:", stream.file);
 	einit_stream(&stream);
+	if (stream->frame > SIZE_MAX / count)
+		eprintf("%s: video too long\n", stream.file);
+	stream->frame *= count;
 	fprint_stream_head(stdout, &stream);
 	fflush(stdout);
 	if (ferror(stdout))
