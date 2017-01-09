@@ -42,7 +42,7 @@ main(int argc, char *argv[])
 		eprintf("<stdin>: video is too wide\n");
 	n = stream.width * stream.pixel_size;
 	if (!(buf = malloc(n)))
-		eprint("malloc:");
+		eprintf("malloc:");
 
 	wm = stream.width - 1;
 	memcpy(buf, stream.buf, ptr = stream.ptr);
