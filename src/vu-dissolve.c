@@ -1,51 +1,52 @@
 /* See LICENSE file for copyright and license details. */
 #include "arg.h"
+#include "stream.h"
 #include "util.h"
 
-#include <fcntl.h>
-#include <inttypes.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-static unsigned int
-clip(unsigned int value)
-{
-	return value > 255 ? 255 : value;
-}
 
 static void
 usage(void)
 {
-	eprintf("usage: %s [-r] -f frames -w width -h height\n", argv0);
+	eprintf("usage: %s [-r]\n", argv0);
+}
+
+static void
+process_xyza(struct stream *stream, size_t n, size_t f, size_t fm)
+{
+	size_t i;
+	double a;
+	for (i = 0; i < n; i += stream->pixel_size) {
+		a = ((double *)(stream->buf + i))[3];
+		a = a * (double)f / fm;
+		((double *)(stream->buf + i))[3] = a;
+	}
+}
+
+static void
+process_xyza_r(struct stream *stream, size_t n, size_t f, size_t fm)
+{
+	size_t i;
+	double a;
+	for (i = 0; i < n; i += stream->pixel_size) {
+		a = ((double *)(stream->buf + i))[3];
+		a = a * (double)(fm - f) / fm;
+		((double *)(stream->buf + i))[3] = a;
+	}
 }
 
 int
 main(int argc, char *argv[])
 {
+	struct stream stream;
 	int reverse = 0;
-	size_t frames = 0, width = 0, height = 0;
-	unsigned char buf[8096];
-	size_t frame, h, w, max;
-	size_t ptr = 0, n, i, fm;
+	size_t f, h, w;
+	size_t n, i, fm;
 	ssize_t r;
-	double a;
+	void (*process)(struct stream *stream, size_t n, size_t f, size_t fm);
 
 	ARGBEGIN {
-	case 'f':
-		if (tozu(EARGF(usage()), 2, SIZE_MAX, &frames))
-			eprintf("argument of -f must be an integer in [2, %zu]\n", SIZE_MAX);
-		break;
-	case 'w':
-		if (tozu(EARGF(usage()), 1, SIZE_MAX, &width))
-			eprintf("argument of -w must be an integer in [1, %zu]\n", SIZE_MAX);
-		break;
-	case 'h':
-		if (tozu(EARGF(usage()), 1, SIZE_MAX, &height))
-			eprintf("argument of -h must be an integer in [1, %zu]\n", SIZE_MAX);
-		break;
 	case 'r':
 		reverse = 1;
 		break;
@@ -53,42 +54,36 @@ main(int argc, char *argv[])
 		usage();
 	} ARGEND;
 
-	if (argc || !frames || !width || !height)
+	if (argc)
 		usage();
 
-	fm = frames - 1;
-	for (frame = 0; frame < frames; frame++) {
-		for (h = height; h--;) {
-			for (w = width << 2; w; w -= n) {
-				max = sizeof(buf) - ptr < w ? sizeof(buf) - ptr : w;
-				r = read(STDIN_FILENO, buf + ptr, max);
-				if (r < 0)
-					eprintf("read <stdin>:");
-				if (r == 0)
-					eprintf("content is shorter than specified\n");
-				n = ptr += (size_t)r;
-				n -= n & 3;
-				if (reverse) {
-					for (i = 0; i < n; i += 4) {
-						a = buf[i + 3];
-						a = a * (double)frame / fm;
-						a += 0.5;
-						buf[i + 3] = clip((unsigned int)a);
-					}
-				} else {
-					for (i = 0; i < n; i += 4) {
-						a = buf[i + 3];
-						a = a * (double)(fm - frame) / fm;
-						a += 0.5;
-						buf[i + 3] = clip((unsigned int)a);
-					}
-				}
+	stream.fd = STDIN_FILENO;
+	stream.file = "<stdin>";
+	einit_stream(&stream);
+	fprint_stream_head(stdout, &stream);
+	fflush(stdout);
+	if (ferror(stdout))
+		eprintf("<stdout>:");
+
+	if (!strcmp(stream.pixfmt, "xyza"))
+		process = reverse ? process_xyza_r : process_xyza;
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
+
+	fm = stream.frames - 1;
+	for (f = 0; f < stream.frames; f++) {
+		for (h = stream.height; h--;) {
+			for (w = stream.width * stream.pixel_size; w; w -= n) {
+				if (!eread_stream(&stream, w))
+					eprintf("<stdin>: file is truncated\n");
+				n = stream.ptr - (stream.ptr % stream.pixel_size);
+				process(&stream, n, f, fm);
 				for (i = 0; i < n; i += (size_t)r) {
-					r = write(STDOUT_FILENO, buf + i, n - i);
+					r = write(STDOUT_FILENO, stream.buf + i, n - i);
 					if (r < 0)
 						eprintf("write <stdout>:");
 				}
-				memmove(buf, buf + n, ptr -= n);
+				memmove(stream.buf, stream.buf + n, stream.ptr -= n);
 			}
 		}
 	}

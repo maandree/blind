@@ -1,113 +1,90 @@
 /* See LICENSE file for copyright and license details. */
 #include "arg.h"
+#include "stream.h"
 #include "util.h"
 
 #include <fcntl.h>
 #include <inttypes.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-struct file
-{
-	int fd;
-	unsigned char buf[1024];
-	size_t ptr;
-	const char *file;
-};
-
-static unsigned int
-clip(unsigned int value)
-{
-	return value < 0 ? 0 : value > 255 ? 255 : value;
-}
-
 static void
-blend(struct file *files, size_t n_files, size_t n)
+process_xyza(struct stream *streams, size_t n_streams, size_t n)
 {
-	double r1, g1, b1, a1;
-	double r2, g2, b2, a2;
+	double x1, y1, z1, a1;
+	double x2, y2, z2, a2;
 	size_t i, j;
-	for (i = 0; i < n; i += 4) {
-		r1 = srgb_decode(files->buf[i + 0] / 255.);
-		g1 = srgb_decode(files->buf[i + 1] / 255.);
-		b1 = srgb_decode(files->buf[i + 2] / 255.);
-		a1 = files->buf[i + 3] / 255.;
-		for (j = 1; j < n_files;) {
-			r2 = srgb_decode(files[j].buf[i + 0] / 255.);
-			g2 = srgb_decode(files[j].buf[i + 1] / 255.);
-			b2 = srgb_decode(files[j].buf[i + 2] / 255.);
-			a2 = files[j].buf[i + 3] / 255.;
-			a2 /= ++j;
-			r1 = r1 * a1 * (1 - a2) + r2 * a2;
-			g1 = g1 * a1 * (1 - a2) + g2 * a2;
-			b1 = b1 * a1 * (1 - a2) + b2 * a2;
+	for (i = 0; i < n; i += streams->pixel_size) {
+		x1 = ((double *)(streams[0].buf + i))[0];
+		y1 = ((double *)(streams[0].buf + i))[1];
+		z1 = ((double *)(streams[0].buf + i))[2];
+		a1 = ((double *)(streams[0].buf + i))[3];
+		for (j = 1; j < n_streams; j++) {
+			x2 = ((double *)(streams[j].buf + i))[0];
+			y2 = ((double *)(streams[j].buf + i))[1];
+			z2 = ((double *)(streams[j].buf + i))[2];
+			a2 = ((double *)(streams[j].buf + i))[3];
+			x1 = x1 * a1 * (1 - a2) + x2 * a2;
+			y1 = y1 * a1 * (1 - a2) + y2 * a2;
+			z1 = z1 * a1 * (1 - a2) + z2 * a2;
 			a1 = a1 * (1 - a2) + a2;
 		}
-		r1 = srgb_encode(r1) * 255 + 0.5;
-		g1 = srgb_encode(g1) * 255 + 0.5;
-		b1 = srgb_encode(b1) * 255 + 0.5;
-		a1 = a1 * 255 * 0.5;
-		files->buf[i + 0] = clip((unsigned int)r1);
-		files->buf[i + 1] = clip((unsigned int)g1);
-		files->buf[i + 2] = clip((unsigned int)b1);
-		files->buf[i + 3] = clip((unsigned int)a1);
+		((double *)(streams[0].buf + i))[0] = x1;
+		((double *)(streams[0].buf + i))[1] = y1;
+		((double *)(streams[0].buf + i))[2] = z1;
+		((double *)(streams[0].buf + i))[3] = a1;
 	}
 }
 
 static void
-stack(struct file *files, size_t n_files, size_t n)
+process_xyza_b(struct stream *streams, size_t n_streams, size_t n)
 {
-	double r1, g1, b1, a1;
-	double r2, g2, b2, a2;
+	double x1, y1, z1, a1;
+	double x2, y2, z2, a2;
 	size_t i, j;
-	for (i = 0; i < n; i += 4) {
-		r1 = srgb_decode(files->buf[i + 0] / 255.);
-		g1 = srgb_decode(files->buf[i + 1] / 255.);
-		b1 = srgb_decode(files->buf[i + 2] / 255.);
-		a1 = files->buf[i + 3] / 255.;
-		for (j = 1; j < n_files; j++) {
-			r2 = srgb_decode(files[j].buf[i + 0] / 255.);
-			g2 = srgb_decode(files[j].buf[i + 1] / 255.);
-			b2 = srgb_decode(files[j].buf[i + 2] / 255.);
-			a2 = files[j].buf[i + 3] / 255.;
-			r1 = r1 * a1 * (1 - a2) + r2 * a2;
-			g1 = g1 * a1 * (1 - a2) + g2 * a2;
-			b1 = b1 * a1 * (1 - a2) + b2 * a2;
+	for (i = 0; i < n; i += streams->pixel_size) {
+		x1 = ((double *)(streams[0].buf + i))[0];
+		y1 = ((double *)(streams[0].buf + i))[1];
+		z1 = ((double *)(streams[0].buf + i))[2];
+		a1 = ((double *)(streams[0].buf + i))[3];
+		for (j = 1; j < n_streams;) {
+			x2 = ((double *)(streams[j].buf + i))[0];
+			y2 = ((double *)(streams[j].buf + i))[1];
+			z2 = ((double *)(streams[j].buf + i))[2];
+			a2 = ((double *)(streams[j].buf + i))[3];
+			a2 /= ++j;
+			x1 = x1 * a1 * (1 - a2) + x2 * a2;
+			y1 = y1 * a1 * (1 - a2) + y2 * a2;
+			z1 = z1 * a1 * (1 - a2) + z2 * a2;
 			a1 = a1 * (1 - a2) + a2;
 		}
-		r1 = srgb_encode(r1) * 255 + 0.5;
-		g1 = srgb_encode(g1) * 255 + 0.5;
-		b1 = srgb_encode(b1) * 255 + 0.5;
-		a1 = a1 * 255 * 0.5;
-		files->buf[i + 0] = clip((unsigned int)r1);
-		files->buf[i + 1] = clip((unsigned int)g1);
-		files->buf[i + 2] = clip((unsigned int)b1);
-		files->buf[i + 3] = clip((unsigned int)a1);
+		((double *)(streams[0].buf + i))[0] = x1;
+		((double *)(streams[0].buf + i))[1] = y1;
+		((double *)(streams[0].buf + i))[2] = z1;
+		((double *)(streams[0].buf + i))[3] = a1;
 	}
 }
 
 static void
 usage(void)
 {
-	eprintf("usage: %s [-b] bottom-image ... top-image\n", argv0);
+	eprintf("usage: %s [-b] bottom-stream ... top-stream\n", argv0);
 }
 
 int
 main(int argc, char *argv[])
 {
-	struct file *files;
-	size_t n_files;
-	int blend_flag = 0;
+	struct stream *streams;
+	size_t n_streams;
+	int blend = 0;
 	size_t i, j, n;
 	ssize_t r;
 	size_t closed;
+	void (*process)(struct stream *streams, size_t n_streams, size_t n);
 
 	ARGBEGIN {
 	case 'b':
-		blend_flag = 1;
+		blend = 1;
 		break;
 	default:
 		usage();
@@ -116,56 +93,63 @@ main(int argc, char *argv[])
 	if (argc < 2)
 		usage();
 
-	n_files = (size_t)argc;
-	files = calloc(n_files, sizeof(*files));
-	if (!files)
+	n_streams = (size_t)argc;
+	streams = calloc(n_streams, sizeof(*streams));
+	if (!streams)
 		eprintf("calloc:");
 
-	for (i = 0; i < n_files; i++) {
-		files[i].fd = open(argv[i], O_RDONLY);
-		if (files[i].fd < 0)
-			eprintf("open %s:", argv[i]);
-		files[i].file = argv[i];
+	for (i = 0; i < n_streams; i++) {
+		streams[i].file = argv[i];
+		streams[i].fd = open(streams[i].file, O_RDONLY);
+		if (streams[i].fd < 0)
+			eprintf("open %s:", streams[i].file);
+		if (i) {
+			if (streams[i].width != streams->width || streams[i].height != streams->height)
+				eprintf("videos do not have the same geometry\n");
+			if (strcmp(streams[i].pixfmt, streams->pixfmt))
+				eprintf("videos use incompatible pixel formats\n");
+		}
 	}
 
-	while (n_files) {
-		n = SIZE_MAX;
-		for (i = 0; i < n_files; i++) {
-			r = read(files[i].fd, files[i].buf + files[i].ptr, sizeof(files[i].buf) - files[i].ptr);
-			if (r < 0) {
-				eprintf("read %s:", files[i].file);
-			} else if (r == 0) {
-				close(files[i].fd);
-				files[i].fd = -1;
-			} else {
-				files[i].ptr += (size_t)r;
-			}
-			if (files[i].ptr && files[i].ptr < n)
-				n = files[i].ptr;
-		}
-		n -= n & 3;
+	if (!strcmp(streams->pixfmt, "xyza"))
+		process = blend ? process_xyza_b : process_xyza;
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", streams->pixfmt);
 
-		(blend_flag ? blend : stack)(files, n_files, n);
+	while (n_streams) {
+		n = SIZE_MAX;
+		for (i = 0; i < n_streams; i++) {
+			if (streams[i].ptr < sizeof(streams->buf) && !eread_stream(streams + i, SIZE_MAX)) {
+				close(streams[i].fd);
+				streams[i].fd = -1;
+			}
+			if (streams[i].ptr && streams[i].ptr < n)
+				n = streams[i].ptr;
+		}
+		n -= n % streams->pixel_size;
+
+		process(streams, n_streams, n);
 		for (j = 0; j < n;) {
-			r = write(STDOUT_FILENO, files->buf + j, n - j);
+			r = write(STDOUT_FILENO, streams->buf + j, n - j);
 			if (r < 0)
 				eprintf("write <stdout>:");
 			j += (size_t)r;
 		}
 
 		closed = SIZE_MAX;
-		for (i = 0; i < n_files; i++) {
-			memmove(files[i].buf, files[i].buf + n, files[i].ptr -= n);
-			if (files[i].ptr < 4 && files[i].fd < 0 && closed == SIZE_MAX)
+		for (i = 0; i < n_streams; i++) {
+			memmove(streams[i].buf, streams[i].buf + n, streams[i].ptr -= n);
+			if (streams[i].ptr < streams->pixel_size && streams[i].fd < 0 && closed == SIZE_MAX)
 				closed = i;
 		}
 		if (closed != SIZE_MAX) {
-			for (i = (j = closed) + 1; i < n_files; i++)
-				if (files[i].ptr < 4 && files[i].fd < 0)
-					files[j++] = files[i];
-			n_files = j;
+			for (i = (j = closed) + 1; i < n_streams; i++)
+				if (streams[i].ptr < streams->pixel_size && streams[i].fd < 0)
+					streams[j++] = streams[i];
+			n_streams = j;
 		}
 	}
 
+	free(streams);
 	return 0;
 }

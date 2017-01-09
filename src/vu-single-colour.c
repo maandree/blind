@@ -3,25 +3,23 @@
 #include "util.h"
 
 #include <inttypes.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
+
+typedef double pixel_t[4];
 
 static void
 usage(void)
 {
-	eprintf("usage: %s [-f frames] -w width -h height red green blue [alpha]\n", argv0);
+	eprintf("usage: %s [-f frames] -w width -h height (X Y Z | Y) [alpha]\n", argv0);
 }
 
 int
 main(int argc, char *argv[])
 {
-	int red, green, blue, alpha = 255;
+	double X, Y, Z, alpha = 1;
 	size_t width = 0, height = 0, frames = 1;
-	unsigned char pixel[4];
 	size_t x, y, n;
-	int32_t buf[1024];
+	pixel_t buf[1024];
 	ssize_t r;
 
 	ARGBEGIN {
@@ -41,36 +39,39 @@ main(int argc, char *argv[])
 		usage();
 	} ARGEND;
 
-	if (!width || !height || argc < 3 || argc > 4)
+	if (!width || !height || !argc || argc > 4)
 		usage();
 
-	if (toi(argv[0], 0, 255, &red))
-		eprintf("the red value must be an integer in [0, 255]\n");
-	if (toi(argv[1], 0, 255, &green))
-		eprintf("the green value must be an integer in [0, 255]\n");
-	if (toi(argv[2], 0, 255, &blue))
-		eprintf("the blue value must be an integer in [0, 255]\n");
-	if (argc > 3 && toi(argv[3], 0, 255, &alpha))
-		eprintf("the alpha value must be an integer in [0, 255]\n");
+	if (argc < 3) {
+		X = D65_XYY_X / D65_XYY_Y;
+		Z = 1 / D65_XYY_Y - 1 - X;
+		if (tolf(argv[1], &Y))
+			eprintf("the Y value must be a floating-point value\n");
+	} else {
+		if (tolf(argv[0], &X))
+			eprintf("the X value must be a floating-point value\n");
+		if (tolf(argv[1], &Y))
+			eprintf("the Y value must be a floating-point value\n");
+		if (tolf(argv[2], &Z))
+			eprintf("the Z value must be a floating-point value\n");
+	}
+	if (!(argc & 1) && tolf(argv[argc - 1], &alpha))
+		eprintf("the alpha value must be a floating-point value\n");
 
-	pixel[0] = (unsigned char)red;
-	pixel[1] = (unsigned char)green;
-	pixel[2] = (unsigned char)blue;
-	pixel[3] = (unsigned char)alpha;
-
-	for (x = 0; x < ELEMENTSOF(buf); x++)
-		buf[x] = *(int32_t *)(void *)pixel;
+	for (x = 0; x < ELEMENTSOF(buf); x++) {
+		buf[x][0] = X;
+		buf[x][1] = Y;
+		buf[x][2] = Z;
+		buf[x][3] = alpha;
+	}
 	while (frames--) {
 		for (y = height; y--;) {
 			for (x = width; x;) {
-				n = ELEMENTSOF(buf) < x ? ELEMENTSOF(buf) : x;
-				x -= n;
-				n *= sizeof(*buf);
-				while (n) {
+				x -= n = ELEMENTSOF(buf) < x ? ELEMENTSOF(buf) : x;
+				for (n *= sizeof(*buf); n; n -= (size_t)r) {
 					r = write(STDOUT_FILENO, buf, n);
 					if (r < 0)
 						eprintf("write <stdout>:");
-					n -= (size_t)r;
 				}
 			}
 		}

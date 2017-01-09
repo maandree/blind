@@ -1,12 +1,10 @@
 /* See LICENSE file for copyright and license details. */
 #include "arg.h"
+#include "stream.h"
 #include "util.h"
 
-#include <inttypes.h>
 #include <fcntl.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -16,19 +14,39 @@ usage(void)
 	eprintf("usage: %s [-i] colour-stream alpha-stream\n", argv0);
 }
 
+static void
+process_xyza(struct stream *colour, struct stream *alpha, size_t n)
+{
+	size_t i;
+	double a;
+	for (i = 0; i < n; i += colour->pixel_size) {
+		a = ((double *)(alpha->buf + i))[1];
+		a *= ((double *)(alpha->buf + i))[3];
+		((double *)(colour->buf + i))[3] *= a;
+	}
+}
+
+static void
+process_xyza_i(struct stream *colour, struct stream *alpha, size_t n)
+{
+	size_t i;
+	double a;
+	for (i = 0; i < n; i += colour->pixel_size) {
+		a = 1 - ((double *)(alpha->buf + i))[1];
+		a *= ((double *)(alpha->buf + i))[3];
+		((double *)(colour->buf + i))[3] *= a;
+	}
+}
+
 int
 main(int argc, char *argv[])
 {
 	int invert = 0;
-	int fd_colour = -1;
-	int fd_alpha = -1;
-	unsigned char buf_colour[1024];
-	unsigned char buf_alpha[1024];
-	size_t ptr_colour = 0;
-	size_t ptr_alpha = 0;
+	struct stream colour;
+	struct stream alpha;
 	ssize_t r;
 	size_t i, n;
-	unsigned long int re, gr, bl, a1, a2;
+	void (*process)(struct stream *colour, struct stream *alpha, size_t n);
 
 	ARGBEGIN {
 	case 'i':
@@ -41,96 +59,82 @@ main(int argc, char *argv[])
 	if (argc != 2)
 		usage();
 
-	fd_colour = open(argv[0], O_RDONLY);
-	if (fd_colour < 0)
-		eprintf("open %s:", argv[0]);
+	colour.file = argv[0];
+	colour.fd = open(colour.file, O_RDONLY);
+	if (colour.fd < 0)
+		eprintf("open %s:", colour.file);
+	einit_stream(&colour);
 
-	fd_alpha = open(argv[1], O_RDONLY);
-	if (fd_alpha < 0)
-		eprintf("open %s:", argv[1]);
+	alpha.file = argv[1];
+	alpha.fd = open(alpha.file, O_RDONLY);
+	if (alpha.fd < 0)
+		eprintf("open %s:", alpha.file);
+	einit_stream(&alpha);
+
+	if (colour.width != alpha.width || colour.height != alpha.height)
+		eprintf("videos do not have the same geometry\n");
+	if (colour.pixel_size != alpha.pixel_size)
+		eprintf("videos use incompatible pixel formats\n");
+
+	if (!strcmp(colour.pixfmt, "xyza"))
+		process = invert ? process_xyza_i : process_xyza;
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 
 	for (;;) {
-		r = read(fd_colour, buf_colour + ptr_colour, sizeof(buf_colour) - ptr_colour);
-		if (r < 0) {
-			eprintf("read %s:", argv[0]);
-		} else if (r == 0) {
-			close(fd_colour);
-			fd_colour = -1;
+		if (colour.ptr < sizeof(colour.buf) && !eread_stream(&colour, SIZE_MAX)) {
+			close(colour.fd);
+			colour.fd = -1;
 			break;
-		} else {
-			ptr_colour += (size_t)r;
 		}
-
-		r = read(fd_alpha, buf_alpha + ptr_alpha, sizeof(buf_alpha) - ptr_alpha);
-		if (r < 0) {
-			eprintf("read %s:", argv[0]);
-		} else if (r == 0) {
-			close(fd_alpha);
-			fd_alpha = -1;
+		if (alpha.ptr < sizeof(alpha.buf) && !eread_stream(&alpha, SIZE_MAX)) {
+			close(colour.fd);
+			alpha.fd = -1;
 			break;
-		} else {
-			ptr_alpha += (size_t)r;
 		}
 
-		n = ptr_colour < ptr_alpha ? ptr_colour : ptr_alpha;
-		n -= n & 3;
-		ptr_colour -= n;
-		ptr_alpha -= n;
+		n = colour.ptr < alpha.ptr ? colour.ptr : alpha.ptr;
+		n -= n % colour.pixel_size;
+		colour.ptr -= n;
+		alpha.ptr -= n;
 
-		for (i = 0; i < n; i += 4) {
-			re = buf_alpha[i + 0];
-			gr = buf_alpha[i + 1];
-			bl = buf_alpha[i + 2];
-			a1 = buf_alpha[i + 3];
-			a2 = buf_colour[i + 3];
-			re += gr + bl;
-			if (invert)
-				re = 765 - re;
-			a1 *= a2 * re;
-			a1 = (a1 * 2 + 3 * 255 * 255) / (3 * 255 * 255 * 2);
-			buf_colour[i + 3] = a1;
-		}
+		process(&colour, &alpha, n);
 
-		for (i = 0; i < n; i++) {
-			r = write(STDOUT_FILENO, buf_colour + i, n - i);
+		for (i = 0; i < n; i += (size_t)r) {
+			r = write(STDOUT_FILENO, colour.buf + i, n - i);
 			if (r < 0)
 				eprintf("write <stdout>:");
-			i += (size_t)r;
 		}
 
-		if ((n & 3) || ptr_colour != ptr_alpha) {
-			memmove(buf_colour, buf_colour + n, ptr_colour);
-			memmove(buf_alpha,  buf_alpha  + n, ptr_alpha);
+		if ((n & 3) || colour.ptr != alpha.ptr) {
+			memmove(colour.buf, colour.buf + n, colour.ptr);
+			memmove(alpha.buf,  alpha.buf  + n, alpha.ptr);
 		}
 	}
 
-	if (fd_alpha >= 0)
-		close(fd_alpha);
+	if (alpha.fd >= 0)
+		close(alpha.fd);
 
-	while (ptr_colour) {
-		r = write(STDOUT_FILENO, buf_colour, ptr_colour);
+	for (i = 0; i < colour.ptr; i += (size_t)r) {
+		r = write(STDOUT_FILENO, colour.buf + i, colour.ptr - i);
 		if (r < 0)
 			eprintf("write <stdout>:");
-		ptr_colour -= (size_t)r;
 	}
 
-	if (fd_colour >= 0) {
+	if (colour.fd >= 0) {
 		for (;;) {
-			r = read(fd_colour, buf_colour, sizeof(buf_colour));
-			if (r < 0) {
-				eprintf("read %s:", argv[0]);
-			} else if (r == 0) {
-				close(fd_colour);
-				fd_colour = -1;
+			colour.ptr = 0;
+			if (!eread_stream(&colour, SIZE_MAX)) {
+				close(colour.fd);
+				colour.fd = -1;
 				break;
-			} else {
-				n = (size_t)r;
 			}
 
-			r = write(STDOUT_FILENO, buf_colour, n);
-			if (r < 0)
-				eprintf("write <stdout>:");
-			n -= (size_t)r;
+			for (i = 0; i < colour.ptr; i += (size_t)r) {
+				r = write(STDOUT_FILENO, colour.buf + i, colour.ptr - i);
+				if (r < 0)
+					eprintf("write <stdout>:");
+			}
 		}
 	}
 

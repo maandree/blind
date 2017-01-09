@@ -6,21 +6,21 @@
 #include <string.h>
 #include <unistd.h>
 
-static char *
-xmemmem(char *h, const char *n, size_t hn, size_t nn)
+static double
+get_value(void *buffer)
 {
-	char *p, *end;
-	if (nn > hn)
-		return NULL;
-	end = h + (hn - nn + 1);
-	for (p = h; p != end; p++) {
-		p = memchr(p, *n, (size_t)(end - p));
-		if (!p)
-			return NULL;
-		if (!memcmp(p, n, nn))
-			return p;
-	}
-	return NULL;
+	unsigned char *buf = buffer;
+	unsigned long int value;
+	double ret;
+	value  = (unsigned long int)(buf[0]) << 12;
+	value += (unsigned long int)(buf[1]) <<  8;
+	value += (unsigned long int)(buf[2]) <<  4;
+	value += (unsigned long int)(buf[3]);
+	ret = value;
+	value = 1UL << 15;
+	value |= value - 1;
+	ret /= value;
+	return ret;
 }
 
 static void
@@ -37,9 +37,12 @@ main(int argc, char *argv[])
 	pid_t pid;
 	int status;
 	char buf[8096];
-	size_t ptr, n;
+	size_t ptr, ptw, n;
 	char *p;
 	ssize_t r;
+	double red, green, blue, pixel[4];
+	char width[3 * sizeof(size_t) + 1] = {0};
+	char height[3 * sizeof(size_t) + 1] = {0};
 
 	ARGBEGIN {
 	default:
@@ -73,10 +76,11 @@ main(int argc, char *argv[])
 		if (dup2(pipe_rw[1], STDOUT_FILENO) < 0)
 			eprintf("dup2:");
 		close(pipe_rw[1]);
-		execlp("convert", "convert", "-", "-depth", "8", "-alpha", "activate", "pam:-", NULL);
+		/* XXX Is there a way to convert directly to raw XYZ? (Would avoid gamut truncation) */
+		execlp("convert", "convert", "-", "-depth", "32", "-alpha", "activate", "pam:-", NULL);
 		eprintf("exec convert:");
 	}
-	
+
 	close(pipe_rw[1]);
 
 	for (ptr = 0;;) {
@@ -84,24 +88,56 @@ main(int argc, char *argv[])
 		if (r < 0)
 			eprintf("read <subprocess>:");
 		if (r == 0)
-			break;
+			eprintf("convertion failed\n");
 		ptr += (size_t)r;
-		p = xmemmem(buf, "\nENDHDR\n", ptr, sizeof("\nENDHDR\n") - 1);
-		if (!p)
-			continue;
-		p += sizeof("\nENDHDR\n") - 1;
-		n = (size_t)(p - buf);
-		memmove(buf, buf + n, ptr - n);
-		n = ptr - n;
-		break;
+
+		for (;;) {
+			p = memchr(buf, '\n', ptr);
+			if (!p) {
+				if (ptr == sizeof(buf))
+					eprintf("convertion failed\n");
+				break;
+			}
+			*p++ = '\0';
+			if (strstr(buf, "WIDTH ") == buf) {
+				if (*width || !buf[6] || strlen(buf + 6) >= sizeof(width))
+					eprintf("convertion failed\n");
+				strcpy(width, buf + 6);
+			} else if (strstr(buf, "HEIGHT ") == buf) {
+				if (*height || !buf[7] || strlen(buf + 7) >= sizeof(height))
+					eprintf("convertion failed\n");
+				strcpy(height, buf + 7);
+			} else if (!strcmp(buf, "ENDHDR")) {
+				memmove(buf, p, ptr -= (size_t)(p - buf));
+				goto header_done;
+			}
+			memmove(buf, p, ptr -= (size_t)(p - buf));
+		}
 	}
+header_done:
+
+	if (!*width || !*height)
+		eprintf("convertion failed\n");
+
+	printf("%s %s xyza\n%cuivf", width, height, 0);
+	fflush(stdout);
+	if (ferror(stdout))
+		eprintf("<stdout>:");
 
 	for (;;) {
-		for (ptr = 0; ptr < n;) {
-			r = write(STDOUT_FILENO, buf + ptr, n - ptr);
-			if (r < 0)
-				eprintf("write <stdout>:");
-			ptr += (size_t)r;
+		for (ptr = 0; ptr + 15 < n; ptr += 16) {
+			red      = get_value(buf + ptr +  0);
+			green    = get_value(buf + ptr +  4);
+			blue     = get_value(buf + ptr +  8);
+			pixel[3] = get_value(buf + ptr + 12);
+
+			srgb_to_ciexyz(red, green, blue, pixel + 0, pixel + 1, pixel + 2);
+
+			for (ptw = 0; ptw < sizeof(pixel); ptw += (size_t)r) {
+				r = write(STDOUT_FILENO, (char *)pixel + ptw, sizeof(pixel) - ptw);
+				if (r < 0)
+					eprintf("write <stdout>:");
+			}
 		}
 		r = read(pipe_rw[0], buf, sizeof(buf));
 		if (r < 0)

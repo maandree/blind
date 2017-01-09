@@ -7,13 +7,3 @@ Rendering takes a long time, with this approach you can
 leverage the power of Make.
 
 Source control friendly.
-
-
-FORMAT
-
-The utilities use raw RGBA video, parameters for ffmpeg are:
-
-	-f rawvideo
-	-pix_fmt rgba
-	-s:v ${WIDTH}x${HEIGHT}
-	-r ${FRAME_RATE}

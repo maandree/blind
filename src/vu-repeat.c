@@ -1,5 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 #include "arg.h"
+#include "stream.h"
 #include "util.h"
 
 #include <fcntl.h>
@@ -15,9 +16,8 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	struct stat st;
+	struct stream stream;
 	size_t count, ptr, n, ptw;
-	int fd;
 	ssize_t r;
 	char buf[BUFSIZ];
 
@@ -32,14 +32,25 @@ main(int argc, char *argv[])
 	if (tozu(argv[0], 0, SIZE_MAX, &count))
 		eprintf("the count must be an integer in [0, %zu]\n", SIZE_MAX);
 
-	fd = open(argv[1], O_RDONLY);
-	if (fd < 0)
-		eprintf("open %s:", argv[1]);
+	stream.file = argv[1];
+	stream.fd = open(stream.file, O_RDONLY);
+	if (stream.fd < 0)
+		eprintf("open %s:", stream.file);
+	einit_stream(&stream);
+	fprint_stream_head(stdout, &stream);
+	fflush(stdout);
+	if (ferror(stdout))
+		eprintf("<stdout>:");
 
 	while (count--) {
-		posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
+		for (ptw = 0; ptw < stream.ptr;) {
+			r = write(STDOUT_FILENO, stream.buf + ptw, stream.ptr - ptw);
+			if (r < 0)
+				eprintf("write <stdout>:");
+			ptw += (size_t)r;
+		}
 		for (ptr = 0;;) {
-			r = pread(fd, buf, sizeof(buf), ptr);
+			r = pread(stream.fd, buf, sizeof(buf), ptr);
 			if (r < 0)
 				eprintf("pread %s:", argv[1]);
 			else if (r == 0)
@@ -54,6 +65,6 @@ main(int argc, char *argv[])
 		}
 	}
 
-	close(fd);
+	close(stream.fd);
 	return 0;
 }

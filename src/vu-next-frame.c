@@ -1,10 +1,10 @@
 /* See LICENSE file for copyright and license details. */
 #include "arg.h"
+#include "stream.h"
 #include "util.h"
 
 #include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #define eprintf(...) enprintf(2, __VA_ARGS__)
@@ -12,56 +12,73 @@
 static void
 usage(void)
 {
-	eprintf("usage: %s -w width -h height\n", argv0);
+	eprintf("usage: %s width height pixel-format ...\n", argv0);
 }
 
 int
 main(int argc, char *argv[])
 {
-	size_t width = 0, height = 0;
-	size_t p, n, w, max;
+	struct stream stream;
+	size_t ptr, n, w;
 	ssize_t r;
-	char buf[8096];
-	int anything = 0;
+	int i, anything = 0;
+	char *p;
 
 	ARGBEGIN {
-	case 'w':
-		if (tozu(EARGF(usage()), 1, SIZE_MAX, &width))
-			eprintf("argument of -w must be an integer in [1, %zu]\n", SIZE_MAX);
-		break;
-	case 'h':
-		if (tozu(EARGF(usage()), 1, SIZE_MAX, &height))
-			eprintf("argument of -h must be an integer in [1, %zu]\n", SIZE_MAX);
-		break;
 	default:
 		usage();
 	} ARGEND;
 
-	if (!width || !height || argc)
+	if (argc < 3)
 		usage();
 
-	while (height) {
-		height--;
-		for (w = width << 2; w;) {
-			max = sizeof(buf) < w ? sizeof(buf) : w;
-			r = read(STDIN_FILENO, buf, max);
-			if (r < 0)
-				eprintf("read <stdin>:");
-			if (r == 0)
+	stream.frames = 1;
+	stream.fd = STDIN_FILENO;
+	stream.file = "<stdin>";
+	stream.pixfmt[0] = '\0';
+
+	if (tozu(argv[0], 1, SIZE_MAX, &stream.width))
+		eprintf("the width must be an integer in [1, %zu]\n", SIZE_MAX);
+	if (tozu(argv[1], 1, SIZE_MAX, &stream.height))
+		eprintf("the height must be an integer in [1, %zu]\n", SIZE_MAX);
+	argv += 2, argc -= 2;
+
+	n = (size_t)argc - 1;
+	for (i = 0; i < argc; i++)
+		n += strlen(argv[i]);
+	if (n < sizeof(stream.pixfmt)) {
+		p = stpcpy(stream.pixfmt, argv[0]);
+		for (i = 1; i < argc; i++) {
+			*p++ = ' ';
+			p = stpcpy(p, argv[i]);
+		}
+	}
+
+	eset_pixel_size(&stream);
+
+	fprint_stream_head(stdout, &stream);
+	fflush(stdout);
+	if (ferror(stdout))
+		eprintf("<stdout>:");
+
+	while (stream.height) {
+		stream.height--;
+		for (w = stream.width * stream.pixel_size; w; w -= n) {
+			stream.ptr = 0;
+			n = eread_stream(&stream, w);
+			if (n == 0)
 				goto done;
 			anything = 1;
-			w -= n = (size_t)r;
-			for (p = 0; p < n;) {
-				r = write(STDOUT_FILENO, buf + p, n - p);
+			for (ptr = 0; ptr < stream.ptr; ptr += (size_t)r) {
+				r = write(STDOUT_FILENO, stream.buf + ptr, stream.ptr - ptr);
 				if (r < 0)
 					eprintf("write <stdin>:");
-				p += (size_t)r;
 			}
 		}
 	}
 done:
 
-	if (height || w)
+	if (stream.height || w)
 		eprintf("incomplete frame\n");
 
 	return !anything;
