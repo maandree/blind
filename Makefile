@@ -17,6 +17,7 @@ BIN =\
 	vu-reverse\
 	vu-set-alpha\
 	vu-set-luma\
+	vu-set-saturation\
 	vu-single-colour\
 	vu-stack\
 	vu-write-head
