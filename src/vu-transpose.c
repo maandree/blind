@@ -47,10 +47,10 @@ main(int argc, char *argv[])
 	fprint_stream_head(stdout, &stream);
 	fflush(stdout);
 	if (ferror(stdout))
-		eprintf("<stdin>:");
+		eprintf("<stdout>:");
 
 	if (stream.width > SIZE_MAX / stream.pixel_size)
-		eprintf("<stdin>: video is too wide\n");
+		eprintf("<stdin>: video frame is too large\n");
 	n = stream.width * stream.pixel_size;
 	if (n > SIZE_MAX / stream.height)
 		eprintf("<stdin>: video frame is too large\n");

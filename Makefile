@@ -7,6 +7,7 @@ BIN =\
 	vu-concat\
 	vu-cut\
 	vu-dissolve\
+	vu-extend\
 	vu-flip\
 	vu-flop\
 	vu-from-image\
