@@ -1,5 +1,4 @@
 vu-transpose		transpose frames
-vu-cut			retain a segment of frames
 vu-split		split a video into multiple vidoes
 vu-blur			gaussian blur, -c to only blur chroma
 vu-transform		transformation by matrix multiplication, -t for tiling, -s for improve quality

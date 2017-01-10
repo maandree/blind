@@ -54,7 +54,7 @@ main(int argc, char *argv[])
 			if (r < 0)
 				eprintf("pread %s:", stream.file);
 			else if (r == 0)
-				eprintf("%s: file is shorter than expected", stream.file);
+				eprintf("%s: file is shorter than expected\n", stream.file);
 			ptr += n = (size_t)r;
 			for (ptw = 0; ptw < n;) {
 				r = write(STDOUT_FILENO, buf + ptw, n - ptw);

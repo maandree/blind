@@ -64,7 +64,7 @@ main(int argc, char *argv[])
 			for (ptr = 0; ptr < streams[i].ptr; ptr += (size_t)r) {
 				r = write(STDOUT_FILENO, streams[i].buf + ptr, streams[i].ptr - ptr);
 				if (r < 0)
-					eprintf("write <stdout>");
+					eprintf("write <stdout>:");
 			}
 		}
 		close(streams[i].fd);

@@ -75,7 +75,7 @@ main(int argc, char *argv[])
 		for (h = stream.height; h--;) {
 			for (w = stream.width * stream.pixel_size; w; w -= n) {
 				if (!eread_stream(&stream, w))
-					eprintf("<stdin>: file is truncated\n");
+					eprintf("<stdin>: file is shorter than expected\n");
 				n = stream.ptr - (stream.ptr % stream.pixel_size);
 				process(&stream, n, f, fm);
 				for (i = 0; i < n; i += (size_t)r) {

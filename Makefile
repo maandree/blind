@@ -5,6 +5,7 @@ BIN =\
 	vu-arithm\
 	vu-colour-srgb\
 	vu-concat\
+	vu-cut\
 	vu-dissolve\
 	vu-flip\
 	vu-flop\
