@@ -19,6 +19,7 @@ BIN =\
 	vu-set-luma\
 	vu-set-saturation\
 	vu-single-colour\
+	vu-split\
 	vu-stack\
 	vu-to-image\
 	vu-write-head
