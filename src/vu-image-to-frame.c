@@ -26,7 +26,7 @@ get_value(void *buffer)
 static void
 usage(void)
 {
-	eprintf("usage: %s\n", argv0);
+	eprintf("usage: [-h] %s\n", argv0);
 }
 
 int
@@ -43,8 +43,12 @@ main(int argc, char *argv[])
 	double red, green, blue, pixel[4];
 	char width[3 * sizeof(size_t) + 1] = {0};
 	char height[3 * sizeof(size_t) + 1] = {0};
+	int headless = 0;
 
 	ARGBEGIN {
+	case 'h':
+		headless = 1;
+		break;
 	default:
 		usage();
 	} ARGEND;
@@ -120,10 +124,12 @@ header_done:
 	if (!*width || !*height)
 		eprintf("convertion failed\n");
 
-	printf("%s %s xyza\n%cuivf", width, height, 0);
-	fflush(stdout);
-	if (ferror(stdout))
-		eprintf("<stdout>:");
+	if (!headless) {
+		printf("%s %s xyza\n%cuivf", width, height, 0);
+		fflush(stdout);
+		if (ferror(stdout))
+			eprintf("<stdout>:");
+	}
 
 	for (;;) {
 		for (ptr = 0; ptr + 15 < n; ptr += 16) {
