@@ -3,6 +3,7 @@
 #include "stream.h"
 #include "util.h"
 
+#include <arpa/inet.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +17,7 @@ static int alpha_warning_triggered = 0;
 static void
 usage(void)
 {
-	eprintf("usage: %s [-d depth]\n", argv0);
+	eprintf("usage: %s [-d depth | -f]\n", argv0);
 }
 
 static void
@@ -95,7 +96,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	int depth = 16, bytes;
+	int depth = 16, bytes, farbfeld = 0;
 	unsigned long long int max;
 	size_t n;
 	void (*process)(struct stream *stream, size_t n, int bytes, unsigned long long int max);
@@ -105,11 +106,14 @@ main(int argc, char *argv[])
 		if (toi(EARGF(usage()), 1, 64, &depth))
 			eprintf("argument of -d must be an integer in [1, 64]\n");
 		break;
+	case 'f':
+		farbfeld = 1;
+		break;
 	default:
 		usage();
 	} ARGEND;
 
-	if (argc)
+	if (argc || (farbfeld && depth != 16))
 		usage();
 
 	stream.fd = STDIN_FILENO;
@@ -125,13 +129,28 @@ main(int argc, char *argv[])
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
-	printf("P7\n"
-	       "WIDTH %zu\n"
-	       "HEIGHT %zu\n"
-	       "DEPTH 4\n" /* Depth actually means channels */
-	       "MAXVAL %llu\n"
-	       "TUPLTYPE RGB_ALPHA\n"
-	       "ENDHDR\n", stream.width, stream.height, max);
+	if (farbfeld) {
+		uint32_t width = stream.width, height = stream.height;
+		if (stream.width > UINT32_MAX)
+			eprintf("%s: frame is too wide\n", stream.file);
+		if (stream.height > UINT32_MAX)
+			eprintf("%s: frame is too tall\n", stream.file);
+		printf("farbfeld");
+		memmove(stream.buf + 8, stream.buf, stream.ptr);
+		stream.ptr += 8;
+		width = htonl(width);
+		height = htonl(height);
+		memcpy(stream.buf + 0, &width, 4);
+		memcpy(stream.buf + 4, &height, 4);
+	} else {
+		printf("P7\n"
+		       "WIDTH %zu\n"
+		       "HEIGHT %zu\n"
+		       "DEPTH 4\n" /* Depth actually means channels */
+		       "MAXVAL %llu\n"
+		       "TUPLTYPE RGB_ALPHA\n"
+		       "ENDHDR\n", stream.width, stream.height, max);
+	}
 	fflush(stdout);
 	if (ferror(stdout))
 		eprintf("<stdout>:");
