@@ -64,6 +64,11 @@ eninit_stream(int status, struct stream *stream)
 	if (errno || *end)
 		goto bad_format;
 
+	if (!stream->width)
+		eprintf("%s: width is zero\n", stream->file);
+	if (!stream->height)
+		eprintf("%s: height is zero\n", stream->file);
+
 	n = (size_t)(p - stream->buf) + 1;
 	memmove(stream->buf, stream->buf + n, stream->ptr -= n);
 	while (stream->ptr < 5) {
