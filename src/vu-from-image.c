@@ -2,7 +2,9 @@
 #include "arg.h"
 #include "util.h"
 
+#include <arpa/inet.h>
 #include <sys/wait.h>
+#include <inttypes.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -26,7 +28,7 @@ get_value(void *buffer)
 static void
 usage(void)
 {
-	eprintf("usage: [-h] %s\n", argv0);
+	eprintf("usage: [-h] [-f | -p] %s\n", argv0);
 }
 
 int
@@ -43,17 +45,36 @@ main(int argc, char *argv[])
 	double red, green, blue, pixel[4];
 	char width[3 * sizeof(size_t) + 1] = {0};
 	char height[3 * sizeof(size_t) + 1] = {0};
-	int headless = 0;
+	int headless = 0, farbfeld = 0, pam = 0;
+	const char *file = "<subprocess>";
+	const char *conv_fail_msg = "convertion failed, if converting a farbfeld file, try -f";
 
 	ARGBEGIN {
+	case 'f':
+		farbfeld = 1;
+		break;
 	case 'h':
 		headless = 1;
+		break;
+	case 'p':
+		pam = 1;
 		break;
 	default:
 		usage();
 	} ARGEND;
-	if (argc)
+
+	if (argc || (farbfeld && pam))
 		usage();
+
+	if (farbfeld || pam) {
+		if (farbfeld)
+			conv_fail_msg = "not a valid farbfeld file, try without -f";
+		else
+			conv_fail_msg = "not a valid 16-bit RGBA portable arbitrary map file, try without -p";
+		file = "<stdin>";
+		pipe_rw[0] = STDIN_FILENO;
+		goto after_fork;
+	}
 
 	if (pipe(pipe_rw))
 		eprintf("pipe:");
@@ -86,30 +107,48 @@ main(int argc, char *argv[])
 	}
 
 	close(pipe_rw[1]);
+after_fork:
+
+	if (farbfeld) {
+		for (ptr = 0; ptr < 16; ptr++) {
+			r = read(pipe_rw[0], buf + ptr, sizeof(buf) - ptr);
+			if (r < 0)
+				eprintf("read %s:", file);
+			if (r == 0)
+				eprintf("%s\n", conv_fail_msg);
+			ptr += (size_t)r;
+		}
+		if (memcmp(buf, "farbfeld", 8))
+			eprintf("%s\n", conv_fail_msg);
+		sprintf(width,  "%"PRIu32, ntohl(*(uint32_t *)(buf +  8)));
+		sprintf(height, "%"PRIu32, ntohl(*(uint32_t *)(buf + 12)));
+		ptr = 0;
+		goto header_done;
+	}
 
 	for (ptr = 0;;) {
 		r = read(pipe_rw[0], buf + ptr, sizeof(buf) - ptr);
 		if (r < 0)
-			eprintf("read <subprocess>:");
+			eprintf("read %s:", file);
 		if (r == 0)
-			eprintf("convertion failed\n");
+			eprintf("%s\n", conv_fail_msg);
 		ptr += (size_t)r;
 
 		for (;;) {
 			p = memchr(buf, '\n', ptr);
 			if (!p) {
 				if (ptr == sizeof(buf))
-					eprintf("convertion failed\n");
+					eprintf("%s\n", conv_fail_msg);
 				break;
 			}
 			*p++ = '\0';
 			if (strstr(buf, "WIDTH ") == buf) {
 				if (*width || !buf[6] || strlen(buf + 6) >= sizeof(width))
-					eprintf("convertion failed\n");
+					eprintf("%s\n", conv_fail_msg);
 				strcpy(width, buf + 6);
 			} else if (strstr(buf, "HEIGHT ") == buf) {
 				if (*height || !buf[7] || strlen(buf + 7) >= sizeof(height))
-					eprintf("convertion failed\n");
+					eprintf("%s\n", conv_fail_msg);
 				strcpy(height, buf + 7);
 			} else if (!strcmp(buf, "ENDHDR")) {
 				memmove(buf, p, ptr -= (size_t)(p - buf));
@@ -122,7 +161,7 @@ header_done:
 	n = ptr;
 
 	if (!*width || !*height)
-		eprintf("convertion failed\n");
+		eprintf("%s\n", conv_fail_msg);
 
 	if (!headless) {
 		printf("%s %s xyza\n%cuivf", width, height, 0);
@@ -148,12 +187,15 @@ header_done:
 		}
 		r = read(pipe_rw[0], buf, sizeof(buf));
 		if (r < 0)
-			eprintf("read <subprocess>:");
+			eprintf("read %s:", file);
 		if (r == 0)
 			break;
 		n = (size_t)r;
 	}
 
+	if (farbfeld || pam)
+		return 0;
+	close(pipe_rw[0]);
 	while (waitpid(pid, &status, 0) != pid);
 	return !!status;
 }
