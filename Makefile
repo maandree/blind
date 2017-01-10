@@ -22,6 +22,7 @@ BIN =\
 	vu-split\
 	vu-stack\
 	vu-to-image\
+	vu-transpose\
 	vu-write-head
 
 all: $(BIN)
