@@ -30,7 +30,7 @@ main(int argc, char *argv[])
 	if (argc != 1)
 		usage();
 
-	stream.file = argv[1];
+	stream.file = argv[0];
 	stream.fd = open(stream.file, O_RDONLY);
 	if (stream.fd < 0)
 		eprintf("open %s:", stream.file);
