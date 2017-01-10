@@ -3,6 +3,7 @@
 #include "util.h"
 
 #include <inttypes.h>
+#include <string.h>
 #include <unistd.h>
 
 typedef double pixel_t[4];
@@ -10,7 +11,7 @@ typedef double pixel_t[4];
 static void
 usage(void)
 {
-	eprintf("usage: %s [-f frames] -w width -h height (X Y Z | Y) [alpha]\n", argv0);
+	eprintf("usage: %s [-f frames | -f 'inf'] -w width -h height (X Y Z | Y) [alpha]\n", argv0);
 }
 
 int
@@ -21,11 +22,16 @@ main(int argc, char *argv[])
 	size_t x, y, n;
 	pixel_t buf[1024];
 	ssize_t r;
+	int inf = 0;
+	char *arg;
 
 	ARGBEGIN {
 	case 'f':
-		if (tozu(EARGF(usage()), 1, SIZE_MAX, &frames))
-			eprintf("argument of -f must be an integer in [1, %zu]\n", SIZE_MAX);
+		arg = EARGF(usage());
+		if (!strcmp(arg, "inf"))
+			inf = 1, frames = 0;
+		else if (tozu(arg, 1, SIZE_MAX, &frames))
+			eprintf("argument of -f must be an integer in [1, %zu] or 'inf'\n", SIZE_MAX);
 		break;
 	case 'w':
 		if (tozu(EARGF(usage()), 1, SIZE_MAX, &width))
@@ -64,7 +70,7 @@ main(int argc, char *argv[])
 		buf[x][2] = Z;
 		buf[x][3] = alpha;
 	}
-	while (frames--) {
+	while (inf || frames--) {
 		for (y = height; y--;) {
 			for (x = width; x;) {
 				x -= n = ELEMENTSOF(buf) < x ? ELEMENTSOF(buf) : x;
