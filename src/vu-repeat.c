@@ -3,14 +3,16 @@
 #include "stream.h"
 #include "util.h"
 
+#include <errno.h>
 #include <fcntl.h>
 #include <stdint.h>
+#include <string.h>
 #include <unistd.h>
 
 static void
 usage(void)
 {
-	eprintf("usage: %s count file\n", argv0);
+	eprintf("usage: %s (count | 'inf') file\n", argv0);
 }
 
 int
@@ -20,6 +22,7 @@ main(int argc, char *argv[])
 	size_t count = 0, ptr, n, ptw;
 	ssize_t r;
 	char buf[BUFSIZ];
+	int inf = 0;
 
 	ARGBEGIN {
 	default:
@@ -29,15 +32,18 @@ main(int argc, char *argv[])
 	if (argc != 2)
 		usage();
 
-	if (tozu(argv[0], 0, SIZE_MAX, &count))
+	if (!strcmp(argv[0], "inf")) {
+		inf = 1;
+	} else if (tozu(argv[0], 0, SIZE_MAX, &count)) {
 		eprintf("the count must be an integer in [0, %zu]\n", SIZE_MAX);
+	}
 
 	stream.file = argv[1];
 	stream.fd = open(stream.file, O_RDONLY);
 	if (stream.fd < 0)
 		eprintf("open %s:", stream.file);
 	einit_stream(&stream);
-	if (stream.frames > SIZE_MAX / count)
+	if (count > SIZE_MAX / stream.frames)
 		eprintf("%s: video too long\n", stream.file);
 	stream.frames *= count;
 	fprint_stream_head(stdout, &stream);
@@ -45,12 +51,12 @@ main(int argc, char *argv[])
 	if (ferror(stdout))
 		eprintf("<stdout>:");
 
-	while (count--) {
+	while (inf || count--) {
 		posix_fadvise(stream.fd, 0, 0, POSIX_FADV_SEQUENTIAL);
 		for (ptw = 0; ptw < stream.ptr;) {
 			r = write(STDOUT_FILENO, stream.buf + ptw, stream.ptr - ptw);
 			if (r < 0)
-				eprintf("write <stdout>:");
+				goto writeerr;
 			ptw += (size_t)r;
 		}
 		for (ptr = 0;;) {
@@ -63,12 +69,17 @@ main(int argc, char *argv[])
 			for (ptw = 0; ptw < n;) {
 				r = write(STDOUT_FILENO, buf + ptw, n - ptw);
 				if (r < 0)
-					eprintf("write <stdout>:");
+					goto writeerr;
 				ptw += (size_t)r;
 			}
 		}
 	}
 
 	close(stream.fd);
+	return 0;
+
+writeerr:
+	if (!inf || errno != EPIPE)
+		eprintf("write <stdout>:");
 	return 0;
 }
