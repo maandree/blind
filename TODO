@@ -11,6 +11,6 @@ vu-to-video		use ffmpeg to convert to another format
 vu-primaries		given three selectable primaries split the video into three side-by-side which
 				only one primary active
 vu-crop			crop video, -t for creating tiling instead of cropping
-vu-extend		extend the video on which side with transparency
+vu-extend		extend the video on which side with transparency, , -t for tiling
 vu-distort-map		remap pixels using the X and Y values, -t for tiling, -s for improve quality
 				on downscaling (pixels' neighbours must not change)
