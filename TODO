@@ -1,4 +1,4 @@
-vu-blur			gaussian blur, -c to only blur chroma
+vu-gauss-blur		gaussian blur, -c to only blur chroma
 vu-transform		transformation by matrix multiplication, -t for tiling, -s for improve quality
 				on downscaling (pixels' neighbours must not change)
 vu-chroma-key		replace a chroma with transparency
