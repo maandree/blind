@@ -2,16 +2,11 @@
 #include "stream.h"
 #include "util.h"
 
+#include <sys/stat.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-void
-einit_stream(struct stream *stream)
-{
-	eninit_stream(1, stream);
-}
 
 void
 eninit_stream(int status, struct stream *stream)
@@ -104,12 +99,6 @@ set_pixel_size(struct stream *stream)
 }
 
 void
-eset_pixel_size(struct stream *stream)
-{
-	enset_pixel_size(1, stream);
-}
-
-void
 enset_pixel_size(int status, struct stream *stream)
 {
 	if (set_pixel_size(stream))
@@ -126,12 +115,8 @@ fprint_stream_head(FILE *fp, struct stream *stream)
 }
 
 
-size_t eread_stream(struct stream *stream, size_t n)
-{
-	return enread_stream(1, stream, n);
-}
-
-size_t enread_stream(int status, struct stream *stream, size_t n)
+size_t
+enread_stream(int status, struct stream *stream, size_t n)
 {
 	ssize_t r = read(stream->fd, stream->buf + stream->ptr,
 			 sizeof(stream->buf) - stream->ptr < n ?
@@ -140,4 +125,15 @@ size_t enread_stream(int status, struct stream *stream, size_t n)
 		enprintf(status, "read %s:", stream->file);
 	stream->ptr += (size_t)r;
 	return (size_t)r;
+}
+
+
+void
+eninf_check_fd(int status, int fd, const char *file)
+{
+	struct stat st;
+	if (fstat(fd, &st))
+		eprintf("fstat %s:", file);
+	if (S_ISREG(st.st_mode))
+		eprintf("%s is a regular file, refusing infinite write\n");
 }

@@ -38,6 +38,9 @@ main(int argc, char *argv[])
 		eprintf("the count must be an integer in [0, %zu]\n", SIZE_MAX);
 	}
 
+	if (inf)
+		einf_check_fd(STDOUT_FILENO, "<stdout>");
+
 	stream.file = argv[1];
 	stream.fd = open(stream.file, O_RDONLY);
 	if (stream.fd < 0)

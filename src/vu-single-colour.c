@@ -69,6 +69,9 @@ main(int argc, char *argv[])
 	if (!(argc & 1) && tolf(argv[argc - 1], &alpha))
 		eprintf("the alpha value must be a floating-point value\n");
 
+	if (inf)
+		einf_check_fd(STDOUT_FILENO, "<stdout>");
+
 	strcpy(stream.pixfmt, "xyza");
 	fprint_stream_head(stdout, &stream);
 	fflush(stdout);
