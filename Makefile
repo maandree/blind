@@ -8,8 +8,7 @@ BIN =\
 	vu-dissolve\
 	vu-flip\
 	vu-flop\
-	vu-frame-to-image\
-	vu-image-to-frame\
+	vu-from-image\
 	vu-invert-luma\
 	vu-next-frame\
 	vu-read-head\
@@ -20,6 +19,7 @@ BIN =\
 	vu-set-saturation\
 	vu-single-colour\
 	vu-stack\
+	vu-to-image\
 	vu-write-head
 
 all: $(BIN)
