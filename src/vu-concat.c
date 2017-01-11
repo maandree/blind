@@ -39,6 +39,8 @@ concat_to_stdout(int argc, char *argv[])
 			ewriteall(STDOUT_FILENO, streams->buf, streams->ptr, "<stdout>");
 		close(streams->fd);
 	}
+
+	free(streams);
 }
 
 static void

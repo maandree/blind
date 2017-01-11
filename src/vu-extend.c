@@ -64,10 +64,7 @@ main(int argc, char *argv[])
 	imgh += bottom;
 	echeck_frame_size(imgw, imgh, stream.pixel_size, "output", "<stdout>");
 	m = imgh * (imgw *= stream.pixel_size);
-	image = emalloc(m);
-
-	if (!tile)
-		memset(image, 0, m);
+	image = tile ? emalloc(m) : ecalloc(1, m);
 
 	stream.width += left + right;
 	h = stream.height += top + bottom;
@@ -100,5 +97,7 @@ main(int argc, char *argv[])
 		ewriteall(STDOUT_FILENO, image, m, "<stdout>");
 	}
 
+	free(buf);
+	free(image);
 	return 0;
 }

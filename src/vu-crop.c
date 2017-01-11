@@ -80,5 +80,7 @@ main(int argc, char *argv[])
 		ewriteall(STDOUT_FILENO, image, m, "<stdout>");
 	}
 
+	free(buf);
+	free(image);
 	return 0;
 }
