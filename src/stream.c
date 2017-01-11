@@ -267,3 +267,43 @@ process_two_streams(struct stream *left, struct stream *right, int output_fd, co
 		}
 	}
 }
+
+
+void
+process_multiple_streams(struct stream *streams, size_t n_streams, int output_fd, const char* output_fname,
+			 void (*process)(struct stream *streams, size_t n_streams, size_t n))
+{
+	size_t closed, i, j, n;
+
+	for (i = 1; i < n_streams; i++)
+		echeck_compat(streams + i, streams);
+
+	while (n_streams) {
+		n = SIZE_MAX;
+		for (i = 0; i < n_streams; i++) {
+			if (streams[i].ptr < sizeof(streams->buf) && !eread_stream(streams + i, SIZE_MAX)) {
+				close(streams[i].fd);
+				streams[i].fd = -1;
+			}
+			if (streams[i].ptr && streams[i].ptr < n)
+				n = streams[i].ptr;
+		}
+		n -= n % streams->pixel_size;
+
+		process(streams, n_streams, n);
+		ewriteall(output_fd, streams->buf, n, output_fname);
+
+		closed = SIZE_MAX;
+		for (i = 0; i < n_streams; i++) {
+			memmove(streams[i].buf, streams[i].buf + n, streams[i].ptr -= n);
+			if (streams[i].ptr < streams->pixel_size && streams[i].fd < 0 && closed == SIZE_MAX)
+				closed = i;
+		}
+		if (closed != SIZE_MAX) {
+			for (i = (j = closed) + 1; i < n_streams; i++)
+				if (streams[i].ptr < streams->pixel_size && streams[i].fd < 0)
+					streams[j++] = streams[i];
+			n_streams = j;
+		}
+	}
+}

@@ -43,3 +43,6 @@ void process_each_frame_segmented(struct stream *stream, int output_fd, const ch
 
 void process_two_streams(struct stream *left, struct stream *right, int output_fd, const char* output_fname,
 			 void (*process)(struct stream *left, struct stream *right, size_t n));
+
+void process_multiple_streams(struct stream *streams, size_t n_streams, int output_fd, const char* output_fname,
+			      void (*process)(struct stream *streams, size_t n_streams, size_t n));
