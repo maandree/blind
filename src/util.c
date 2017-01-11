@@ -110,7 +110,7 @@ writeall(int fd, void *buf, size_t n)
 	size_t ptr = 0;
 	ssize_t r;
 	while (ptr < n) {
-		r = write(STDOUT_FILENO, buffer, n);
+		r = write(fd, buffer, n);
 		if (r < 0)
 			return -1;
 		buffer += (size_t)ptr;

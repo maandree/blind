@@ -15,10 +15,9 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t *ends, i, parts, ptr, end, frame_size, max, ptw, n;
+	size_t *ends, i, parts, ptr, end, frame_size, n;
 	FILE *fp;
 	int fd;
-	ssize_t r;
 
 	ENOFLAGS(argc < 2 || argc % 2);
 
@@ -54,17 +53,12 @@ main(int argc, char *argv[])
 		efflush(fp, argv[i * 2]);
 
 		for (end = ends[i] * frame_size; ptr < end; ptr += n) {
-			for (ptw = ptr; stream.ptr && ptw < end;) {
-				max = end - ptw;
-				max = max < stream.ptr ? max : stream.ptr;
-				r = write(fd, stream.buf, max);
-				if (r < 0)
-					eprintf("write %s:\n", argv[i * 2]);
-				memmove(stream.buf, stream.buf + r, stream.ptr - (size_t)r);
-			}
-			n = eread_stream(&stream, end - ptr);
-			if (n == 0)
+			if (stream.ptr == sizeof(stream.buf))
+				n = stream.ptr < end - ptr ? stream.ptr : end - ptr;
+			else if (!(n = eread_stream(&stream, end - ptr)))
 				eprintf("%s: file is shorter than expected\n", stream.file);
+			ewriteall(STDOUT_FILENO, stream.buf, n, "<stdout>");
+			memmove(stream.buf, stream.buf + n, stream.ptr -= n);
 		}
 
 		if (fclose(fp))
