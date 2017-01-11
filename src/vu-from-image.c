@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "util.h"
 
 #include <arpa/inet.h>
@@ -7,6 +6,8 @@
 #include <inttypes.h>
 #include <string.h>
 #include <unistd.h>
+
+USAGE("[-h] [-f | -p]")
 
 static double
 get_value(void *buffer)
@@ -25,21 +26,15 @@ get_value(void *buffer)
 	return ret;
 }
 
-static void
-usage(void)
-{
-	eprintf("usage: [-h] [-f | -p] %s\n", argv0);
-}
-
 int
 main(int argc, char *argv[])
 {
 	int pipe_rw[2];
 	int i, old_fd;
-	pid_t pid;
+	pid_t pid = 0;
 	int status;
 	char buf[8096];
-	size_t ptr, ptw, n;
+	size_t ptr, n;
 	char *p;
 	ssize_t r;
 	double red, green, blue, pixel[4];
@@ -164,10 +159,8 @@ header_done:
 		eprintf("%s\n", conv_fail_msg);
 
 	if (!headless) {
-		printf("%s %s xyza\n%cuivf", width, height, 0);
-		fflush(stdout);
-		if (ferror(stdout))
-			eprintf("<stdout>:");
+		printf("1 %s %s xyza\n%cuivf", width, height, 0);
+		efflush(stdout, "<stdout>");
 	}
 
 	for (;;) {
@@ -178,12 +171,7 @@ header_done:
 			pixel[3] = get_value(buf + ptr + 12);
 
 			srgb_to_ciexyz(red, green, blue, pixel + 0, pixel + 1, pixel + 2);
-
-			for (ptw = 0; ptw < sizeof(pixel); ptw += (size_t)r) {
-				r = write(STDOUT_FILENO, (char *)pixel + ptw, sizeof(pixel) - ptw);
-				if (r < 0)
-					eprintf("write <stdout>:");
-			}
+			ewriteall(STDOUT_FILENO, pixel, sizeof(pixel), "<stdout>");
 		}
 		r = read(pipe_rw[0], buf, sizeof(buf));
 		if (r < 0)

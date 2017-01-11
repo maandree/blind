@@ -4,6 +4,7 @@
 
 #include <sys/stat.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -133,7 +134,60 @@ eninf_check_fd(int status, int fd, const char *file)
 {
 	struct stat st;
 	if (fstat(fd, &st))
-		eprintf("fstat %s:", file);
+		enprintf(status, "fstat %s:", file);
 	if (S_ISREG(st.st_mode))
-		eprintf("%s is a regular file, refusing infinite write\n");
+		enprintf(status, "%s is a regular file, refusing infinite write\n");
+}
+
+
+int
+check_frame_size(size_t width, size_t height, size_t pixel_size)
+{
+	if (!width || !height || !pixel_size)
+		return 1;
+	if (width > SIZE_MAX / height)
+		return 0;
+	if (width * height > SIZE_MAX / pixel_size)
+		return 0;
+	return 1;
+}
+
+void
+encheck_frame_size(int status, size_t width, size_t height, size_t pixel_size, const char *prefix, const char *fname)
+{
+	if (!check_frame_size(width, height, pixel_size))
+		enprintf(status, "%s: %s%svideo frame is too large\n",
+			 prefix ? prefix : "", (prefix && *prefix) ? " " : "", fname);
+}
+
+
+void
+encheck_compat(int status, const struct stream *a, const struct stream *b)
+{
+	if (a->width != b->width || a->height != b->height)
+		eprintf("videos do not have the same geometry\n");
+	if (strcmp(a->pixfmt, b->pixfmt))
+		eprintf("videos use incompatible pixel formats\n");
+}
+
+
+int
+enread_frame(int status, struct stream *stream, void *buf, size_t n)
+{
+	char *buffer = buf;
+	ssize_t r;
+	for (; stream->ptr < n; stream->ptr += (size_t)r) {
+		r = read(stream->fd, buffer + stream->ptr, n - stream->ptr);
+		if (r < 0) {
+			eprintf("read %s:", stream->file);
+		} else if (r == 0) {
+			if (!stream->ptr)
+				break;
+			eprintf("%s: incomplete frame", stream->file);
+		}
+	}
+	if (!stream->ptr)
+		return 0;
+	stream->ptr = 0;
+	return 1;
 }

@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "stream.h"
 #include "util.h"
 
@@ -8,11 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static void
-usage(void)
-{
-	eprintf("usage: %s [-i] alpha-stream\n", argv0);
-}
+USAGE("[-i] alpha-stream")
 
 static void
 process_xyza(struct stream *colour, struct stream *alpha, size_t n)
@@ -42,10 +37,8 @@ int
 main(int argc, char *argv[])
 {
 	int invert = 0;
-	struct stream colour;
-	struct stream alpha;
-	ssize_t r;
-	size_t i, n;
+	struct stream colour, alpha;
+	size_t n;
 	void (*process)(struct stream *colour, struct stream *alpha, size_t n) = NULL;
 
 	ARGBEGIN {
@@ -64,15 +57,10 @@ main(int argc, char *argv[])
 	einit_stream(&colour);
 
 	alpha.file = argv[0];
-	alpha.fd = open(alpha.file, O_RDONLY);
-	if (alpha.fd < 0)
-		eprintf("open %s:", alpha.file);
+	alpha.fd = eopen(alpha.file, O_RDONLY);
 	einit_stream(&alpha);
 
-	if (colour.width != alpha.width || colour.height != alpha.height)
-		eprintf("videos do not have the same geometry\n");
-	if (colour.pixel_size != alpha.pixel_size)
-		eprintf("videos use incompatible pixel formats\n");
+	echeck_compat(&colour, &alpha);
 
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = invert ? process_xyza_i : process_xyza;
@@ -98,12 +86,7 @@ main(int argc, char *argv[])
 
 		process(&colour, &alpha, n);
 
-		for (i = 0; i < n; i += (size_t)r) {
-			r = write(STDOUT_FILENO, colour.buf + i, n - i);
-			if (r < 0)
-				eprintf("write <stdout>:");
-		}
-
+		ewriteall(STDOUT_FILENO, colour.buf, n, "<stdout>");
 		if ((n & 3) || colour.ptr != alpha.ptr) {
 			memmove(colour.buf, colour.buf + n, colour.ptr);
 			memmove(alpha.buf,  alpha.buf  + n, alpha.ptr);
@@ -113,11 +96,7 @@ main(int argc, char *argv[])
 	if (alpha.fd >= 0)
 		close(alpha.fd);
 
-	for (i = 0; i < colour.ptr; i += (size_t)r) {
-		r = write(STDOUT_FILENO, colour.buf + i, colour.ptr - i);
-		if (r < 0)
-			eprintf("write <stdout>:");
-	}
+	ewriteall(STDOUT_FILENO, colour.buf, colour.ptr, "<stdout>");
 
 	if (colour.fd >= 0) {
 		for (;;) {
@@ -127,12 +106,7 @@ main(int argc, char *argv[])
 				colour.fd = -1;
 				break;
 			}
-
-			for (i = 0; i < colour.ptr; i += (size_t)r) {
-				r = write(STDOUT_FILENO, colour.buf + i, colour.ptr - i);
-				if (r < 0)
-					eprintf("write <stdout>:");
-			}
+			ewriteall(STDOUT_FILENO, colour.buf, colour.ptr, "<stdout>");
 		}
 	}
 

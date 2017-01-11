@@ -75,4 +75,14 @@ extern char *argv0;
 
 #define LNGARG()	&argv[0][0]
 
+#define EARG()		EARGF(usage())
+
+#define ENOFLAGS(...)	ARGBEGIN {\
+			default:\
+				usage();\
+			} ARGEND;\
+			if (__VA_ARGS__)\
+				usage()
+
+
 #endif

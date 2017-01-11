@@ -9,12 +9,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <unistd.h>
 
 char *argv0;
 
-static void
-xvprintf(const char *fmt, va_list ap)
+void
+weprintf(const char *fmt, ...)
 {
+	va_list ap;
+	va_start(ap, fmt);
+
 	if (argv0 && strncmp(fmt, "usage", strlen("usage")))
 		fprintf(stderr, "%s: ", argv0);
 
@@ -24,39 +28,7 @@ xvprintf(const char *fmt, va_list ap)
 		fputc(' ', stderr);
 		perror(NULL);
 	}
-}
 
-void
-eprintf(const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	xvprintf(fmt, ap);
-	va_end(ap);
-
-	exit(1);
-}
-
-void
-enprintf(int status, const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	xvprintf(fmt, ap);
-	va_end(ap);
-
-	exit(status);
-}
-
-void
-weprintf(const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	xvprintf(fmt, ap);
 	va_end(ap);
 }
 
@@ -132,39 +104,17 @@ erange:
 
 
 int
-fshut(FILE *fp, const char *fname)
+writeall(int fd, void *buf, size_t n)
 {
- 	int ret = 0;
-
-        /* fflush() is undefined for input streams by ISO C,
-         * but not POSIX 2008 if you ignore ISO C overrides.
-         * Leave it unchecked and rely on the following
-         * functions to detect errors.
-         */
-        fflush(fp);
-
-        if (ferror(fp) && !ret) {
-        	weprintf("ferror %s:", fname);
-                ret = 1;
-        }
-
-        if (fclose(fp) && !ret) {
-                weprintf("fclose %s:", fname);
-		ret = 1;
+	char *buffer = buf;
+	size_t ptr = 0;
+	ssize_t r;
+	while (ptr < n) {
+		r = write(STDOUT_FILENO, buffer, n);
+		if (r < 0)
+			return -1;
+		buffer += (size_t)ptr;
+		n -= (size_t)ptr;
 	}
-
-        return ret;
-}
-
-void
-enfshut(int status, FILE *fp, const char *fname)
-{
- 	if (fshut(fp, fname))
-                exit(status);
-}
-
-void
-efshut(FILE *fp, const char *fname)
-{
-        enfshut(1, fp, fname);
+	return 0;
 }

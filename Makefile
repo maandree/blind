@@ -32,10 +32,11 @@ all: $(BIN)
 %: %.o util.o stream.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
-%.o: src/%.c src/*.h
+%.o: src/%.c src/*.h src/*/*.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 clean:
 	-rm $(BIN) $(BIN:=.o) util.o stream.o
 
 .PHONY: all clean
+.PRECIOUS: util.o stream.o

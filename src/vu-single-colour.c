@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "stream.h"
 #include "util.h"
 
@@ -7,13 +6,9 @@
 #include <string.h>
 #include <unistd.h>
 
-typedef double pixel_t[4];
+USAGE("[-f frames | -f 'inf'] -w width -h height (X Y Z | Y) [alpha]")
 
-static void
-usage(void)
-{
-	eprintf("usage: %s [-f frames | -f 'inf'] -w width -h height (X Y Z | Y) [alpha]\n", argv0);
-}
+typedef double pixel_t[4];
 
 int
 main(int argc, char *argv[])
@@ -32,19 +27,17 @@ main(int argc, char *argv[])
 
 	ARGBEGIN {
 	case 'f':
-		arg = EARGF(usage());
+		arg = EARG();
 		if (!strcmp(arg, "inf"))
 			inf = 1, stream.frames = 0;
-		else if (tozu(arg, 1, SIZE_MAX, &stream.frames))
-			eprintf("argument of -f must be an integer in [1, %zu] or 'inf'\n", SIZE_MAX);
+		else
+			stream.frames = etozu_flag('f', arg, 1, SIZE_MAX);
 		break;
 	case 'w':
-		if (tozu(EARGF(usage()), 1, SIZE_MAX, &stream.width))
-			eprintf("argument of -w must be an integer in [1, %zu]\n", SIZE_MAX);
+		stream.width = etozu_flag('w', EARG(), 1, SIZE_MAX);
 		break;
 	case 'h':
-		if (tozu(EARGF(usage()), 1, SIZE_MAX, &stream.height))
-			eprintf("argument of -h must be an integer in [1, %zu]\n", SIZE_MAX);
+		stream.height = etozu_flag('h', EARG(), 1, SIZE_MAX);
 		break;
 	default:
 		usage();
@@ -56,27 +49,21 @@ main(int argc, char *argv[])
 	if (argc < 3) {
 		X = D65_XYY_X / D65_XYY_Y;
 		Z = 1 / D65_XYY_Y - 1 - X;
-		if (tolf(argv[1], &Y))
-			eprintf("the Y value must be a floating-point value\n");
+		Y = etolf_arg("the Y value", argv[1]);
 	} else {
-		if (tolf(argv[0], &X))
-			eprintf("the X value must be a floating-point value\n");
-		if (tolf(argv[1], &Y))
-			eprintf("the Y value must be a floating-point value\n");
-		if (tolf(argv[2], &Z))
-			eprintf("the Z value must be a floating-point value\n");
+		X = etolf_arg("the X value", argv[0]);
+		Y = etolf_arg("the Y value", argv[1]);
+		Z = etolf_arg("the Z value", argv[2]);
 	}
-	if (!(argc & 1) && tolf(argv[argc - 1], &alpha))
-		eprintf("the alpha value must be a floating-point value\n");
+	if (~argc & 1)
+		alpha = etolf_arg("the alpha value", argv[argc - 1]);
 
 	if (inf)
 		einf_check_fd(STDOUT_FILENO, "<stdout>");
 
 	strcpy(stream.pixfmt, "xyza");
 	fprint_stream_head(stdout, &stream);
-	fflush(stdout);
-	if (ferror(stdout))
-		eprintf("<stdout>:");
+	efflush(stdout, "<stdout>");
 
 	for (x = 0; x < ELEMENTSOF(buf); x++) {
 		buf[x][0] = X;

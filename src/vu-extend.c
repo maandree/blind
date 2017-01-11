@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "stream.h"
 #include "util.h"
 
@@ -8,11 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static void
-usage(void)
-{
-	eprintf("usage: %s [-l left] [-r right] [-a above] [-b below] [-t]\n", argv0);
-}
+USAGE("[-l left] [-r right] [-a above] [-b below] [-t]")
 
 int
 main(int argc, char *argv[])
@@ -27,20 +22,16 @@ main(int argc, char *argv[])
 
 	ARGBEGIN {
 	case 'l':
-		if (tozu(EARGF(usage()), 0, SIZE_MAX, &left))
-			eprintf("argument of -l must be an integer in [0, %zu]\n", SIZE_MAX);
+		left = etozu_flag('l', EARG(), 0, SIZE_MAX);
 		break;
 	case 'r':
-		if (tozu(EARGF(usage()), 0, SIZE_MAX, &right))
-			eprintf("argument of -r must be an integer in [0, %zu]\n", SIZE_MAX);
+		right = etozu_flag('r', EARG(), 0, SIZE_MAX);
 		break;
 	case 'a':
-		if (tozu(EARGF(usage()), 0, SIZE_MAX, &top))
-			eprintf("argument of -a must be an integer in [0, %zu]\n", SIZE_MAX);
+		top = etozu_flag('a', EARG(), 0, SIZE_MAX);
 		break;
 	case 'b':
-		if (tozu(EARGF(usage()), 0, SIZE_MAX, &bottom))
-			eprintf("argument of -b must be an integer in [0, %zu]\n", SIZE_MAX);
+		bottom = etozu_flag('b', EARG(), 0, SIZE_MAX);
 		break;
 	case 't':
 		tile = 1;
@@ -56,14 +47,9 @@ main(int argc, char *argv[])
 	stream.fd = STDIN_FILENO;
 	einit_stream(&stream);
 
-	if (stream.width > SIZE_MAX / stream.pixel_size)
-		eprintf("<stdin>: video frame is too large\n");
-	n = stream.width * stream.pixel_size;
-	if (n > SIZE_MAX / stream.height)
-		eprintf("<stdin>: video frame is too large\n");
-	n *= stream.height;
-	if (!(buf = malloc(n)))
-		eprintf("malloc:");
+	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
+	n = stream.height * stream.width * stream.pixel_size;
+	buf = emalloc(n);
 
 	if (stream.width > SIZE_MAX - left)
 		eprintf("<stdout>: output video is too wide\n");
@@ -77,14 +63,9 @@ main(int argc, char *argv[])
 	if (imgh > SIZE_MAX - bottom)
 		eprintf("<stdout>: output video is too tall\n");
 	imgh += bottom;
-	if (imgw > SIZE_MAX / stream.pixel_size)
-		eprintf("<stdout>: output video frame is too large\n");
-	m = imgw *= stream.pixel_size;
-	if (m > SIZE_MAX / imgh)
-		eprintf("<stdout>: output video frame is too large\n");
-	m *= imgh;
-	if (!(image = malloc(m)))
-		eprintf("malloc:");
+	echeck_frame_size(imgw, imgh, stream.pixel_size, "output", "<stdout>");
+	m = imgh * (imgw *= stream.pixel_size);
+	image = emalloc(m);
 
 	if (!tile)
 		memset(image, 0, m);
@@ -92,9 +73,7 @@ main(int argc, char *argv[])
 	stream.width += left + right;
 	h = stream.height += top + bottom;
 	fprint_stream_head(stdout, &stream);
-	fflush(stdout);
-	if (ferror(stdout))
-		eprintf("<stdout>:");
+	efflush(stdout, "<stdout>");
 	stream.width -= left + right;
 	stream.height -= top + bottom;
 
@@ -133,11 +112,7 @@ main(int argc, char *argv[])
 				memcpy(image + y * imgw, image + (((y + yoff) % stream.height) + top) * imgw, imgw);
 		}
 
-		for (ptr = 0; ptr < m; ptr += (size_t)r) {
-			r = write(STDOUT_FILENO, image + ptr, m - ptr);
-			if (r < 0)
-				eprintf("write <stdout>");
-		}
+		ewriteall(STDOUT_FILENO, image, m, "<stdout>");
 	}
 
 	return 0;

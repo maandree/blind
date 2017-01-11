@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "stream.h"
 #include "util.h"
 
@@ -8,11 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static void
-usage(void)
-{
-	eprintf("usage: %s [-w] saturation-stream\n", argv0);
-}
+USAGE("[-w] saturation-stream")
 
 static void
 process_xyza(struct stream *colour, struct stream *satur, size_t n)
@@ -51,11 +46,9 @@ process_xyza_w(struct stream *colour, struct stream *satur, size_t n)
 int
 main(int argc, char *argv[])
 {
-	struct stream colour;
-	struct stream satur;
+	struct stream colour, satur;
 	int whitepoint = 0;
-	ssize_t r;
-	size_t i, n;
+	size_t n;
 	void (*process)(struct stream *colour, struct stream *satur, size_t n) = NULL;
 
 	ARGBEGIN {
@@ -74,15 +67,10 @@ main(int argc, char *argv[])
 	einit_stream(&colour);
 
 	satur.file = argv[0];
-	satur.fd = open(satur.file, O_RDONLY);
-	if (satur.fd < 0)
-		eprintf("open %s:", satur.file);
+	satur.fd = eopen(satur.file, O_RDONLY);
 	einit_stream(&satur);
 
-	if (colour.width != satur.width || colour.height != satur.height)
-		eprintf("videos do not have the same geometry\n");
-	if (colour.pixel_size != satur.pixel_size)
-		eprintf("videos use incompatible pixel formats\n");
+	echeck_compat(&colour, &satur);
 
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = whitepoint ? process_xyza_w : process_xyza;
@@ -108,12 +96,7 @@ main(int argc, char *argv[])
 
 		process(&colour, &satur, n);
 
-		for (i = 0; i < n; i += (size_t)r) {
-			r = write(STDOUT_FILENO, colour.buf + i, n - i);
-			if (r < 0)
-				eprintf("write <stdout>:");
-		}
-
+		ewriteall(STDOUT_FILENO, colour.buf, n, "<stdout>");
 		if ((n & 3) || colour.ptr != satur.ptr) {
 			memmove(colour.buf, colour.buf + n, colour.ptr);
 			memmove(satur.buf,  satur.buf  + n, satur.ptr);
@@ -123,11 +106,7 @@ main(int argc, char *argv[])
 	if (satur.fd >= 0)
 		close(satur.fd);
 
-	for (i = 0; i < colour.ptr; i += (size_t)r) {
-		r = write(STDOUT_FILENO, colour.buf + i, colour.ptr - i);
-		if (r < 0)
-			eprintf("write <stdout>:");
-	}
+	ewriteall(STDOUT_FILENO, colour.buf, colour.ptr, "<stdout>");
 
 	if (colour.fd >= 0) {
 		for (;;) {
@@ -137,12 +116,7 @@ main(int argc, char *argv[])
 				colour.fd = -1;
 				break;
 			}
-
-			for (i = 0; i < colour.ptr; i += (size_t)r) {
-				r = write(STDOUT_FILENO, colour.buf + i, colour.ptr - i);
-				if (r < 0)
-					eprintf("write <stdout>:");
-			}
+			ewriteall(STDOUT_FILENO, colour.buf, colour.ptr, "<stdout>");
 		}
 	}
 

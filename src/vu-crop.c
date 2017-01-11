@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "stream.h"
 #include "util.h"
 
@@ -8,11 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static void
-usage(void)
-{
-	eprintf("usage: [-t] width height left top %s\n", argv0);
-}
+USAGE("[-t] width height left top")
 
 int
 main(int argc, char *argv[])
@@ -20,7 +15,7 @@ main(int argc, char *argv[])
 	struct stream stream;
 	char *buf, *image, *p;
 	size_t width = 0, height = 0, left = 0, top = 0;
-	size_t off, yoff, x, y, irown, orown, ptr, n, m;
+	size_t off, yoff = 0, x, y, irown, orown, ptr, n, m;
 	ssize_t r;
 	int tile = 0;
 
@@ -35,14 +30,10 @@ main(int argc, char *argv[])
 	if (argc != 4)
 		usage();
 
-	if (tozu(argv[0], 1, SIZE_MAX, &width))
-		eprintf("width be an integer in [1, %zu]\n", SIZE_MAX);
-	if (tozu(argv[1], 1, SIZE_MAX, &height))
-		eprintf("height be an integer in [1, %zu]\n", SIZE_MAX);
-	if (tozu(argv[2], 0, SIZE_MAX, &left))
-		eprintf("left position be an integer in [0, %zu]\n", SIZE_MAX);
-	if (tozu(argv[3], 0, SIZE_MAX, &top))
-		eprintf("top position be an integer in [0, %zu]\n", SIZE_MAX);
+	width  = etozu_arg("the width",         argv[0], 1, SIZE_MAX);
+	height = etozu_arg("the height",        argv[1], 1, SIZE_MAX);
+	left   = etozu_arg("the left position", argv[2], 0, SIZE_MAX);
+	top    = etozu_arg("the top position",  argv[3], 0, SIZE_MAX);
 
 	stream.file = "<stdin>";
 	stream.fd = STDIN_FILENO;
@@ -58,29 +49,21 @@ main(int argc, char *argv[])
 		stream.width  = x;
 		stream.height = y;
 	}
-	fflush(stdout);
-	if (ferror(stdout))
-		eprintf("<stdout>:");
+	efflush(stdout, "<stdout>");
 
-	if (stream.width > SIZE_MAX / stream.pixel_size)
-		eprintf("<stdin>: video frame is too large\n");
-	n = irown = stream.width * stream.pixel_size;
-	if (n > SIZE_MAX / stream.height)
-		eprintf("<stdin>: video frame is too large\n");
-	n *= stream.height;
-	if (!(buf = malloc(n)))
-		eprintf("malloc:");
+	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
+	n = stream.height * (irown = stream.width * stream.pixel_size);
+	buf = emalloc(n);
 	orown = width * stream.pixel_size;
 	m = tile ? n : height * orown;
-	if (!(image = malloc(m)))
-		eprintf("malloc:");
+	image = emalloc(m);
 
 	left *= stream.pixel_size;
-	if (tile) {
+	if (!tile) {
+		off = top * irown;
+	} else {
 		off  = (orown  - (left % orown))  % orown;
 		yoff = (height - (top  % height)) % height;
-	} else {
-		off = top * irown;
 	}
 	memcpy(buf, stream.buf, ptr = stream.ptr);
 	for (;;) {
@@ -106,14 +89,9 @@ main(int argc, char *argv[])
 				for (x = 0; x < irown; x++, ptr++)
 					image[ptr++] = p[(x + off) % orown];
 			}
-			
 		}
 
-		for (ptr = 0; ptr < m; ptr += (size_t)r) {
-			r = write(STDOUT_FILENO, image + ptr, m - ptr);
-			if (r < 0)
-				eprintf("write <stdout>");
-		}
+		ewriteall(STDOUT_FILENO, image, m, "<stdout>");
 	}
 
 	return 0;

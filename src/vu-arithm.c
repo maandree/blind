@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "stream.h"
 #include "util.h"
 
@@ -9,14 +8,10 @@
 #include <string.h>
 #include <unistd.h>
 
+USAGE("right-hand-stream")
+
 /* Because the syntax for a function returning a function pointer is disgusting. */
 typedef void (*process_func)(struct stream *left, struct stream *right, size_t n);
-
-static void
-usage(void)
-{
-	eprintf("usage: %s operation right-hand-stream\n", argv0);
-}
 
 #define LIST_OPERATORS\
 	X(add, *lh += rh)\
@@ -64,32 +59,20 @@ main(int argc, char *argv[])
 {
 	struct stream left;
 	struct stream right;
-	ssize_t r;
-	size_t i, n;
+	size_t n;
 	process_func process = NULL;
 
-	ARGBEGIN {
-	default:
-		usage();
-	} ARGEND;
-
-	if (argc != 2)
-		usage();
+	ENOFLAGS(argc != 2);
 
 	left.file = "<stdin>";
 	left.fd = STDIN_FILENO;
 	einit_stream(&left);
 
 	right.file = argv[1];
-	right.fd = open(right.file, O_RDONLY);
-	if (right.fd < 0)
-		eprintf("open %s:", right.file);
+	right.fd = eopen(right.file, O_RDONLY);
 	einit_stream(&right);
 
-	if (left.width != right.width || left.height != right.height)
-		eprintf("videos do not have the same geometry\n");
-	if (left.pixel_size != right.pixel_size)
-		eprintf("videos use incompatible pixel formats\n");
+	echeck_compat(&left, &right);
 
 	if (!strcmp(left.pixfmt, "xyza"))
 		process = get_lf_process(argv[0]);
@@ -115,12 +98,7 @@ main(int argc, char *argv[])
 
 		process(&left, &right, n);
 
-		for (i = 0; i < n; i += (size_t)r) {
-			r = write(STDOUT_FILENO, left.buf + i, n - i);
-			if (r < 0)
-				eprintf("write <stdout>:");
-		}
-
+		ewriteall(STDOUT_FILENO, left.buf, n, "<stdout>");
 		if ((n & 3) || left.ptr != right.ptr) {
 			memmove(left.buf,  left.buf  + n, left.ptr);
 			memmove(right.buf, right.buf + n, right.ptr);
@@ -130,11 +108,7 @@ main(int argc, char *argv[])
 	if (right.fd >= 0)
 		close(right.fd);
 
-	for (i = 0; i < left.ptr; i += (size_t)r) {
-		r = write(STDOUT_FILENO, left.buf + i, left.ptr - i);
-		if (r < 0)
-			eprintf("write <stdout>:");
-	}
+	ewriteall(STDOUT_FILENO, left.buf, left.ptr, "<stdout>");
 
 	if (left.fd >= 0) {
 		for (;;) {
@@ -144,12 +118,7 @@ main(int argc, char *argv[])
 				left.fd = -1;
 				break;
 			}
-
-			for (i = 0; i < left.ptr; i += (size_t)r) {
-				r = write(STDOUT_FILENO, left.buf + i, left.ptr - i);
-				if (r < 0)
-					eprintf("write <stdout>:");
-			}
+			ewriteall(STDOUT_FILENO, left.buf, left.ptr, "<stdout>");
 		}
 	}
 

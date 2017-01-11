@@ -1,47 +1,29 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "stream.h"
 #include "util.h"
 
-#include <fcntl.h>
 #include <limits.h>
-#include <stdint.h>
 #include <unistd.h>
 
-static void
-usage(void)
-{
-	eprintf("usage: %s file\n", argv0);
-}
+USAGE("file")
 
 int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t frame_size, ptr, end, n, ptw;
+	size_t frame_size, ptr, end, n;
 	ssize_t r;
 	char buf[BUFSIZ];
 
-	ARGBEGIN {
-	default:
-		usage();
-	} ARGEND;
-
-	if (argc != 1)
-		usage();
+	ENOFLAGS(argc != 1);
 
 	stream.file = argv[0];
-	stream.fd = open(stream.file, O_RDONLY);
-	if (stream.fd < 0)
-		eprintf("open %s:", stream.file);
+	stream.fd = eopen(stream.file, O_RDONLY);
 	einit_stream(&stream);
 	fprint_stream_head(stdout, &stream);
-	fflush(stdout);
-	if (ferror(stdout))
-		eprintf("<stdout>:");
-	if (stream.width > SIZE_MAX / stream.height)
-		eprintf("%s: video is too large\n", stream.file);
-	frame_size = stream.width * stream.height;
+	efflush(stdout, "<stdout>");
+	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
+	frame_size = stream.width * stream.height * stream.pixel_size;
 	if (stream.frames > SSIZE_MAX / frame_size)
 		eprintf("%s: video is too large\n", stream.file);
 
@@ -56,12 +38,7 @@ main(int argc, char *argv[])
 			else if (r == 0)
 				eprintf("%s: file is shorter than expected\n", stream.file);
 			ptr += n = (size_t)r;
-			for (ptw = 0; ptw < n;) {
-				r = write(STDOUT_FILENO, buf + ptw, n - ptw);
-				if (r < 0)
-					eprintf("write <stdout>:");
-				ptw += (size_t)r;
-			}
+			ewriteall(STDOUT_FILENO, buf, n, "<stdout>");
 		}
 	}
 

@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "stream.h"
 #include "util.h"
 
@@ -7,6 +6,8 @@
 #include <inttypes.h>
 #include <string.h>
 #include <unistd.h>
+
+USAGE("[-b] bottom-stream ... top-stream")
 
 static void
 process_xyza(struct stream *streams, size_t n_streams, size_t n)
@@ -65,12 +66,6 @@ process_xyza_b(struct stream *streams, size_t n_streams, size_t n)
 	}
 }
 
-static void
-usage(void)
-{
-	eprintf("usage: %s [-b] bottom-stream ... top-stream\n", argv0);
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -78,7 +73,6 @@ main(int argc, char *argv[])
 	size_t n_streams;
 	int blend = 0;
 	size_t i, j, n;
-	ssize_t r;
 	size_t closed;
 	void (*process)(struct stream *streams, size_t n_streams, size_t n) = NULL;
 
@@ -94,21 +88,13 @@ main(int argc, char *argv[])
 		usage();
 
 	n_streams = (size_t)argc;
-	streams = calloc(n_streams, sizeof(*streams));
-	if (!streams)
-		eprintf("calloc:");
+	streams = ecalloc(n_streams, sizeof(*streams));
 
 	for (i = 0; i < n_streams; i++) {
 		streams[i].file = argv[i];
-		streams[i].fd = open(streams[i].file, O_RDONLY);
-		if (streams[i].fd < 0)
-			eprintf("open %s:", streams[i].file);
-		if (i) {
-			if (streams[i].width != streams->width || streams[i].height != streams->height)
-				eprintf("videos do not have the same geometry\n");
-			if (strcmp(streams[i].pixfmt, streams->pixfmt))
-				eprintf("videos use incompatible pixel formats\n");
-		}
+		streams[i].fd = eopen(streams[i].file, O_RDONLY);
+		if (i)
+			echeck_compat(streams + i, streams);
 	}
 
 	if (!strcmp(streams->pixfmt, "xyza"))
@@ -129,12 +115,8 @@ main(int argc, char *argv[])
 		n -= n % streams->pixel_size;
 
 		process(streams, n_streams, n);
-		for (j = 0; j < n;) {
-			r = write(STDOUT_FILENO, streams->buf + j, n - j);
-			if (r < 0)
-				eprintf("write <stdout>:");
-			j += (size_t)r;
-		}
+
+		ewriteall(STDOUT_FILENO, streams->buf, n, "<stdout>");
 
 		closed = SIZE_MAX;
 		for (i = 0; i < n_streams; i++) {

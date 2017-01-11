@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "stream.h"
 #include "util.h"
 
@@ -10,11 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static void
-usage(void)
-{
-	eprintf("usage: %s (file end-point) ...\n", argv0);
-}
+USAGE("(file (end-point | 'end')) ...")
 
 int
 main(int argc, char *argv[])
@@ -25,20 +20,13 @@ main(int argc, char *argv[])
 	int fd;
 	ssize_t r;
 
-	ARGBEGIN {
-	default:
-		usage();
-	} ARGEND;
-
-	if (argc < 2 || argc % 2)
-		usage();
+	ENOFLAGS(argc < 2 || argc % 2);
 
 	stream.file = "<stdin>";
 	stream.fd = STDIN_FILENO;
 	einit_stream(&stream);
-	if (stream.width > SIZE_MAX / stream.height)
-		eprintf("%s: video is too large\n", stream.file);
-	frame_size = stream.width * stream.height;
+	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
+	frame_size = stream.width * stream.height * stream.pixel_size;
 	if (stream.frames > SSIZE_MAX / frame_size)
 		eprintf("%s: video is too large\n", stream.file);
 
@@ -58,16 +46,12 @@ main(int argc, char *argv[])
 
 	ptr = 0;
 	for (i = 0; i < parts; i++) {
-		fd = open(argv[i * 2], O_WRONLY);
-		if (fd < 0)
-			eprintf("open %s:", argv[i * 2]);
+		fd = eopen(argv[i * 2], O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		fp = fdopen(fd, "wb");
 
 		stream.frames = ends[i] - (i ? ends[i - 1] : 0);
 		fprint_stream_head(fp, &stream);
-		fflush(fp);
-		if (ferror(fp))
-			eprintf("%s:", argv[i * 2]);
+		efflush(fp, argv[i * 2]);
 
 		for (end = ends[i] * frame_size; ptr < end; ptr += n) {
 			for (ptw = ptr; stream.ptr && ptw < end;) {

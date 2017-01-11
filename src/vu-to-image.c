@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "stream.h"
 #include "util.h"
 
@@ -10,15 +9,11 @@
 #include <string.h>
 #include <unistd.h>
 
+USAGE("[-d depth | -f]")
+
 static int luma_warning_triggered = 0;
 static int gamut_warning_triggered = 0;
 static int alpha_warning_triggered = 0;
-
-static void
-usage(void)
-{
-	eprintf("usage: %s [-d depth | -f]\n", argv0);
-}
 
 static void
 write_pixel(double R, double G, double B, double A, int bytes, unsigned long long int max)
@@ -26,8 +21,6 @@ write_pixel(double R, double G, double B, double A, int bytes, unsigned long lon
 	unsigned long long int colours[4];
 	unsigned char buf[4 * 8];
 	int i, j, k, bm = bytes - 1;
-	size_t ptr, n;
-	ssize_t r;
 
 	if (R < 0 || G < 0 || B < 0 || R > 1 || G > 1 || B > 1) {
 		if (gamut_warning_triggered) {
@@ -60,12 +53,7 @@ write_pixel(double R, double G, double B, double A, int bytes, unsigned long lon
 		}
 	}
 
-	n = (size_t)bytes * 4;
-	for (ptr = 0; ptr < n; ptr += (size_t)r) {
-		r = write(STDOUT_FILENO, buf + ptr, n - ptr);
-		if (r < 0)
-			eprintf("write <stdout>:");
-	}
+	ewriteall(STDOUT_FILENO, buf, (size_t)bytes * 4, "<stdout>");
 }
 
 static void
@@ -103,8 +91,7 @@ main(int argc, char *argv[])
 
 	ARGBEGIN {
 	case 'd':
-		if (toi(EARGF(usage()), 1, 64, &depth))
-			eprintf("argument of -d must be an integer in [1, 64]\n");
+		depth = etoi_flag('d', EARG(), 1, 64);
 		break;
 	case 'f':
 		farbfeld = 1;
@@ -151,18 +138,13 @@ main(int argc, char *argv[])
 		       "TUPLTYPE RGB_ALPHA\n"
 		       "ENDHDR\n", stream.width, stream.height, max);
 	}
-	fflush(stdout);
-	if (ferror(stdout))
-		eprintf("<stdout>:");
+	efflush(stdout, "<stdout>");
 
-	for (;;) {
-		n = stream.ptr;
-		n -= n % stream.pixel_size;
+	do {
+		n = stream.ptr - (stream.ptr % stream.pixel_size);
 		process(&stream, n, bytes, max);
 		memmove(stream.buf, stream.buf + n, stream.ptr -= n);
-		if (!eread_stream(&stream, SIZE_MAX))
-			break;
-	}
+	} while (eread_stream(&stream, SIZE_MAX));
 
 	return 0;
 }

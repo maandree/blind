@@ -1,53 +1,30 @@
 /* See LICENSE file for copyright and license details. */
-#include "arg.h"
 #include "stream.h"
 #include "util.h"
 
+#include <sys/mman.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <string.h>
 #include <unistd.h>
 
-static void
-usage(void)
-{
-	eprintf("usage: %s first-stream ... last-stream\n", argv0);
-}
+USAGE("[-o output-file] first-stream ... last-stream")
 
-int
-main(int argc, char *argv[])
+static void
+concat_to_stdout(int argc, char *argv[])
 {
 	struct stream *streams;
-	size_t ptr, frames = 0;
-	ssize_t r;
+	size_t frames = 0;
 	int i;
 
-	ARGBEGIN {
-	default:
-		usage();
-	} ARGEND;
-
-	if (argc < 2)
-		usage();
-
-	streams = malloc((size_t)argc * sizeof(*streams));
-	if (!streams)
-		eprintf("malloc:");
+	streams = emalloc((size_t)argc * sizeof(*streams));
 
 	for (i = 0; i < argc; i++) {
 		streams[i].file = argv[i];
-		streams[i].fd = open(streams[i].file, O_RDONLY);
-		if (streams[i].fd < 0)
-			eprintf("open %s:", streams[i].file);
+		streams[i].fd = eopen(streams[i].file, O_RDONLY);
 		einit_stream(streams + i);
-
-		if (i) {
-			if (streams[i].width != streams->width || streams[i].height != streams->height)
-				eprintf("videos do not have the same geometry\n");
-			if (strcmp(streams[i].pixfmt, streams->pixfmt))
-				eprintf("videos use incompatible pixel formats\n");
-		}
-
+		if (i)
+			echeck_compat(streams + i, streams);
 		if (streams[i].frames > SIZE_MAX - frames)
 			eprintf("resulting video is too long\n");
 		frames += streams[i].frames;
@@ -55,20 +32,79 @@ main(int argc, char *argv[])
 
 	streams->frames = frames;
 	fprint_stream_head(stdout, streams);
-	fflush(stdout);
-	if (ferror(stdout))
-		eprintf("<stdout>:");
+	efflush(stdout, "<stdout>");
 
-	for (i = 0; i < argc; i++) {
-		for (; eread_stream(streams + i, SIZE_MAX); streams[i].ptr = 0) {
-			for (ptr = 0; ptr < streams[i].ptr; ptr += (size_t)r) {
-				r = write(STDOUT_FILENO, streams[i].buf + ptr, streams[i].ptr - ptr);
-				if (r < 0)
-					eprintf("write <stdout>:");
-			}
-		}
-		close(streams[i].fd);
+	for (; argc--; streams++) {
+		for (; eread_stream(streams, SIZE_MAX); streams->ptr = 0)
+			ewriteall(STDOUT_FILENO, streams->buf, streams->ptr, "<stdout>");
+		close(streams->fd);
 	}
+}
+
+static void
+concat_to_file(int argc, char *argv[], char *output_file)
+{
+	struct stream stream, refstream;
+	int first = 0;
+	int fd = eopen(output_file, O_RDWR | O_CREAT | O_TRUNC, 0666);
+	char head[3 * sizeof(size_t) + 4 + sizeof(stream.pixfmt) + 6];
+	ssize_t headlen, size = 0;
+	char *data;
+
+	for (; argc--; argv++) {
+		stream.file = *argv;
+		stream.fd = eopen(stream.file, O_RDONLY);
+		einit_stream(&stream);
+
+		if (first) {
+			stream = refstream;
+		} else {
+			if (refstream.frames > SIZE_MAX - stream.frames)
+				eprintf("resulting video is too long\n");
+			refstream.frames += stream.frames;
+			echeck_compat(&stream, &refstream);
+		}
+
+		for (; eread_stream(&stream, SIZE_MAX); stream.ptr = 0) {
+			ewriteall(STDOUT_FILENO, stream.buf, stream.ptr, "<stdout>");
+			size += stream.ptr;
+		}
+		close(stream.fd);
+	}
+
+	sprintf(head, "%zu %zu %zu %s\n%cuivf%zn",
+		stream.frames, stream.width, stream.height, stream.pixfmt, 0, &headlen);
+
+	ewriteall(STDOUT_FILENO, head, (size_t)headlen, "<stdout>");
+
+	data = mmap(0, size + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+	memmove(data + headlen, data, size);
+	memcpy(data, head, (size_t)headlen);
+	munmap(data, size + (size_t)headlen);
+
+	close(fd);
+}
+
+int
+main(int argc, char *argv[])
+{
+	char *output_file = NULL;
+
+	ARGBEGIN {
+	case 'o':
+		output_file = EARG();
+		break;
+	default:
+		usage();
+	} ARGEND;
+
+	if (argc < 2)
+		usage();
+
+	if (output_file)
+		concat_to_file(argc, argv, output_file);
+	else
+		concat_to_stdout(argc, argv);
 
 	return 0;
 }
