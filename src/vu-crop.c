@@ -16,7 +16,6 @@ main(int argc, char *argv[])
 	char *buf, *image, *p;
 	size_t width = 0, height = 0, left = 0, top = 0;
 	size_t off, yoff = 0, x, y, irown, orown, ptr, n, m;
-	ssize_t r;
 	int tile = 0;
 
 	ARGBEGIN {
@@ -65,21 +64,9 @@ main(int argc, char *argv[])
 		off  = (orown  - (left % orown))  % orown;
 		yoff = (height - (top  % height)) % height;
 	}
-	memcpy(buf, stream.buf, ptr = stream.ptr);
-	for (;;) {
-		for (; ptr < n; ptr += (size_t)r) {
-			r = read(stream.fd, buf + ptr, n - ptr);
-			if (r < 0) {
-				eprintf("read %s:", stream.file);
-			} else if (r == 0) {
-				if (!ptr)
-					break;
-				eprintf("%s: incomplete frame", stream.file);
-			}
-		}
-		if (!ptr)
-			break;
 
+	memcpy(buf, stream.buf, ptr = stream.ptr);
+	while (eread_frame(&stream, buf, n)) {
 		if (!tile) {
 			for (y = 0; y < height; y++)
 				memcpy(image + y * orown, buf + y * irown + off, orown);
@@ -90,7 +77,6 @@ main(int argc, char *argv[])
 					image[ptr++] = p[(x + off) % orown];
 			}
 		}
-
 		ewriteall(STDOUT_FILENO, image, m, "<stdout>");
 	}
 
