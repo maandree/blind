@@ -14,7 +14,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t count = 0, ptr, n;
+	size_t count = 0, ptr;
 	ssize_t r;
 	char buf[BUFSIZ];
 	int inf = 0;
@@ -39,26 +39,21 @@ main(int argc, char *argv[])
 	efflush(stdout, "<stdout>");
 
 	while (inf || count--) {
-		posix_fadvise(stream.fd, 0, 0, POSIX_FADV_SEQUENTIAL);
-		if (writeall(STDOUT_FILENO, stream.buf, stream.ptr))
-			goto writeerr;
-		for (ptr = 0;;) {
+		posix_fadvise(stream.fd, stream.headlen, 0, POSIX_FADV_SEQUENTIAL);
+		for (ptr = stream.headlen;; ptr += (size_t)r) {
 			r = pread(stream.fd, buf, sizeof(buf), ptr);
 			if (r < 0)
 				eprintf("pread %s:", stream.file);
-			else if (r == 0)
+			if (r == 0)
 				break;
-			ptr += n = (size_t)r;
-			if (writeall(STDOUT_FILENO, buf, n))
-				goto writeerr;
+			if (writeall(STDOUT_FILENO, buf, (size_t)r)) {
+				if (!inf || errno != EPIPE)
+					eprintf("write <stdout>:");
+				return 0;
+			}
 		}
 	}
 
 	close(stream.fd);
-	return 0;
-
-writeerr:
-	if (!inf || errno != EPIPE)
-		eprintf("write <stdout>:");
 	return 0;
 }
