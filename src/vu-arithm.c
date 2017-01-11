@@ -57,9 +57,7 @@ LIST_OPERATORS
 int
 main(int argc, char *argv[])
 {
-	struct stream left;
-	struct stream right;
-	size_t n;
+	struct stream left, right;
 	process_func process = NULL;
 
 	ENOFLAGS(argc != 2);
@@ -72,55 +70,11 @@ main(int argc, char *argv[])
 	right.fd = eopen(right.file, O_RDONLY);
 	einit_stream(&right);
 
-	echeck_compat(&left, &right);
-
 	if (!strcmp(left.pixfmt, "xyza"))
 		process = get_lf_process(argv[0]);
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", left.pixfmt);
 
-	for (;;) {
-		if (left.ptr < sizeof(left.buf) && !eread_stream(&left, SIZE_MAX)) {
-			close(left.fd);
-			left.fd = -1;
-			break;
-		}
-		if (right.ptr < sizeof(right.buf) && !eread_stream(&right, SIZE_MAX)) {
-			close(right.fd);
-			right.fd = -1;
-			break;
-		}
-
-		n = left.ptr < right.ptr ? left.ptr : right.ptr;
-		n -= n % left.pixel_size;
-		left.ptr -= n;
-		right.ptr -= n;
-
-		process(&left, &right, n);
-
-		ewriteall(STDOUT_FILENO, left.buf, n, "<stdout>");
-		if ((n & 3) || left.ptr != right.ptr) {
-			memmove(left.buf,  left.buf  + n, left.ptr);
-			memmove(right.buf, right.buf + n, right.ptr);
-		}
-	}
-
-	if (right.fd >= 0)
-		close(right.fd);
-
-	ewriteall(STDOUT_FILENO, left.buf, left.ptr, "<stdout>");
-
-	if (left.fd >= 0) {
-		for (;;) {
-			left.ptr = 0;
-			if (!eread_stream(&left, SIZE_MAX)) {
-				close(left.fd);
-				left.fd = -1;
-				break;
-			}
-			ewriteall(STDOUT_FILENO, left.buf, left.ptr, "<stdout>");
-		}
-	}
-
+	process_two_streams(&left, &right, STDOUT_FILENO, "<stdout>", process);
 	return 0;
 }

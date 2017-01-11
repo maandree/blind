@@ -42,7 +42,6 @@ main(int argc, char *argv[])
 {
 	int invert = 0;
 	struct stream colour, mask;
-	size_t n;
 	void (*process)(struct stream *colour, struct stream *mask, size_t n) = NULL;
 
 	ARGBEGIN {
@@ -64,55 +63,11 @@ main(int argc, char *argv[])
 	mask.fd = eopen(mask.file, O_RDONLY);
 	einit_stream(&mask);
 
-	echeck_compat(&colour, &mask);
-
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = invert ? process_xyza_i : process_xyza;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 
-	for (;;) {
-		if (colour.ptr < sizeof(colour.buf) && !eread_stream(&colour, SIZE_MAX)) {
-			close(colour.fd);
-			colour.fd = -1;
-			break;
-		}
-		if (mask.ptr < sizeof(mask.buf) && !eread_stream(&mask, SIZE_MAX)) {
-			close(mask.fd);
-			mask.fd = -1;
-			break;
-		}
-
-		n = colour.ptr < mask.ptr ? colour.ptr : mask.ptr;
-		n -= n % colour.pixel_size;
-		colour.ptr -= n;
-		mask.ptr -= n;
-
-		process(&colour, &mask, n);
-
-		ewriteall(STDOUT_FILENO, colour.buf, n, "<stdout>");
-		if ((n & 3) || colour.ptr != mask.ptr) {
-			memmove(colour.buf, colour.buf + n, colour.ptr);
-			memmove(mask.buf,   mask.buf  + n,  mask.ptr);
-		}
-	}
-
-	if (mask.fd >= 0)
-		close(mask.fd);
-
-	ewriteall(STDOUT_FILENO, colour.buf, colour.ptr, "<stdout>");
-
-	if (colour.fd >= 0) {
-		for (;;) {
-			colour.ptr = 0;
-			if (!eread_stream(&colour, SIZE_MAX)) {
-				close(colour.fd);
-				colour.fd = -1;
-				break;
-			}
-			ewriteall(STDOUT_FILENO, colour.buf, colour.ptr, "<stdout>");
-		}
-	}
-
+	process_two_streams(&colour, &mask, STDOUT_FILENO, "<stdout>", process);
 	return 0;
 }

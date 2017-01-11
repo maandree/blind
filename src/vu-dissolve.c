@@ -64,7 +64,7 @@ main(int argc, char *argv[])
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
 	fmd = fm = stream.frames - 1;
-	EACH_FRAME_SEGMENTED(&stream, process);
+	process_each_frame_segmented(&stream, STDOUT_FILENO, "<stdout>", process);
 
 	return 0;
 }

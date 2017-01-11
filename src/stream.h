@@ -37,19 +37,8 @@ void encheck_frame_size(int status, size_t width, size_t height, size_t pixel_si
 void encheck_compat(int status, const struct stream *a, const struct stream *b);
 int enread_frame(int status, struct stream *stream, void *buf, size_t n);
 
-#define EACH_FRAME_SEGMENTED(stream, process)\
-	do {\
-		size_t size__, f__, r__, n__;\
-		echeck_frame_size((stream)->width, (stream)->height, (stream)->pixel_size, 0, (stream)->file);\
-		size__ = (stream)->height * (stream)->width * (stream)->pixel_size;\
-		for (f__ = 0; f__ < (stream)->frames; f__++) {\
-			for (n__ = size__; n__; n__ -= r__) {\
-				if (!eread_stream((stream), n__))\
-					eprintf("%s: file is shorter than expected\n", (stream)->file);\
-				r__ = (stream)->ptr - ((stream)->ptr % (stream)->pixel_size);\
-				(process)((stream), r__, f__);\
-				ewriteall(STDOUT_FILENO, (stream)->buf, r__, "<stdout>");\
-				memmove((stream)->buf, (stream)->buf + r__, (stream)->ptr -= r__);\
-			}\
-		}\
-	} while (0)
+void process_each_frame_segmented(struct stream *stream, int output_fd, const char* output_fname,
+				  void (*process)(struct stream *stream, size_t n, size_t frame));
+
+void process_two_streams(struct stream *left, struct stream *right, int output_fd, const char* output_fname,
+			 void (*process)(struct stream *left, struct stream *right, size_t n));

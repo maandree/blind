@@ -48,7 +48,6 @@ main(int argc, char *argv[])
 {
 	struct stream colour, satur;
 	int whitepoint = 0;
-	size_t n;
 	void (*process)(struct stream *colour, struct stream *satur, size_t n) = NULL;
 
 	ARGBEGIN {
@@ -70,55 +69,11 @@ main(int argc, char *argv[])
 	satur.fd = eopen(satur.file, O_RDONLY);
 	einit_stream(&satur);
 
-	echeck_compat(&colour, &satur);
-
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = whitepoint ? process_xyza_w : process_xyza;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 
-	for (;;) {
-		if (colour.ptr < sizeof(colour.buf) && !eread_stream(&colour, SIZE_MAX)) {
-			close(colour.fd);
-			colour.fd = -1;
-			break;
-		}
-		if (satur.ptr < sizeof(satur.buf) && !eread_stream(&satur, SIZE_MAX)) {
-			close(satur.fd);
-			satur.fd = -1;
-			break;
-		}
-
-		n = colour.ptr < satur.ptr ? colour.ptr : satur.ptr;
-		n -= n % colour.pixel_size;
-		colour.ptr -= n;
-		satur.ptr -= n;
-
-		process(&colour, &satur, n);
-
-		ewriteall(STDOUT_FILENO, colour.buf, n, "<stdout>");
-		if ((n & 3) || colour.ptr != satur.ptr) {
-			memmove(colour.buf, colour.buf + n, colour.ptr);
-			memmove(satur.buf,  satur.buf  + n, satur.ptr);
-		}
-	}
-
-	if (satur.fd >= 0)
-		close(satur.fd);
-
-	ewriteall(STDOUT_FILENO, colour.buf, colour.ptr, "<stdout>");
-
-	if (colour.fd >= 0) {
-		for (;;) {
-			colour.ptr = 0;
-			if (!eread_stream(&colour, SIZE_MAX)) {
-				close(colour.fd);
-				colour.fd = -1;
-				break;
-			}
-			ewriteall(STDOUT_FILENO, colour.buf, colour.ptr, "<stdout>");
-		}
-	}
-
+	process_two_streams(&colour, &satur, STDOUT_FILENO, "<stdout>", process);
 	return 0;
 }

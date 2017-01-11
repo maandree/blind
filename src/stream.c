@@ -191,3 +191,78 @@ enread_frame(int status, struct stream *stream, void *buf, size_t n)
 	stream->ptr = 0;
 	return 1;
 }
+
+
+void
+process_each_frame_segmented(struct stream *stream, int output_fd, const char* output_fname,
+			     void (*process)(struct stream *stream, size_t n, size_t frame))
+{
+	size_t frame_size, frame, r, n;
+
+	echeck_frame_size(stream->width, stream->height, stream->pixel_size, 0, stream->file);
+	frame_size = stream->height * stream->width * stream->pixel_size;
+
+	for (frame = 0; frame < stream->frames; frame++) {
+		for (n = frame_size; n; n -= r) {
+			if (!eread_stream(stream, n))
+				eprintf("%s: file is shorter than expected\n", stream->file);
+			r = stream->ptr - (stream->ptr % stream->pixel_size);
+			(process)(stream, r, frame);
+			ewriteall(output_fd, stream->buf, r, output_fname);
+			memmove(stream->buf, stream->buf + r, stream->ptr -= r);
+		}
+	}
+}
+
+
+void
+process_two_streams(struct stream *left, struct stream *right, int output_fd, const char* output_fname,
+		    void (*process)(struct stream *left, struct stream *right, size_t n))
+{
+	size_t n;
+
+	echeck_compat(left, right);
+
+	for (;;) {
+		if (left->ptr < sizeof(left->buf) && !eread_stream(left, SIZE_MAX)) {
+			close(left->fd);
+			left->fd = -1;
+			break;
+		}
+		if (right->ptr < sizeof(right->buf) && !eread_stream(right, SIZE_MAX)) {
+			close(right->fd);
+			right->fd = -1;
+			break;
+		}
+
+		n = left->ptr < right->ptr ? left->ptr : right->ptr;
+		n -= n % left->pixel_size;
+		left->ptr -= n;
+		right->ptr -= n;
+
+		process(left, right, n);
+
+		ewriteall(output_fd, left->buf, n, output_fname);
+		if ((n & 3) || left->ptr != right->ptr) {
+			memmove(left->buf, left->buf + n, left->ptr);
+			memmove(right->buf,  right->buf  + n, right->ptr);
+		}
+	}
+
+	if (right->fd >= 0)
+		close(right->fd);
+
+	ewriteall(output_fd, left->buf, left->ptr, output_fname);
+
+	if (left->fd >= 0) {
+		for (;;) {
+			left->ptr = 0;
+			if (!eread_stream(left, SIZE_MAX)) {
+				close(left->fd);
+				left->fd = -1;
+				break;
+			}
+			ewriteall(output_fd, left->buf, left->ptr, output_fname);
+		}
+	}
+}

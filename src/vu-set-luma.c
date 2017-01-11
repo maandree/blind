@@ -25,7 +25,6 @@ int
 main(int argc, char *argv[])
 {
 	struct stream colour, luma;
-	size_t n;
 	void (*process)(struct stream *colour, struct stream *luma, size_t n);
 
 	ENOFLAGS(argc != 1);
@@ -38,55 +37,11 @@ main(int argc, char *argv[])
 	luma.fd = eopen(luma.file, O_RDONLY);
 	einit_stream(&luma);
 
-	echeck_compat(&colour, &luma);
-
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = process_xyza;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 
-	for (;;) {
-		if (colour.ptr < sizeof(colour.buf) && !eread_stream(&colour, SIZE_MAX)) {
-			close(colour.fd);
-			colour.fd = -1;
-			break;
-		}
-		if (luma.ptr < sizeof(luma.buf) && !eread_stream(&luma, SIZE_MAX)) {
-			close(luma.fd);
-			luma.fd = -1;
-			break;
-		}
-
-		n = colour.ptr < luma.ptr ? colour.ptr : luma.ptr;
-		n -= n % colour.pixel_size;
-		colour.ptr -= n;
-		luma.ptr -= n;
-
-		process(&colour, &luma, n);
-
-		ewriteall(STDOUT_FILENO, colour.buf, n, "<stdout>");
-		if ((n & 3) || colour.ptr != luma.ptr) {
-			memmove(colour.buf, colour.buf + n, colour.ptr);
-			memmove(luma.buf,   luma.buf   + n, luma.ptr);
-		}
-	}
-
-	if (luma.fd >= 0)
-		close(luma.fd);
-
-	ewriteall(STDOUT_FILENO, colour.buf, colour.ptr, "<stdout>");
-
-	if (colour.fd >= 0) {
-		for (;;) {
-			colour.ptr = 0;
-			if (!eread_stream(&colour, SIZE_MAX)) {
-				close(colour.fd);
-				colour.fd = -1;
-				break;
-			}
-			ewriteall(STDOUT_FILENO, colour.buf, colour.ptr, "<stdout>");
-		}
-	}
-
+	process_two_streams(&colour, &luma, STDOUT_FILENO, "<stdout>", process);
 	return 0;
 }
