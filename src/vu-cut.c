@@ -14,7 +14,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t frame_size, start = 0, end = 0, ptr, max, n;
+	size_t frame_size, start = 0, end = 0, ptr, max;
 	ssize_t r;
 	char buf[BUFSIZ];
 	int to_end = 0;
@@ -50,19 +50,19 @@ main(int argc, char *argv[])
 		eprintf("%s\n", start > end ?
 			"start point is after end point" :
 			"refusing to create video with zero frames");
-	end   *= frame_size;
-	start *= frame_size;
+	end   = end   * frame_size + stream.headlen;
+	start = start * frame_size + stream.headlen;
 
-	for (ptr = start; ptr < end;) {
+	posix_fadvise(stream.fd, start, end - start, POSIX_FADV_SEQUENTIAL);
+	for (ptr = start; ptr < end; ptr += (size_t)r) {
 		max = end - ptr;
-		max = sizeof(buf) < max ? sizeof(buf) : max;
-		r = read(stream.fd, buf + ptr, max);
+		max = max < sizeof(buf) ? max : sizeof(buf);
+		r = pread(stream.fd, buf, max, ptr);
 		if (r < 0)
-			eprintf("read %s:", stream.file);
+			eprintf("pread %s:", stream.file);
 		if (r == 0)
 			eprintf("%s: file is shorter than expected\n", stream.file);
-		ptr += n = (size_t)r;
-		ewriteall(STDOUT_FILENO, buf, n, "<stdout>");
+		ewriteall(STDOUT_FILENO, buf, (size_t)r, "<stdout>");
 	}
 
 	close(stream.fd);

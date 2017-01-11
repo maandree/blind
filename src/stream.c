@@ -80,6 +80,7 @@ eninit_stream(int status, struct stream *stream)
 	    stream->buf[3] != 'v' || stream->buf[4] != 'f')
 		goto bad_format;
 	memmove(stream->buf, stream->buf + 5, stream->ptr -= 5);
+	stream->headlen = n + 5;
 
 	enset_pixel_size(status, stream);
 

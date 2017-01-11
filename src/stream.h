@@ -24,6 +24,7 @@ struct stream
 	size_t ptr;
 	char buf[4096];
 	const char *file;
+	size_t headlen;
 };
 
 void eninit_stream(int status, struct stream *stream);
