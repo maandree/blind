@@ -7,5 +7,6 @@ vu-from-video		use ffmpeg to convert from another format
 vu-to-video		use ffmpeg to convert to another format
 vu-primaries		given three selectable primaries split the video into three side-by-side which
 				only one primary active
-vu-distort-map		remap pixels using the X and Y values, -t for tiling, -s for improve quality
-				on downscaling (pixels' neighbours must not change)
+vu-apply-map		remap pixels (distortion) using the X and Y values, -t for tiling, -s for
+				improve quality on downscaling (pixels' neighbours must not change)
+vu-apply-kernel		apply a convolution matrix
