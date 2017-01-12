@@ -112,16 +112,32 @@ int
 writeall(int fd, void *buf, size_t n)
 {
 	char *buffer = buf;
-	size_t ptr = 0;
 	ssize_t r;
-	while (ptr < n) {
+	while (n) {
 		r = write(fd, buffer, n);
 		if (r < 0)
 			return -1;
-		buffer += (size_t)ptr;
-		n -= (size_t)ptr;
+		buffer += (size_t)r;
+		n -= (size_t)r;
 	}
 	return 0;
+}
+
+ssize_t
+readall(int fd, void *buf, size_t n)
+{
+	char *buffer = buf;
+	size_t ptr = 0;
+	ssize_t r;
+	for (;;) {
+		r = read(fd, buffer + ptr, n - ptr);
+		if (r < 0)
+			return -1;
+		if (r == 0)
+			break;
+		r += (size_t)r;
+	}
+	return r;
 }
 
 
