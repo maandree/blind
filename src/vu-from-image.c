@@ -165,9 +165,9 @@ header_done:
 
 	for (;;) {
 		for (ptr = 0; ptr + 15 < n; ptr += 16) {
-			red      = get_value(buf + ptr +  0);
-			green    = get_value(buf + ptr +  4);
-			blue     = get_value(buf + ptr +  8);
+			red      = srgb_decode(get_value(buf + ptr + 0));
+			green    = srgb_decode(get_value(buf + ptr + 4));
+			blue     = srgb_decode(get_value(buf + ptr + 8));
 			pixel[3] = get_value(buf + ptr + 12);
 
 			srgb_to_ciexyz(red, green, blue, pixel + 0, pixel + 1, pixel + 2);
