@@ -44,19 +44,19 @@ eninit_stream(int status, struct stream *stream)
 	errno = 0;
 	stream->frames = strtoul(stream->buf, &end, 10);
 	if (errno == ERANGE && *stream->buf != '-')
-		eprintf("%s: too long\n", stream->file);
+		eprintf("%s: video is too long\n", stream->file);
 	if (errno || *end)
 		goto bad_format;
 	errno = 0;
 	stream->width = strtoul(w, &end, 10);
 	if (errno == ERANGE && *stream->buf != '-')
-		eprintf("%s: too wide\n", stream->file);
+		eprintf("%s: video is too wide\n", stream->file);
 	if (errno || *end)
 		goto bad_format;
 	errno = 0;
 	stream->height = strtoul(h, &end, 10);
 	if (errno == ERANGE && *stream->buf != '-')
-		eprintf("%s: too tall\n", stream->file);
+		eprintf("%s: video is too tall\n", stream->file);
 	if (errno || *end)
 		goto bad_format;
 

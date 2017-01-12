@@ -17,6 +17,7 @@ BIN =\
 	vu-read-head\
 	vu-repeat\
 	vu-reverse\
+	vu-rewrite-head\
 	vu-set-alpha\
 	vu-set-luma\
 	vu-set-saturation\
