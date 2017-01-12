@@ -1,9 +1,20 @@
 RATIONALE
 
-Video editor's are embarrassingly bug, especially when the
-size of the project grows.
+•  It's source control friendly and it's easy for a user to
+   resolve merge conflicts and identify changes.
 
-Rendering takes a long time, with this approach you can
-leverage the power of Make.
+•  Rendering can take a very long time. With this approach,
+   the user can use Make to only rerender parts that have
+   been changes.
 
-Source control friendly.
+•  No room for buggy GUI:s, which currently is a problem on
+   the large video editors for Linux.
+
+•  Less chance that the user makes a change by mistake
+   without noticing it, such as moving a clip in the editor
+   by mistake instead of for example resizing.
+
+•  Even old crappy computers can be used for large projects.
+
+•  Very easy to utilise command line image editors for modify
+   frames, or to add your own tools for custom effects.
