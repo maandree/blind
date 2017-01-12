@@ -60,7 +60,7 @@ main(int argc, char *argv[])
 	struct stream left, right;
 	process_func process = NULL;
 
-	ENOFLAGS(argc != 2);
+	ENOFLAGS(argc != 1);
 
 	left.file = "<stdin>";
 	left.fd = STDIN_FILENO;

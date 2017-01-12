@@ -16,7 +16,7 @@ main(int argc, char *argv[])
 	size_t i, ptr;
 	ssize_t r;
 
-	ENOFLAGS(!argc);
+	ENOFLAGS(argc);
 
 	for (ptr = 0; ptr < sizeof(buf);) {
 		r = read(STDIN_FILENO, buf + ptr, 1);
