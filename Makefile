@@ -37,7 +37,7 @@ all: $(BIN)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 clean:
-	-rm $(BIN) $(BIN:=.o) util.o stream.o
+	-rm $(BIN) *.o
 
 .PHONY: all clean
 .PRECIOUS: util.o stream.o
