@@ -17,7 +17,7 @@ eninit_stream(int status, struct stream *stream)
 	size_t n;
 	char *p = NULL, *w, *h, *f, *end;
 
-	for (stream->ptr = 0; p;) {
+	for (stream->ptr = 0; stream->fd >= 0 && p;) {
 		r = read(stream->fd, stream->buf + stream->ptr, sizeof(stream->buf) - stream->ptr);
 		if (r < 0)
 			enprintf(status, "read %s:", stream->file);
