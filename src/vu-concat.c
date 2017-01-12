@@ -49,7 +49,7 @@ concat_to_file(int argc, char *argv[], char *output_file)
 	struct stream stream, refstream;
 	int first = 0;
 	int fd = eopen(output_file, O_RDWR | O_CREAT | O_TRUNC, 0666);
-	char head[3 * sizeof(size_t) + 4 + sizeof(stream.pixfmt) + 6];
+	char head[3 * 3 * sizeof(size_t) + sizeof(stream.pixfmt) + 10];
 	ssize_t headlen, size = 0;
 	char *data;
 
