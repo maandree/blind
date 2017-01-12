@@ -6,9 +6,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#undef eprintf
-#define eprintf(...) enprintf(2, __VA_ARGS__)
-
 USAGE("width height pixel-format ...")
 
 int
@@ -26,8 +23,8 @@ main(int argc, char *argv[])
 	stream.file = "<stdin>";
 	stream.pixfmt[0] = '\0';
 
-	stream.width  = etozu_arg("the width",  argv[0], 1, SIZE_MAX);
-	stream.height = etozu_arg("the height", argv[1], 1, SIZE_MAX);
+	stream.width  = entozu_arg(2, "the width",  argv[0], 1, SIZE_MAX);
+	stream.height = entozu_arg(2, "the height", argv[1], 1, SIZE_MAX);
 	argv += 2, argc -= 2;
 
 	n = (size_t)argc - 1;
@@ -41,26 +38,26 @@ main(int argc, char *argv[])
 		}
 	}
 
-	eset_pixel_size(&stream);
+	enset_pixel_size(2, &stream);
 
 	fprint_stream_head(stdout, &stream);
-	efflush(stdout, "<stdout>");
+	enfflush(2, stdout, "<stdout>");
 
 	w = stream.width * stream.pixel_size;
 	while (stream.height) {
 		stream.height--;
 		for (n = w; n; n -= stream.ptr) {
 			stream.ptr = 0;
-			if (!eread_stream(&stream, n))
+			if (!enread_stream(2, &stream, n))
 				goto done;
 			anything = 1;
-			ewriteall(STDOUT_FILENO, stream.buf, stream.ptr, "<stdout>");
+			enwriteall(2, STDOUT_FILENO, stream.buf, stream.ptr, "<stdout>");
 		}
 	}
 done:
 
 	if (stream.height || n)
-		eprintf("incomplete frame\n");
+		enprintf(2, "incomplete frame\n");
 
 	return !anything;
 }

@@ -50,6 +50,8 @@ rewrite(struct stream *stream, int frames_auto)
 			eprintf("ftruncate %s:", stream->file);
 
 	data = mmap(0, length + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_PRIVATE, stream->fd, 0);
+	if (data == MAP_FAILED)
+		eprintf("mmap %s:", stream->file);
 	if (headlen != stream->headlen)
 		memmove(data + headlen, data + stream->headlen, length);
 	memcpy(data, head, (size_t)headlen);

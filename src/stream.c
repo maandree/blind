@@ -2,6 +2,7 @@
 #include "stream.h"
 #include "util.h"
 
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <inttypes.h>
@@ -189,27 +190,27 @@ enread_frame(int status, struct stream *stream, void *buf, size_t n)
 	}
 	if (!stream->ptr)
 		return 0;
-	stream->ptr = 0;
+	stream->ptr -= n;
 	return 1;
 }
 
 
 void
-process_each_frame_segmented(struct stream *stream, int output_fd, const char* output_fname,
-			     void (*process)(struct stream *stream, size_t n, size_t frame))
+nprocess_each_frame_segmented(int status, struct stream *stream, int output_fd, const char* output_fname,
+			      void (*process)(struct stream *stream, size_t n, size_t frame))
 {
 	size_t frame_size, frame, r, n;
 
-	echeck_frame_size(stream->width, stream->height, stream->pixel_size, 0, stream->file);
+	encheck_frame_size(status, stream->width, stream->height, stream->pixel_size, 0, stream->file);
 	frame_size = stream->height * stream->width * stream->pixel_size;
 
 	for (frame = 0; frame < stream->frames; frame++) {
 		for (n = frame_size; n; n -= r) {
-			if (!eread_stream(stream, n))
-				eprintf("%s: file is shorter than expected\n", stream->file);
+			if (!enread_stream(status, stream, n))
+				enprintf(status, "%s: file is shorter than expected\n", stream->file);
 			r = stream->ptr - (stream->ptr % stream->pixel_size);
 			(process)(stream, r, frame);
-			ewriteall(output_fd, stream->buf, r, output_fname);
+			enwriteall(status, output_fd, stream->buf, r, output_fname);
 			memmove(stream->buf, stream->buf + r, stream->ptr -= r);
 		}
 	}
@@ -217,20 +218,20 @@ process_each_frame_segmented(struct stream *stream, int output_fd, const char* o
 
 
 void
-process_two_streams(struct stream *left, struct stream *right, int output_fd, const char* output_fname,
-		    void (*process)(struct stream *left, struct stream *right, size_t n))
+nprocess_two_streams(int status, struct stream *left, struct stream *right, int output_fd, const char* output_fname,
+		     void (*process)(struct stream *left, struct stream *right, size_t n))
 {
 	size_t n;
 
-	echeck_compat(left, right);
+	encheck_compat(status, left, right);
 
 	for (;;) {
-		if (left->ptr < sizeof(left->buf) && !eread_stream(left, SIZE_MAX)) {
+		if (left->ptr < sizeof(left->buf) && !enread_stream(status, left, SIZE_MAX)) {
 			close(left->fd);
 			left->fd = -1;
 			break;
 		}
-		if (right->ptr < sizeof(right->buf) && !eread_stream(right, SIZE_MAX)) {
+		if (right->ptr < sizeof(right->buf) && !enread_stream(status, right, SIZE_MAX)) {
 			close(right->fd);
 			right->fd = -1;
 			break;
@@ -243,40 +244,40 @@ process_two_streams(struct stream *left, struct stream *right, int output_fd, co
 
 		process(left, right, n);
 
-		ewriteall(output_fd, left->buf, n, output_fname);
+		enwriteall(status, output_fd, left->buf, n, output_fname);
 		if ((n & 3) || left->ptr != right->ptr) {
-			memmove(left->buf, left->buf + n, left->ptr);
-			memmove(right->buf,  right->buf  + n, right->ptr);
+			memmove(left->buf,  left->buf  + n, left->ptr);
+			memmove(right->buf, right->buf + n, right->ptr);
 		}
 	}
 
 	if (right->fd >= 0)
 		close(right->fd);
 
-	ewriteall(output_fd, left->buf, left->ptr, output_fname);
+	enwriteall(status, output_fd, left->buf, left->ptr, output_fname);
 
 	if (left->fd >= 0) {
 		for (;;) {
 			left->ptr = 0;
-			if (!eread_stream(left, SIZE_MAX)) {
+			if (!enread_stream(status, left, SIZE_MAX)) {
 				close(left->fd);
 				left->fd = -1;
 				break;
 			}
-			ewriteall(output_fd, left->buf, left->ptr, output_fname);
+			enwriteall(status, output_fd, left->buf, left->ptr, output_fname);
 		}
 	}
 }
 
 
 void
-process_multiple_streams(struct stream *streams, size_t n_streams, int output_fd, const char* output_fname,
-			 void (*process)(struct stream *streams, size_t n_streams, size_t n))
+nprocess_multiple_streams(int status, struct stream *streams, size_t n_streams, int output_fd, const char* output_fname,
+			  void (*process)(struct stream *streams, size_t n_streams, size_t n))
 {
 	size_t closed, i, j, n;
 
 	for (i = 1; i < n_streams; i++)
-		echeck_compat(streams + i, streams);
+		encheck_compat(status, streams + i, streams);
 
 	while (n_streams) {
 		n = SIZE_MAX;
@@ -291,7 +292,7 @@ process_multiple_streams(struct stream *streams, size_t n_streams, int output_fd
 		n -= n % streams->pixel_size;
 
 		process(streams, n_streams, n);
-		ewriteall(output_fd, streams->buf, n, output_fname);
+		enwriteall(status, output_fd, streams->buf, n, output_fname);
 
 		closed = SIZE_MAX;
 		for (i = 0; i < n_streams; i++) {
@@ -306,4 +307,57 @@ process_multiple_streams(struct stream *streams, size_t n_streams, int output_fd
 			n_streams = j;
 		}
 	}
+}
+
+
+void
+nprocess_each_frame_two_streams(int status, struct stream *left, struct stream *right, int output_fd, const char* output_fname,
+				void (*process)(char *restrict output, char *restrict lbuf, char *restrict rbuf,
+						struct stream *left, struct stream *right, size_t ln, size_t rn))
+{
+	size_t lframe_size, rframe_size;
+	char *lbuf, *rbuf, *image;
+
+	encheck_frame_size(status, left->width,  left->height,  left->pixel_size,  0, left->file);
+	encheck_frame_size(status, right->width, right->height, right->pixel_size, 0, right->file);
+	lframe_size = left->height  * left->width  * left->pixel_size;
+	rframe_size = right->height * right->width * right->pixel_size;
+
+	if (lframe_size > SIZE_MAX - lframe_size || 2 * lframe_size > SIZE_MAX - rframe_size)
+		enprintf(status, "video frame is too large\n");
+
+	image = mmap(0, 2 * lframe_size + lframe_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+	if (image == MAP_FAILED)
+		enprintf(status, "mmap:");
+	lbuf = image + 1 * lframe_size;
+	rbuf = image + 2 * lframe_size;
+
+	for (;;) {
+		if (!enread_frame(status, left, lbuf, lframe_size)) {
+			close(left->fd);
+			left->fd = -1;
+			break;
+		}
+		if (!enread_frame(status, right, rbuf, rframe_size)) {
+			close(right->fd);
+			right->fd = -1;
+			break;
+		}
+
+		process(image, lbuf, rbuf, left, right, lframe_size, rframe_size);
+		enwriteall(status, output_fd, image, lframe_size, output_fname);
+	}
+
+	if (right->fd >= 0)
+		close(right->fd);
+
+	if (left->fd >= 0) {
+		memcpy(image, lbuf, left->ptr);
+		while (enread_frame(status, left, lbuf, lframe_size))
+			enwriteall(status, output_fd, image, lframe_size, output_fname);
+	}
+
+	free(lbuf);
+	free(rbuf);
+	munmap(image, 2 * lframe_size + rframe_size);
 }

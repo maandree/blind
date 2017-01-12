@@ -12,6 +12,7 @@ BIN =\
 	vu-flip\
 	vu-flop\
 	vu-from-image\
+	vu-gauss-blur\
 	vu-invert-luma\
 	vu-next-frame\
 	vu-read-head\

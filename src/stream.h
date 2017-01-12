@@ -13,6 +13,11 @@
 #define enread_row(...) enread_frame(__VA_ARGS__)
 #define eread_row(...)  eread_frame(__VA_ARGS__)
 
+#define process_each_frame_segmented(...)   nprocess_each_frame_segmented(1, __VA_ARGS__)
+#define process_two_streams(...)            nprocess_two_streams(1, __VA_ARGS__)
+#define process_multiple_streams(...)       nprocess_multiple_streams(1, __VA_ARGS__)
+#define process_each_frame_two_streams(...) nprocess_each_frame_two_streams(1, __VA_ARGS__)
+
 struct stream
 {
 	size_t frames;
@@ -38,11 +43,15 @@ void encheck_frame_size(int status, size_t width, size_t height, size_t pixel_si
 void encheck_compat(int status, const struct stream *a, const struct stream *b);
 int enread_frame(int status, struct stream *stream, void *buf, size_t n);
 
-void process_each_frame_segmented(struct stream *stream, int output_fd, const char* output_fname,
+void nprocess_each_frame_segmented(int status, struct stream *stream, int output_fd, const char* output_fname,
 				  void (*process)(struct stream *stream, size_t n, size_t frame));
 
-void process_two_streams(struct stream *left, struct stream *right, int output_fd, const char* output_fname,
+void nprocess_two_streams(int status, struct stream *left, struct stream *right, int output_fd, const char* output_fname,
 			 void (*process)(struct stream *left, struct stream *right, size_t n));
 
-void process_multiple_streams(struct stream *streams, size_t n_streams, int output_fd, const char* output_fname,
+void nprocess_multiple_streams(int status, struct stream *streams, size_t n_streams, int output_fd, const char* output_fname,
 			      void (*process)(struct stream *streams, size_t n_streams, size_t n));
+
+void nprocess_each_frame_two_streams(int status, struct stream *left, struct stream *right, int output_fd, const char* output_fname,
+				     void (*process)(char *restrict output, char *restrict lbuf, char *restrict rbuf,
+						     struct stream *left, struct stream *right, size_t ln, size_t rn));

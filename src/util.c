@@ -1,9 +1,14 @@
 /* See LICENSE file for copyright and license details. */
 #include "util.h"
 
+#if defined(HAVE_PRCTL)
+# include <sys/prctl.h>
+#endif
+#include <sys/wait.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -117,4 +122,49 @@ writeall(int fd, void *buf, size_t n)
 		n -= (size_t)ptr;
 	}
 	return 0;
+}
+
+
+static inline pid_t
+enfork(int status)
+{
+	pid_t pid = fork();
+	if (pid == -1)
+		enprintf(status, "fork:");
+	return pid;
+}
+
+
+int
+enfork_jobs(int status, size_t *start, size_t *end, size_t jobs)
+{
+	size_t j, s = *start, n = *end - *start;
+	if (jobs < 2)
+		return 1;
+	*end = n / jobs + s;
+	for (j = 1; j < jobs; j++) {
+		if (!enfork(status)) {
+#if defined(HAVE_PRCTL) && defined(PR_SET_PDEATHSIG)
+			prctl(PR_SET_PDEATHSIG, SIGKILL);
+#endif
+			*start = n * (j + 0) / jobs + s;
+			*end   = n * (j + 1) / jobs + s;
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
+void
+enjoin_jobs(int status, int is_master)
+{
+	int stat;
+	if (!is_master)
+		exit(0);
+	while (wait(&stat) != -1)
+		if (!stat)
+			exit(status);
+	if (errno != ECHILD)
+		enprintf(status, "wait:");
 }

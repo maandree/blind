@@ -77,9 +77,11 @@ concat_to_file(int argc, char *argv[], char *output_file)
 	sprintf(head, "%zu %zu %zu %s\n%cuivf%zn",
 		stream.frames, stream.width, stream.height, stream.pixfmt, 0, &headlen);
 
-	ewriteall(STDOUT_FILENO, head, (size_t)headlen, "<stdout>");
+	ewriteall(fd, head, (size_t)headlen, output_file);
 
 	data = mmap(0, size + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+	if (data == MAP_FAILED)
+		eprintf("mmap %s:", output_file);
 	memmove(data + headlen, data, size);
 	memcpy(data, head, (size_t)headlen);
 	munmap(data, size + (size_t)headlen);
