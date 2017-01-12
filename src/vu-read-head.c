@@ -10,7 +10,7 @@ USAGE("")
 int
 main(int argc, char *argv[])
 {
-	char buf[4 + 3 * 3 * sizeof(size_t) + sizeof(((struct stream *)0)->pixfmt)];
+	char buf[STREAM_HEAD_MAX];
 	char magic[] = {'\0', 'u', 'i', 'v', 'f'};
 	char b, *p;
 	size_t i, ptr;

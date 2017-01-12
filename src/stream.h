@@ -2,6 +2,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#define STREAM_HEAD_MAX (3 * 3 * sizeof(size_t) + sizeof(((struct stream *)0)->pixfmt) + 10)
+
 #define einit_stream(...)      eninit_stream(1, __VA_ARGS__)
 #define eset_pixel_size(...)   enset_pixel_size(1, __VA_ARGS__)
 #define eread_stream(...)      enread_stream(1, __VA_ARGS__)

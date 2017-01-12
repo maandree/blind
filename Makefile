@@ -13,6 +13,7 @@ BIN =\
 	vu-flop\
 	vu-from-image\
 	vu-from-text\
+	vu-from-video\
 	vu-gauss-blur\
 	vu-invert-luma\
 	vu-next-frame\

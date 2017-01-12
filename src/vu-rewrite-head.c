@@ -15,7 +15,7 @@ USAGE("[-h] file [(frames | 'auto') [(width | 'same') (height | 'same') [format 
 static void
 rewrite(struct stream *stream, int frames_auto)
 {
-	char head[3 * 3 * sizeof(size_t) + sizeof(stream->pixfmt) + 10];
+	char head[STREAM_HEAD_MAX];
 	ssize_t headlen;
 	size_t frame_size, frame_count, length;
 	struct stat st;

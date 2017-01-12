@@ -47,6 +47,8 @@ main(int argc, char *argv[])
 	for (i = 0; i < parts; i++) {
 		fd = eopen(argv[i * 2], O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		fp = fdopen(fd, "wb");
+		if (!fp)
+			eprintf("fdopen %s:", argv[i * 2]);
 
 		stream.frames = ends[i] - (i ? ends[i - 1] : 0);
 		fprint_stream_head(fp, &stream);
