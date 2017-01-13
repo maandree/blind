@@ -2,7 +2,6 @@ vu-transform		transformation by matrix multiplication, -t for tiling, -s for imp
 				on downscaling (pixels' neighbours must not change)
 vu-chroma-key		replace a chroma with transparency
 vu-primary-key		replace a primary with transparency, -g for greyscaled images
-vu-to-video		use ffmpeg to convert to another format
 vu-primaries		given three selectable primaries split the video into three side-by-side which
 				only one primary active
 vu-apply-map		remap pixels (distortion) using the X and Y values, -t for tiling, -s for

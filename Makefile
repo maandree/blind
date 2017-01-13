@@ -29,6 +29,7 @@ BIN =\
 	vu-stack\
 	vu-to-image\
 	vu-to-text\
+	vu-to-video\
 	vu-transpose\
 	vu-write-head
 

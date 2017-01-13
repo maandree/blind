@@ -112,9 +112,9 @@ convert_segment(char *buf, size_t n, int fd, char *file)
 	if (draft) {
 		for (ptr = i = 0; ptr < n; ptr += 8) {
 			pixels[i][3] = ntohs(((uint16_t *)(buf + ptr))[0]) / max;
-			y = ntohs(((uint16_t *)(buf + ptr))[1]);
-			u = ntohs(((uint16_t *)(buf + ptr))[2]);
-			v = ntohs(((uint16_t *)(buf + ptr))[3]);
+			y = (ntohs(((uint16_t *)(buf + ptr))[1]) -  16 * 256);
+			u = (ntohs(((uint16_t *)(buf + ptr))[2]) - 128 * 256);
+			v = (ntohs(((uint16_t *)(buf + ptr))[3]) - 128 * 256);
 			scaled_yuv_to_ciexyz(y, u, v, pixels[i] + 0, pixels[i] + 1, pixels[i] + 2);
 			if (++i == 1024) {
 				i = 0;
@@ -124,9 +124,9 @@ convert_segment(char *buf, size_t n, int fd, char *file)
 	} else {
 		for (ptr = i = 0; ptr < n; ptr += 8) {
 			pixels[i][3] = ntohs(((uint16_t *)(buf + ptr))[0]) / max;
-			y = ntohs(((uint16_t *)(buf + ptr))[1]) / max;
-			u = ntohs(((uint16_t *)(buf + ptr))[2]) / max;
-			v = ntohs(((uint16_t *)(buf + ptr))[3]) / max;
+			y = (ntohs(((uint16_t *)(buf + ptr))[1]) -  16 * 256) / max;
+			u = (ntohs(((uint16_t *)(buf + ptr))[2]) - 128 * 256) / max;
+			v = (ntohs(((uint16_t *)(buf + ptr))[3]) - 128 * 256) / max;
 			yuv_to_srgb(y, u, v, &r, &g, &b);
 			r = srgb_decode(r);
 			g = srgb_decode(g);
