@@ -2,6 +2,7 @@
 #include "stream.h"
 #include "util.h"
 
+#include <arpa/inet.h>
 #if defined(HAVE_PRCTL)
 # include <sys/prctl.h>
 #endif
@@ -14,7 +15,9 @@
 #include <string.h>
 #include <unistd.h>
 
-USAGE("[-r frame-rate] [-w width -h height] input-file output-file")
+USAGE("[-r frame-rate] [-w width -h height] [-d] input-file output-file")
+
+static int draft = 0;
 
 static void
 read_metadata(FILE *fp, char *fname, size_t *width, size_t *height, size_t *frames)
@@ -106,19 +109,33 @@ convert_segment(char *buf, size_t n, int fd, char *file)
 	double y, u, v, max = (double)UINT16_MAX;
 	double r, g, b;
 	pixel_t pixels[1024];
-	for (ptr = i = 0; ptr < n; ptr += 8, i++) {
-		pixels[i][3] = ntohs(((uint16_t *)(buf + ptr))[0]) / max;
-		y = ntohs(((uint16_t *)(buf + ptr))[1]) / max;
-		u = ntohs(((uint16_t *)(buf + ptr))[2]) / max;
-		v = ntohs(((uint16_t *)(buf + ptr))[3]) / max;
-		yuv_to_srgb(y, u, v, &r, &g, &b);
-		r = srgb_decode(r);
-		g = srgb_decode(g);
-		b = srgb_decode(b);
-		srgb_to_ciexyz(r, g, b, pixels[i] + 0, pixels[i] + 1, pixels[i] + 2);
-		if (++i == 1024) {
-			i = 0;
-			ewriteall(fd, pixels, sizeof(pixels), file);
+	if (draft) {
+		for (ptr = i = 0; ptr < n; ptr += 8, i++) {
+			pixels[i][3] = ntohs(((uint16_t *)(buf + ptr))[0]) / max;
+			y = ntohs(((uint16_t *)(buf + ptr))[1]);
+			u = ntohs(((uint16_t *)(buf + ptr))[2]);
+			v = ntohs(((uint16_t *)(buf + ptr))[3]);
+			scaled_yuv_to_ciexyz(y, u, v, pixels[i] + 0, pixels[i] + 1, pixels[i] + 2);
+			if (++i == 1024) {
+				i = 0;
+				ewriteall(fd, pixels, sizeof(pixels), file);
+			}
+		}
+	} else {
+		for (ptr = i = 0; ptr < n; ptr += 8, i++) {
+			pixels[i][3] = ntohs(((uint16_t *)(buf + ptr))[0]) / max;
+			y = ntohs(((uint16_t *)(buf + ptr))[1]) / max;
+			u = ntohs(((uint16_t *)(buf + ptr))[2]) / max;
+			v = ntohs(((uint16_t *)(buf + ptr))[3]) / max;
+			yuv_to_srgb(y, u, v, &r, &g, &b);
+			r = srgb_decode(r);
+			g = srgb_decode(g);
+			b = srgb_decode(b);
+			srgb_to_ciexyz(r, g, b, pixels[i] + 0, pixels[i] + 1, pixels[i] + 2);
+			if (++i == 1024) {
+				i = 0;
+				ewriteall(fd, pixels, sizeof(pixels), file);
+			}
 		}
 	}
 	if (i)
@@ -209,6 +226,9 @@ main(int argc, char *argv[])
 	struct stat st;
 
 	ARGBEGIN {
+	case 'd':
+		draft = 1;
+		break;
 	case 'r':
 		frame_rate = EARG();
 		break;
