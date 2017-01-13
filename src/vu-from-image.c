@@ -229,7 +229,7 @@ main(int argc, char *argv[])
 
 	if (!pid) {
 		close(pipe_rw[0]);
-		if (dup2(pipe_rw[1], STDOUT_FILENO) < 0)
+		if (dup2(pipe_rw[1], STDOUT_FILENO) == -1)
 			eprintf("dup2:");
 		close(pipe_rw[1]);
 		/* XXX Is there a way to convert directly to raw XYZ? (Would avoid gamut truncation) */

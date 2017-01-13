@@ -110,7 +110,7 @@ convert_segment(char *buf, size_t n, int fd, char *file)
 	double r, g, b;
 	pixel_t pixels[1024];
 	if (draft) {
-		for (ptr = i = 0; ptr < n; ptr += 8, i++) {
+		for (ptr = i = 0; ptr < n; ptr += 8) {
 			pixels[i][3] = ntohs(((uint16_t *)(buf + ptr))[0]) / max;
 			y = ntohs(((uint16_t *)(buf + ptr))[1]);
 			u = ntohs(((uint16_t *)(buf + ptr))[2]);
@@ -122,7 +122,7 @@ convert_segment(char *buf, size_t n, int fd, char *file)
 			}
 		}
 	} else {
-		for (ptr = i = 0; ptr < n; ptr += 8, i++) {
+		for (ptr = i = 0; ptr < n; ptr += 8) {
 			pixels[i][3] = ntohs(((uint16_t *)(buf + ptr))[0]) / max;
 			y = ntohs(((uint16_t *)(buf + ptr))[1]) / max;
 			u = ntohs(((uint16_t *)(buf + ptr))[2]) / max;
