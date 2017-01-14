@@ -1,11 +1,11 @@
-INPUT_VIDEO = '<please select a video file as INPUT_VIDEO>'
+INPUT_VIDEO = <please select a video file as INPUT_VIDEO>
 
 SHELL = bash
 # We need Bash's process substitution operator >()
 # because we want to convert the files back to a
 # cooked format, because raw takes a serious amount
 # of space. It is of course also possible to use
-# FIFO:s.
+# FIFO:s (if you know what you are doing).
 
 DRAFT = -d
 # Useful for better performance when not working
