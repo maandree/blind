@@ -79,7 +79,7 @@ main(int argc, char *argv[])
 				stream.ptr = 0;
 			} else if (ptr % frame_size) {
 				eprintf("%s: incomplete frame\n", stream.file);
-			} else if (!unknown_length) {
+			} else if (!unknown_length || !to_end[i]) {
 				eprintf("%s: file is shorter than expected\n", stream.file);
 			} else {
 				break;
