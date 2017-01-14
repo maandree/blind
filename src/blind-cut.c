@@ -43,7 +43,7 @@ main(int argc, char *argv[])
 	efflush(stdout, "<stdout>");
 	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
 	frame_size = stream.width * stream.height * stream.pixel_size;
-	if (stream.frames > SSIZE_MAX / frame_size)
+	if (stream.frames > (size_t)SSIZE_MAX / frame_size)
 		eprintf("%s: video is too large\n", stream.file);
 
 	if (start >= end)

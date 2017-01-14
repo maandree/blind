@@ -26,7 +26,7 @@ main(int argc, char *argv[])
 	einit_stream(&stream);
 	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
 	frame_size = stream.width * stream.height * stream.pixel_size;
-	if (stream.frames > SSIZE_MAX / frame_size)
+	if (stream.frames > (size_t)SSIZE_MAX / frame_size)
 		eprintf("%s: video is too large\n", stream.file);
 
 	parts = (size_t)argc / 2;
@@ -55,12 +55,17 @@ main(int argc, char *argv[])
 		efflush(fp, argv[i * 2]);
 
 		for (end = ends[i] * frame_size; ptr < end; ptr += n) {
-			if (stream.ptr == sizeof(stream.buf))
-				n = stream.ptr < end - ptr ? stream.ptr : end - ptr;
-			else if (!(n = eread_stream(&stream, end - ptr)))
+			n = end - ptr;
+			if (stream.ptr) {
+				n = stream.ptr < n ? stream.ptr : n;
+				ewriteall(fd, stream.buf, n, argv[i * 2]);
+				memmove(stream.buf, stream.buf + n, stream.ptr -= n);
+			} else if ((n = eread_stream(&stream, n))) {
+				ewriteall(fd, stream.buf, n, argv[i * 2]);
+				stream.ptr = 0;
+			} else {
 				eprintf("%s: file is shorter than expected\n", stream.file);
-			ewriteall(STDOUT_FILENO, stream.buf, n, "<stdout>");
-			memmove(stream.buf, stream.buf + n, stream.ptr -= n);
+			}
 		}
 
 		if (fclose(fp))
