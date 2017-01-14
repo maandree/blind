@@ -26,12 +26,14 @@ main(int argc, char *argv[])
 	frame_size = stream.width * stream.height * stream.pixel_size;
 	if (stream.frames > SSIZE_MAX / frame_size)
 		eprintf("%s: video is too large\n", stream.file);
+	if (stream.frames * frame_size > SSIZE_MAX - stream.headlen)
+		eprintf("%s: video is too large\n", stream.file);
 
 #if defined(POSIX_FADV_RANDOM)
 	posix_fadvise(stream.fd, 0, 0, POSIX_FADV_RANDOM);
 #endif
 	while (stream.frames--) {
-		ptr = stream.frames * frame_size;
+		ptr = stream.frames * frame_size + stream.headlen;
 		end = ptr + frame_size;
 		while (ptr < end) {
 			r = pread(stream.fd, buf, sizeof(buf), ptr);

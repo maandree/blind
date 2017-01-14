@@ -1,4 +1,4 @@
-INPUT_VIDEO = <please select a video file as INPUT_VIDEO>
+INPUT_VIDEO = <please select a video file as INPUT_VIDEO>
 
 SHELL = bash
 # We need Bash's process substitution operator >()
