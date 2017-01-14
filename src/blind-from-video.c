@@ -2,7 +2,6 @@
 #include "stream.h"
 #include "util.h"
 
-#include <arpa/inet.h>
 #if defined(HAVE_PRCTL)
 # include <sys/prctl.h>
 #endif
@@ -20,30 +19,23 @@ USAGE("[-r frame-rate] [-w width -h height] [-d] input-file output-file")
 static int draft = 0;
 
 static void
-read_metadata(FILE *fp, char *fname, size_t *width, size_t *height, size_t *frames)
+read_metadata(FILE *fp, char *fname, size_t *width, size_t *height)
 {
 	char *line = NULL;
 	size_t size = 0;
 	ssize_t len;
-	int have_width = !width, have_height = !height, have_frames = 0;
 	char *p;
 
 	while ((len = getline(&line, &size, fp)) != -1) {
 		if (len && line[len - 1])
 			line[--len] = '\0';
 		p = strchr(line, '=') + 1;
-		if (width && strstr(line, "width=") == line) {
+		if (strstr(line, "width=") == line) {
 			if (tozu(p, 1, SIZE_MAX, width))
 				eprintf("invalid width: %s\n", p);
-			have_width = 1;
-		} else if (height && strstr(line, "height=") == line) {
+		} else if (strstr(line, "height=") == line) {
 			if (tozu(p, 1, SIZE_MAX, height))
 				eprintf("invalid height: %s\n", p);
-			have_height = 1;
-		} else if (strstr(line, "nb_read_frames=") == line) {
-			if (tozu(p, 0, SIZE_MAX, frames))
-				eprintf("invalid frame count: %s\n", p);
-			have_frames = 1;
 		}
 	}
 
@@ -51,12 +43,12 @@ read_metadata(FILE *fp, char *fname, size_t *width, size_t *height, size_t *fram
 		eprintf("getline %s:", fname);
 	free(line);
 
-	if (have_width + have_height + have_frames < 3)
+	if (!*width || !*height)
 		eprintf("could not get all required metadata\n");
 }
 
 static void
-get_metadata(char *file, size_t *width, size_t *height, size_t *frames)
+get_metadata(char *file, size_t *width, size_t *height)
 {
 	FILE *fp;
 	int fd, pipe_rw[2];
@@ -83,7 +75,7 @@ get_metadata(char *file, size_t *width, size_t *height, size_t *frames)
 			eprintf("dup2:");
 		close(pipe_rw[1]);
 		execlp("ffprobe", "ffprobe", "-v", "quiet", "-show_streams",
-		       "-select_streams", "v", "-count_frames", "-", NULL);
+		       "-select_streams", "v", "-", NULL);
 		eprintf("exec ffprobe:");
 	}
 
@@ -91,7 +83,7 @@ get_metadata(char *file, size_t *width, size_t *height, size_t *frames)
 	fp = fdopen(pipe_rw[0], "rb");
 	if (!fp)
 		eprintf("fdopen <subprocess>:");
-	read_metadata(fp, file, width, height, frames);
+	read_metadata(fp, file, width, height);
 	fclose(fp);
 	close(pipe_rw[0]);
 
@@ -111,10 +103,10 @@ convert_segment(char *buf, size_t n, int fd, char *file)
 	pixel_t pixels[1024];
 	if (draft) {
 		for (ptr = i = 0; ptr < n; ptr += 8) {
-			pixels[i][3] = ntohs(((uint16_t *)(buf + ptr))[0]) / max;
-			y = (ntohs(((uint16_t *)(buf + ptr))[1]) -  16 * 256);
-			u = (ntohs(((uint16_t *)(buf + ptr))[2]) - 128 * 256);
-			v = (ntohs(((uint16_t *)(buf + ptr))[3]) - 128 * 256);
+			pixels[i][3] = 1;
+			y = (long int)(le16toh(((uint16_t *)(buf + ptr))[1])) -  16L * 256L;
+			u = (long int)(le16toh(((uint16_t *)(buf + ptr))[2])) - 128L * 256L;
+			v = (long int)(le16toh(((uint16_t *)(buf + ptr))[3])) - 128L * 256L;
 			scaled_yuv_to_ciexyz(y, u, v, pixels[i] + 0, pixels[i] + 1, pixels[i] + 2);
 			if (++i == 1024) {
 				i = 0;
@@ -123,10 +115,10 @@ convert_segment(char *buf, size_t n, int fd, char *file)
 		}
 	} else {
 		for (ptr = i = 0; ptr < n; ptr += 8) {
-			pixels[i][3] = ntohs(((uint16_t *)(buf + ptr))[0]) / max;
-			y = (ntohs(((uint16_t *)(buf + ptr))[1]) -  16 * 256) / max;
-			u = (ntohs(((uint16_t *)(buf + ptr))[2]) - 128 * 256) / max;
-			v = (ntohs(((uint16_t *)(buf + ptr))[3]) - 128 * 256) / max;
+			pixels[i][3] = le16toh(((uint16_t *)(buf + ptr))[0]) / max;
+			y = ((long int)le16toh(((uint16_t *)(buf + ptr))[1]) -  16L * 256L) / max;
+			u = ((long int)le16toh(((uint16_t *)(buf + ptr))[2]) - 128L * 256L) / max;
+			v = ((long int)le16toh(((uint16_t *)(buf + ptr))[3]) - 128L * 256L) / max;
 			yuv_to_srgb(y, u, v, &r, &g, &b);
 			r = srgb_decode(r);
 			g = srgb_decode(g);
@@ -145,14 +137,15 @@ convert_segment(char *buf, size_t n, int fd, char *file)
 static void
 convert(char *infile, int outfd, char *outfile, size_t width, size_t height, char *frame_rate)
 {
-	char geometry[2 * 3 * sizeof(size_t) + 2], *cmd[13], buf[BUFSIZ];
-	int status, fd, pipe_rw[2];
+	char geometry[2 * 3 * sizeof(size_t) + 2], buf[BUFSIZ];
+	const char *cmd[13];
+	int status, pipe_rw[2];
 	size_t i = 0, n, ptr;
 	ssize_t r;
 	pid_t pid;
 
 	cmd[i++] = "ffmpeg";
-	cmd[i++] = "-i", cmd[i++] = "-";
+	cmd[i++] = "-i", cmd[i++] = infile;
 	cmd[i++] = "-f", cmd[i++] = "rawvideo";
 	cmd[i++] = "-pix_fmt", cmd[i++] = "ayuv64le";
 	if (width && height) {
@@ -175,10 +168,6 @@ convert(char *infile, int outfd, char *outfile, size_t width, size_t height, cha
 #if defined(HAVE_PRCTL) && defined(PR_SET_PDEATHSIG)
 		prctl(PR_SET_PDEATHSIG, SIGKILL);
 #endif
-		fd = eopen(infile, O_RDONLY);
-		if (dup2(fd, STDIN_FILENO) == -1)
-			eprintf("dup2:");
-		close(fd);
 		close(pipe_rw[0]);
 		if (dup2(pipe_rw[1], STDOUT_FILENO) == -1)
 			eprintf("dup2:");
@@ -220,9 +209,8 @@ main(int argc, char *argv[])
 	char *outfile;
 	char *data;
 	ssize_t headlen;
-	size_t length;
-	int outfd, status;
-	pid_t pid;
+	size_t length, frame_size;
+	int outfd;
 	struct stat st;
 
 	ARGBEGIN {
@@ -248,34 +236,29 @@ main(int argc, char *argv[])
 	infile = argv[0];
 	outfile = argv[1];
 
+	if (!width)
+		get_metadata(infile, &width, &height);
+	if (width > SIZE_MAX / height)
+		eprintf("video frame too large\n");
+	frame_size = width * height;
+	if (4 * sizeof(double) > SIZE_MAX / frame_size)
+		eprintf("video frame too large\n");
+	frame_size *= 4 * sizeof(double);
+
 	outfd = eopen(outfile, O_RDWR | O_CREAT | O_TRUNC, 0666);
-
-	pid = fork();
-	if (pid == -1)
-		eprintf("fork:");
-
-	if (!pid) {
-#if defined(HAVE_PRCTL) && defined(PR_SET_PDEATHSIG)
-		prctl(PR_SET_PDEATHSIG, SIGKILL);
-#endif
-		convert(infile, outfd, outfile, width, height, frame_rate);
-		exit(0);
-	}
-
-	get_metadata(infile, width ? NULL : &width, height ? NULL : &height, &frames);
-
-	if (waitpid(pid, &status, 0) == -1)
-		eprintf("waitpid:");
-	if (status)
-		exit(1);
+	convert(infile, outfd, outfile, width, height, frame_rate);
 
 	if (fstat(outfd, &st))
 		eprintf("fstat %s:", outfile);
 	length = (size_t)(st.st_size);
 
+	if (length % frame_size)
+		eprintf("<subprocess>: incomplete frame");
+	frames = length / frame_size;
+
 	sprintf(head, "%zu %zu %zu %s\n%cuivf%zn", frames, width, height, "xyza", 0, &headlen);
 	ewriteall(outfd, head, (size_t)headlen, outfile);
-	data = mmap(0, length + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_PRIVATE, outfd, 0);
+	data = mmap(0, length + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_SHARED, outfd, 0);
 	memmove(data + headlen, data, length);
 	memcpy(data, head, (size_t)headlen);
 	munmap(data, length + (size_t)headlen);

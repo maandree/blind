@@ -29,7 +29,7 @@ DEF_STR_TO_INT(toi, int, tolli, long long int, "i")
 	en##FNAME##_flag(int status, int flag, const char *s, TYPE min, TYPE max)\
 	{\
 		TYPE ret = 0;\
-		if (!FNAME(s, min, max, &ret))\
+		if (FNAME(s, min, max, &ret))\
 			enprintf(status,\
 				 "argument of -%c must be an integer in [%"PRI", %"PRI"]\n",\
 				 flag, min, max);\
@@ -46,7 +46,7 @@ DEF_STR_TO_INT(toi, int, tolli, long long int, "i")
 	en##FNAME##_arg(int status, const char *name, const char *s, TYPE min, TYPE max)\
 	{\
 		TYPE ret = 0;\
-		if (!FNAME(s, min, max, &ret))\
+		if (FNAME(s, min, max, &ret))\
 			enprintf(status,\
 				 "%s must be an integer in [%"PRI", %"PRI"]\n",\
 				 name, min, max);\
@@ -104,7 +104,7 @@ DEF_STR_TO_INT(toi, int, "i")
 	en##FNAME##_flag(int status, int flag, const char *s)\
 	{\
 		TYPE ret = 0;\
-		if (!FNAME(s, &ret))\
+		if (FNAME(s, &ret))\
 			enprintf(status, "argument of -%c must be floating-point value\n", flag);\
 		return ret;\
 	}\
@@ -119,7 +119,7 @@ DEF_STR_TO_INT(toi, int, "i")
 	en##FNAME##_arg(int status, const char *name, const char *s)\
 	{\
 		TYPE ret = 0;\
-		if (!FNAME(s, &ret))\
+		if (FNAME(s, &ret))\
 			enprintf(status, "%s must be floating-point value\n", name);\
 		return ret;\
 	}\

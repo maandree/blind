@@ -2,7 +2,6 @@
 #include "stream.h"
 #include "util.h"
 
-#include <arpa/inet.h>
 #if defined(HAVE_PRCTL)
 # include <sys/prctl.h>
 #endif
@@ -28,22 +27,21 @@ process_xyza(char *buf, size_t n, int fd, const char *fname)
 	pixels = pixbuf;
 	end = pixbuf + ELEMENTSOF(pixbuf);
 	if (draft) {
-		for (ptr = 0; ptr < n; ptr += sizeof(pixel)) {
+		for (ptr = 0; ptr < n; ptr += 4 * sizeof(double)) {
 			pixel = (double *)(buf + ptr);
-			a = (long int)(pixel[3] * 0xFFFFL);
 			ciexyz_to_scaled_yuv(pixel[0], pixel[1], pixel[2], &r, &g, &b);
-			y = (long int)r +  16 * 256;
-			u = (long int)g + 128 * 256;
-			v = (long int)b + 128 * 256;
-			*pixels++ = htons((uint16_t)(a < 0 ? 0 : a > 0xFFFFL ? 0xFFFFL : a));
-			*pixels++ = htons((uint16_t)(y < 0 ? 0 : y > 0xFFFFL ? 0xFFFFL : y));
-			*pixels++ = htons((uint16_t)(u < 0 ? 0 : u > 0xFFFFL ? 0xFFFFL : u));
-			*pixels++ = htons((uint16_t)(v < 0 ? 0 : v > 0xFFFFL ? 0xFFFFL : v));
+			y = (long int)r +  16L * 256L;
+			u = (long int)g + 128L * 256L;
+			v = (long int)b + 128L * 256L;
+			*pixels++ = 0xFFFFU;
+			*pixels++ = htole16((uint16_t)(y < 0 ? 0 : y > 0xFFFFL ? 0xFFFFL : y));
+			*pixels++ = htole16((uint16_t)(u < 0 ? 0 : u > 0xFFFFL ? 0xFFFFL : u));
+			*pixels++ = htole16((uint16_t)(v < 0 ? 0 : v > 0xFFFFL ? 0xFFFFL : v));
 			if (pixels == end)
 				ewriteall(fd, pixels = pixbuf, sizeof(pixbuf), fname);
 		}
 	} else {
-		for (ptr = 0; ptr < n; ptr += sizeof(pixel)) {
+		for (ptr = 0; ptr < n; ptr += 4 * sizeof(double)) {
 			pixel = (double *)(buf + ptr);
 			a = (long int)(pixel[3] * 0xFFFFL);
 			ciexyz_to_srgb(pixel[0], pixel[1], pixel[2], &r, &g, &b);
@@ -51,22 +49,19 @@ process_xyza(char *buf, size_t n, int fd, const char *fname)
 			g = srgb_encode(g);
 			b = srgb_encode(b);
 			srgb_to_yuv(r, g, b, pixel + 0, pixel + 1, pixel + 2);
-			y = (long int)(pixel[0] * 0xFFFFL);
-			u = (long int)(pixel[1] * 0xFFFFL);
-			v = (long int)(pixel[2] * 0xFFFFL);
-			y +=  16 * 256;
-			u += 128 * 256;
-			v += 128 * 256;
-			*pixels++ = htons((uint16_t)(a < 0 ? 0 : a > 0xFFFFL ? 0xFFFFL : a));
-			*pixels++ = htons((uint16_t)(y < 0 ? 0 : y > 0xFFFFL ? 0xFFFFL : y));
-			*pixels++ = htons((uint16_t)(u < 0 ? 0 : u > 0xFFFFL ? 0xFFFFL : u));
-			*pixels++ = htons((uint16_t)(v < 0 ? 0 : v > 0xFFFFL ? 0xFFFFL : v));
+			y = (long int)(pixel[0] * 0xFFFFL) +  16L * 256L;
+			u = (long int)(pixel[1] * 0xFFFFL) + 128L * 256L;
+			v = (long int)(pixel[2] * 0xFFFFL) + 128L * 256L;
+			*pixels++ = htole16((uint16_t)(a < 0 ? 0 : a > 0xFFFFL ? 0xFFFFL : a));
+			*pixels++ = htole16((uint16_t)(y < 0 ? 0 : y > 0xFFFFL ? 0xFFFFL : y));
+			*pixels++ = htole16((uint16_t)(u < 0 ? 0 : u > 0xFFFFL ? 0xFFFFL : u));
+			*pixels++ = htole16((uint16_t)(v < 0 ? 0 : v > 0xFFFFL ? 0xFFFFL : v));
 			if (pixels == end)
 				ewriteall(fd, pixels = pixbuf, sizeof(pixbuf), fname);
 		}
 	}
 	if (pixels != pixbuf)
-		ewriteall(fd, pixels = pixbuf, sizeof(pixbuf), fname);
+		ewriteall(fd, pixbuf, (size_t)(pixels - pixbuf) * sizeof(*pixels), fname);
 }
 
 int
@@ -128,11 +123,14 @@ main(int argc, char *argv[])
 		if (dup2(pipe_rw[0], STDIN_FILENO) == -1)
 			eprintf("dup2:");
 		close(pipe_rw[0]);
+		execvp("ffmpeg", cmd);
 		eprintf("exec ffmpeg:");
 	}
 
+	free(cmd);
+
 	close(pipe_rw[0]);
-	while (!eread_stream(&stream, SIZE_MAX)) {
+	while (eread_stream(&stream, SIZE_MAX)) {
 		n = stream.ptr - (stream.ptr % stream.pixel_size);
 		process(stream.buf, n, pipe_rw[1], "<subprocess>");
 		memmove(stream.buf, stream.buf + n, stream.ptr -= n);

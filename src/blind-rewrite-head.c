@@ -42,22 +42,22 @@ rewrite(struct stream *stream, int frames_auto)
 		stream->frames, stream->width, stream->height, stream->pixfmt, 0, &headlen);
 
 	length = stream->frames * frame_size;
-	if (length > (size_t)SSIZE_MAX || headlen > (size_t)SSIZE_MAX - length)
+	if (length > (size_t)SSIZE_MAX || (size_t)headlen > (size_t)SSIZE_MAX - length)
 		eprintf("%s: video is too long\n", stream->file);
 
-	if (headlen > stream->headlen)
+	if ((size_t)headlen > stream->headlen)
 		if (ftruncate(stream->fd, length + headlen))
 			eprintf("ftruncate %s:", stream->file);
 
-	data = mmap(0, length + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_PRIVATE, stream->fd, 0);
+	data = mmap(0, length + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_SHARED, stream->fd, 0);
 	if (data == MAP_FAILED)
 		eprintf("mmap %s:", stream->file);
-	if (headlen != stream->headlen)
+	if ((size_t)headlen != stream->headlen)
 		memmove(data + headlen, data + stream->headlen, length);
 	memcpy(data, head, (size_t)headlen);
 	munmap(data, length + (size_t)headlen);
 
-	if (headlen < stream->headlen)
+	if ((size_t)headlen < stream->headlen)
 		if (ftruncate(stream->fd, length + headlen))
 			eprintf("ftruncate %s:", stream->file);
 }
@@ -80,7 +80,7 @@ main(int argc, char *argv[])
 	if (headless) {
 		if (argc != 5)
 			eprintf("all positional arguments are mandatory unless -h is used\n");
-	} else if (argc != 1 || argc != 2 || argc != 4 || argc != 5) {
+	} else if (argc != 1 && argc != 2 && argc != 4 && argc != 5) {
 		usage();
 	}
 

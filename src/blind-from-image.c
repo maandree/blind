@@ -97,10 +97,16 @@ static size_t
 pam_head(int fd, const char *fname)
 {
 	size_t ptr;
+	ssize_t r;
 	char *p;
 	unsigned long long int maxval = UINT8_MAX;
 	for (ptr = 0;;) {
-		ptr += ereadall(fd, buf + ptr, (size_t)buf - ptr, fname);
+		r = read(fd, buf + ptr, sizeof(buf) - 1);
+		if (r < 0)
+			eprintf("read %s:", fname);
+		if (r == 0)
+			eprintf("%s\n", conv_fail_msg);
+		ptr += (size_t)r;
 		for (;;) {
 			p = memchr(buf, '\n', ptr);
 			if (!p) {
@@ -148,13 +154,13 @@ pam_head(int fd, const char *fname)
 		}
 	}
 header_done:
-	if (maxval < (size_t)UINT8_MAX) {
+	if (maxval <= (size_t)UINT8_MAX) {
 		pixel_size = sizeof(uint8_t);
 		get_value = get_value_u8;
-	} else if (maxval < (size_t)UINT16_MAX) {
+	} else if (maxval <= (size_t)UINT16_MAX) {
 		pixel_size = sizeof(uint16_t);
 		get_value = get_value_u16;
-	} else if (maxval < (size_t)UINT32_MAX) {
+	} else if (maxval <= (size_t)UINT32_MAX) {
 		pixel_size = sizeof(uint32_t);
 		get_value = get_value_u32;
 	} else {
@@ -176,7 +182,6 @@ main(int argc, char *argv[])
 	size_t off, n;
 	ssize_t r;
 	const char *file = "<subprocess>";
-	const char *conv_fail_msg = "convertion failed, if converting a farbfeld file, try -f";
 
 	ARGBEGIN {
 	case 'f':
@@ -202,7 +207,7 @@ main(int argc, char *argv[])
 	else
 		forked = 1;
 
-	if (forked) {
+	if (!forked) {
 		file = "<stdin>";
 		pipe_rw[0] = STDIN_FILENO;
 		goto after_fork;

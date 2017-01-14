@@ -17,7 +17,7 @@ eninit_stream(int status, struct stream *stream)
 	size_t n;
 	char *p = NULL, *w, *h, *f, *end;
 
-	for (stream->ptr = 0; stream->fd >= 0 && p;) {
+	for (stream->ptr = 0; stream->fd >= 0 && !p;) {
 		r = read(stream->fd, stream->buf + stream->ptr, sizeof(stream->buf) - stream->ptr);
 		if (r < 0)
 			enprintf(status, "read %s:", stream->file);
@@ -87,7 +87,7 @@ eninit_stream(int status, struct stream *stream)
 
 	return;
 bad_format:
-	enprintf(status, "%s: file format not supported%s\n", stream->file);
+	enprintf(status, "%s: file format not supported\n", stream->file);
 }
 
 
@@ -167,9 +167,9 @@ void
 encheck_compat(int status, const struct stream *a, const struct stream *b)
 {
 	if (a->width != b->width || a->height != b->height)
-		eprintf("videos do not have the same geometry\n");
+		enprintf(status, "videos do not have the same geometry\n");
 	if (strcmp(a->pixfmt, b->pixfmt))
-		eprintf("videos use incompatible pixel formats\n");
+		enprintf(status, "videos use incompatible pixel formats\n");
 }
 
 
@@ -181,11 +181,11 @@ enread_frame(int status, struct stream *stream, void *buf, size_t n)
 	for (; stream->ptr < n; stream->ptr += (size_t)r) {
 		r = read(stream->fd, buffer + stream->ptr, n - stream->ptr);
 		if (r < 0) {
-			eprintf("read %s:", stream->file);
+			enprintf(status, "read %s:", stream->file);
 		} else if (r == 0) {
 			if (!stream->ptr)
 				break;
-			eprintf("%s: incomplete frame", stream->file);
+			enprintf(status, "%s: incomplete frame", stream->file);
 		}
 	}
 	if (!stream->ptr)

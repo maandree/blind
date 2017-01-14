@@ -16,3 +16,4 @@
 #include "util/colour.h"
 #include "util/io.h"
 #include "util/jobs.h"
+#include "util/endian.h"

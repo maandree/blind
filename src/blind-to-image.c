@@ -46,14 +46,14 @@ write_pixel(double R, double G, double B, double A, int bytes, unsigned long lon
 	colours[2] = srgb_encode(B) * max + 0.5;
 	colours[3] = A * max + 0.5;
 
-	for (i = k = 0; i < 4; i++) {
-		for (j = 0; j < bytes; j++, k++) {
-			buf[k + bm - j] = (unsigned char)(colours[j]);
-			colours[j] >>= 8;
+	for (i = k = 0; i < 4; i++, k += bytes) {
+		for (j = 0; j < bytes; j++) {
+			buf[k + bm - j] = (unsigned char)(colours[i]);
+			colours[i] >>= 8;
 		}
 	}
 
-	ewriteall(STDOUT_FILENO, buf, (size_t)bytes * 4, "<stdout>");
+	ewriteall(STDOUT_FILENO, buf, k, "<stdout>");
 }
 
 static void
@@ -75,7 +75,7 @@ process_xyza(struct stream *stream, size_t n, int bytes, unsigned long long int 
 			}
 		}
 
-		srgb_to_ciexyz(X, Y, Z, &R, &G, &B);
+		ciexyz_to_srgb(X, Y, Z, &R, &G, &B);
 		write_pixel(R, G, B, A, bytes, max);
 	}
 }
@@ -109,7 +109,7 @@ main(int argc, char *argv[])
 
 	max = 1ULL << (depth - 1);
 	max |= max - 1;
-	for (bytes = 1; bytes * 8 < depth; bytes++);
+	bytes = (depth + 7) / 8;
 
 	if (!strcmp(stream.pixfmt, "xyza"))
 		process = process_xyza;

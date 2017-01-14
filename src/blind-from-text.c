@@ -10,7 +10,7 @@
 USAGE("")
 
 static void
-process_xyza(struct stream *stream)
+process_xyza(void)
 {
 	double buf[BUFSIZ / sizeof(double)];
 	size_t i;
@@ -35,7 +35,7 @@ main(int argc, char *argv[])
 	size_t size = 0;
 	char *line = NULL;
 	ssize_t len;
-	void (*process)(struct stream *stream) = NULL;
+	void (*process)(void) = NULL;
 
 	ENOFLAGS(argc);
 
@@ -48,7 +48,7 @@ main(int argc, char *argv[])
 	}
 	if (len && line[len - 1] == '\n')
 		line[--len] = '\n';
-	if (len + 6 > sizeof(stream.buf))
+	if ((size_t)len + 6 > sizeof(stream.buf))
 		eprintf("<stdin>: head is too long\n");
 	stream.fd = -1;
 	stream.file = "<stdin>";
@@ -64,7 +64,7 @@ main(int argc, char *argv[])
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
-	process(&stream);
+	process();
 
 	efshut(stdin, "<stdin>");
 	return 0;

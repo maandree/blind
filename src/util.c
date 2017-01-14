@@ -171,7 +171,6 @@ enfork_jobs(int status, size_t *start, size_t *end, size_t jobs)
 	return 1;
 }
 
-
 void
 enjoin_jobs(int status, int is_master)
 {

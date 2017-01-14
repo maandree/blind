@@ -79,7 +79,7 @@ concat_to_file(int argc, char *argv[], char *output_file)
 
 	ewriteall(fd, head, (size_t)headlen, output_file);
 
-	data = mmap(0, size + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+	data = mmap(0, size + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (data == MAP_FAILED)
 		eprintf("mmap %s:", output_file);
 	memmove(data + headlen, data, size);

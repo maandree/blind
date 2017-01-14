@@ -17,7 +17,7 @@ static size_t jobs = 1;
 
 static void
 process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
-	     struct stream *colour, struct stream *sigma, size_t n, size_t unused)
+	     struct stream *colour, struct stream *sigma, size_t n, size_t sn)
 {
 	typedef double pixel_t[4];
 
@@ -141,7 +141,8 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 		}
 	}
 
-	(void) unused;
+	(void) sigma;
+	(void) sn;
 }
 
 int

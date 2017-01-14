@@ -56,7 +56,7 @@ main(int argc, char *argv[])
 	}
 done:
 
-	if (stream.height || n)
+	if (anything && (stream.height || n))
 		enprintf(2, "incomplete frame\n");
 
 	return !anything;
