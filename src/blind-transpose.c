@@ -14,28 +14,33 @@ main(int argc, char *argv[])
 {
 	struct stream stream;
 	char *buf, *image;
-	size_t n, imgw, imgh, x, y, i, b;
+	size_t n, imgw, srcw, srch, ps, x, y, i, b, dx;
 
 	ENOFLAGS(argc);
 
 	stream.file = "<stdin>";
 	stream.fd = STDIN_FILENO;
 	einit_stream(&stream);
+	imgw = srch = stream.height;
+	stream.height = srcw = stream.width;
+	stream.width = imgw;
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
 	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, "<stdin>");
-	n = stream.width * stream.height * stream.pixel_size;
+	n = stream.width * stream.height * (ps = stream.pixel_size);
 	buf   = emalloc(n);
 	image = emalloc(n);
 
-	imgw = stream.width * (imgh = stream.height * stream.pixel_size);
+	srch *= ps;
+	srcw *= dx = imgw * ps;
+	imgw *= ps;
 	memcpy(buf, stream.buf, stream.ptr);
 	while (eread_frame(&stream, buf, n)) {
-		for (b = y = 0; y < imgh; y += stream.pixel_size)
-			for (x = 0; x < imgw; x += imgh)
-				for (i = 0; i < stream.pixel_size; i++)
-					image[x + y + i] = buf[b++];
+		for (b = y = 0; y < srch; y += ps)
+			for (x = 0; x < srcw; x += dx)
+				for (i = 0; i < ps; i++, b++)
+					image[y + x + i] = buf[b];
 		ewriteall(STDOUT_FILENO, image, n, "<stdout>");
 	}
 
