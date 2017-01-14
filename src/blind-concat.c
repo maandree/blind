@@ -34,10 +34,10 @@ concat_to_stdout(int argc, char *argv[])
 	fprint_stream_head(stdout, streams);
 	efflush(stdout, "<stdout>");
 
-	for (; argc--; streams++) {
-		for (; eread_stream(streams, SIZE_MAX); streams->ptr = 0)
-			ewriteall(STDOUT_FILENO, streams->buf, streams->ptr, "<stdout>");
-		close(streams->fd);
+	for (i = 0; i < argc; i++) {
+		for (; eread_stream(streams + i, SIZE_MAX); streams[i].ptr = 0)
+			ewriteall(STDOUT_FILENO, streams[i].buf, streams[i].ptr, "<stdout>");
+		close(streams[i].fd);
 	}
 
 	free(streams);
@@ -47,7 +47,7 @@ static void
 concat_to_file(int argc, char *argv[], char *output_file)
 {
 	struct stream stream, refstream;
-	int first = 0;
+	int first = 1;
 	int fd = eopen(output_file, O_RDWR | O_CREAT | O_TRUNC, 0666);
 	char head[STREAM_HEAD_MAX];
 	ssize_t headlen, size = 0;
@@ -59,7 +59,8 @@ concat_to_file(int argc, char *argv[], char *output_file)
 		einit_stream(&stream);
 
 		if (first) {
-			stream = refstream;
+			refstream = stream;
+			first = 1;
 		} else {
 			if (refstream.frames > SIZE_MAX - stream.frames)
 				eprintf("resulting video is too long\n");
@@ -68,7 +69,7 @@ concat_to_file(int argc, char *argv[], char *output_file)
 		}
 
 		for (; eread_stream(&stream, SIZE_MAX); stream.ptr = 0) {
-			ewriteall(STDOUT_FILENO, stream.buf, stream.ptr, "<stdout>");
+			ewriteall(fd, stream.buf, stream.ptr, output_file);
 			size += stream.ptr;
 		}
 		close(stream.fd);

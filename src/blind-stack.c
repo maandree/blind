@@ -66,6 +66,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < n_streams; i++) {
 		streams[i].file = argv[i];
 		streams[i].fd = eopen(streams[i].file, O_RDONLY);
+		einit_stream(streams + i);
 	}
 
 	if (!strcmp(streams->pixfmt, "xyza"))
@@ -73,6 +74,8 @@ main(int argc, char *argv[])
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", streams->pixfmt);
 
+	fprint_stream_head(stdout, streams);
+	efflush(stdout, "<stdout>");
 	process_multiple_streams(streams, n_streams, STDOUT_FILENO, "<stdout>", process);
 
 	free(streams);
