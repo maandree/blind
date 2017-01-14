@@ -18,7 +18,6 @@ UNTESTED:
 	blind-from-text
 	blind-gauss-blur
 	blind-invert-luma
-	blind-repeat
 	blind-reverse
 	blind-rewrite-head
 	blind-set-alpha
