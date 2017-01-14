@@ -53,7 +53,9 @@ main(int argc, char *argv[])
 	end   = end   * frame_size + stream.headlen;
 	start = start * frame_size + stream.headlen;
 
+#if defined(POSIX_FADV_SEQUENTIAL)
 	posix_fadvise(stream.fd, start, end - start, POSIX_FADV_SEQUENTIAL);
+#endif
 	for (ptr = start; ptr < end; ptr += (size_t)r) {
 		max = end - ptr;
 		max = max < sizeof(buf) ? max : sizeof(buf);

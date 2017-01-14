@@ -1,7 +1,8 @@
 /* See LICENSE file for copyright and license details. */
 
-#define ewriteall(...) enwriteall(1, __VA_ARGS__)
-#define ereadall(...)  enreadall(1, __VA_ARGS__)
+#define ewriteall(...)  enwriteall(1, __VA_ARGS__)
+#define ereadall(...)   enreadall(1, __VA_ARGS__)
+#define epwriteall(...) enpwriteall(1, __VA_ARGS__)
 
 int writeall(int fd, void *buf, size_t n);
 
@@ -21,4 +22,13 @@ enreadall(int status, int fd, void *buf, size_t n, const char *fname)
 	if (r < 0)
 		enprintf(status, "read %s:", fname);
 	return (size_t)r;
+}
+
+int pwriteall(int fd, void *buf, size_t n, size_t ptr);
+
+static inline void
+enpwriteall(int status, int fd, void *buf, size_t n, size_t ptr, const char *fname)
+{
+	if (pwriteall(fd, buf, n, ptr))
+		enprintf(status, "pwrite %s:", fname);
 }

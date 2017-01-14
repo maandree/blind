@@ -39,7 +39,9 @@ main(int argc, char *argv[])
 	efflush(stdout, "<stdout>");
 
 	while (inf || count--) {
+#if defined(POSIX_FADV_SEQUENTIAL)
 		posix_fadvise(stream.fd, stream.headlen, 0, POSIX_FADV_SEQUENTIAL);
+#endif
 		for (ptr = stream.headlen;; ptr += (size_t)r) {
 			r = pread(stream.fd, buf, sizeof(buf), ptr);
 			if (r < 0)

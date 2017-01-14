@@ -140,6 +140,22 @@ readall(int fd, void *buf, size_t n)
 	return r;
 }
 
+int
+pwriteall(int fd, void *buf, size_t n, size_t ptr)
+{
+	char *buffer = buf;
+	ssize_t r;
+	while (n) {
+		r = pwrite(fd, buffer, n, ptr);
+		if (r < 0)
+			return -1;
+		buffer += (size_t)r;
+		n -= (size_t)r;
+		ptr += (size_t)r;
+	}
+	return 0;
+}
+
 
 static inline pid_t
 enfork(int status)
