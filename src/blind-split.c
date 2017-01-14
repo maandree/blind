@@ -9,17 +9,27 @@
 #include <string.h>
 #include <unistd.h>
 
-USAGE("(file (end-point | 'end')) ...")
+USAGE("[-L] (file (end-point | 'end')) ...")
 
 int
 main(int argc, char *argv[])
 {
 	struct stream stream;
 	size_t *ends, i, parts, ptr, end, frame_size, n;
+	char *to_end;
 	FILE *fp;
-	int fd;
+	int fd, unknown_length = 0;
 
-	ENOFLAGS(argc < 2 || argc % 2);
+	ARGBEGIN {
+	case 'L':
+		unknown_length = 1;
+		break;
+	default:
+		usage();
+	} ARGEND;
+
+	if (argc < 2 || argc % 2)
+		usage();
 
 	stream.file = "<stdin>";
 	stream.fd = STDIN_FILENO;
@@ -31,15 +41,19 @@ main(int argc, char *argv[])
 
 	parts = (size_t)argc / 2;
 	ends = alloca(parts * sizeof(*ends));
+	to_end = alloca(parts);
 
 	for (i = 0; i < parts; i++) {
-		if (!strcmp(argv[i * 2 + 1], "end"))
-			ends[i] = stream.frames;
-		else if (tozu(argv[i * 2 + 1], 0, SIZE_MAX, ends + i))
+		to_end[i] = 0;
+		if (!strcmp(argv[i * 2 + 1], "end")) {
+			ends[i] = unknown_length ? SIZE_MAX : stream.frames;
+			to_end[i] = 1;
+		} else if (tozu(argv[i * 2 + 1], 0, SIZE_MAX, ends + i)) {
 			eprintf("the end point must be an integer in [0, %zu]\n", SIZE_MAX);
+		}
 		if (i && ends[i] <= ends[i - 1])
 			eprintf("the end points must be in strictly ascending order\n");
-		if (ends[i] > stream.frames)
+		if (!unknown_length && ends[i] > stream.frames)
 			eprintf("frame %zu is beyond the end of the video\n", ends[i]);
 	}
 
@@ -54,7 +68,7 @@ main(int argc, char *argv[])
 		fprint_stream_head(fp, &stream);
 		efflush(fp, argv[i * 2]);
 
-		for (end = ends[i] * frame_size; ptr < end; ptr += n) {
+		for (end = to_end[i] ? SIZE_MAX : ends[i] * frame_size; ptr < end; ptr += n) {
 			n = end - ptr;
 			if (stream.ptr) {
 				n = stream.ptr < n ? stream.ptr : n;
@@ -63,8 +77,12 @@ main(int argc, char *argv[])
 			} else if ((n = eread_stream(&stream, n))) {
 				ewriteall(fd, stream.buf, n, argv[i * 2]);
 				stream.ptr = 0;
-			} else {
+			} else if (ptr % frame_size) {
+				eprintf("%s: incomplete frame\n", stream.file);
+			} else if (!unknown_length) {
 				eprintf("%s: file is shorter than expected\n", stream.file);
+			} else {
+				break;
 			}
 		}
 

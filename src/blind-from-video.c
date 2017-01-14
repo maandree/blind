@@ -14,7 +14,7 @@
 #include <string.h>
 #include <unistd.h>
 
-USAGE("[-r frame-rate] [-w width -h height] [-d] input-file output-file")
+USAGE("[-r frame-rate] [-w width -h height] [-dL] input-file output-file")
 
 static int draft = 0;
 
@@ -94,7 +94,7 @@ get_metadata(char *file, size_t *width, size_t *height)
 }
 
 static void
-convert_segment(char *buf, size_t n, int fd, char *file)
+convert_segment(char *buf, size_t n, int fd, const char *file)
 {
 	typedef double pixel_t[4];
 	size_t i, ptr;
@@ -135,7 +135,7 @@ convert_segment(char *buf, size_t n, int fd, char *file)
 }
 
 static void
-convert(char *infile, int outfd, char *outfile, size_t width, size_t height, char *frame_rate)
+convert(const char *infile, int outfd, const char *outfile, size_t width, size_t height, const char *frame_rate)
 {
 	char geometry[2 * 3 * sizeof(size_t) + 2], buf[BUFSIZ];
 	const char *cmd[13];
@@ -206,16 +206,19 @@ main(int argc, char *argv[])
 	char head[STREAM_HEAD_MAX];
 	char *frame_rate = NULL;
 	char *infile;
-	char *outfile;
+	const char *outfile;
 	char *data;
 	ssize_t headlen;
 	size_t length, frame_size;
-	int outfd;
+	int outfd, skip_length = 0;
 	struct stat st;
 
 	ARGBEGIN {
 	case 'd':
 		draft = 1;
+		break;
+	case 'L':
+		skip_length = 1;
 		break;
 	case 'r':
 		frame_rate = EARG();
@@ -245,7 +248,20 @@ main(int argc, char *argv[])
 		eprintf("video frame too large\n");
 	frame_size *= 4 * sizeof(double);
 
-	outfd = eopen(outfile, O_RDWR | O_CREAT | O_TRUNC, 0666);
+	if (!strcmp(outfile, "-")) {
+		outfile = "<stdout>";
+		outfd = STDOUT_FILENO;
+		if (!skip_length)
+			eprintf("standard out as output file is only allowed with -L\n");
+	} else {
+		outfd = eopen(outfile, O_RDWR | O_CREAT | O_TRUNC, 0666);
+	}
+
+	if (skip_length) {
+		sprintf(head, "%zu %zu %zu %s\n%cuivf%zn", frames, width, height, "xyza", 0, &headlen);
+		ewriteall(outfd, head, (size_t)headlen, outfile);
+	}
+
 	convert(infile, outfd, outfile, width, height, frame_rate);
 
 	if (fstat(outfd, &st))
@@ -256,12 +272,14 @@ main(int argc, char *argv[])
 		eprintf("<subprocess>: incomplete frame");
 	frames = length / frame_size;
 
-	sprintf(head, "%zu %zu %zu %s\n%cuivf%zn", frames, width, height, "xyza", 0, &headlen);
-	ewriteall(outfd, head, (size_t)headlen, outfile);
-	data = mmap(0, length + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_SHARED, outfd, 0);
-	memmove(data + headlen, data, length);
-	memcpy(data, head, (size_t)headlen);
-	munmap(data, length + (size_t)headlen);
+	if (!skip_length) {
+		sprintf(head, "%zu %zu %zu %s\n%cuivf%zn", frames, width, height, "xyza", 0, &headlen);
+		ewriteall(outfd, head, (size_t)headlen, outfile);
+		data = mmap(0, length + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_SHARED, outfd, 0);
+		memmove(data + headlen, data, length);
+		memcpy(data, head, (size_t)headlen);
+		munmap(data, length + (size_t)headlen);
+	}
 
 	close(outfd);
 	return 0;
