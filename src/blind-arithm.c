@@ -8,7 +8,12 @@
 #include <string.h>
 #include <unistd.h>
 
-USAGE("operation right-hand-stream")
+USAGE("[-ayxz] operation right-hand-stream")
+
+static int skip_a = 0;
+static int skip_x = 0;
+static int skip_y = 0;
+static int skip_z = 0;
 
 /* Because the syntax for a function returning a function pointer is disgusting. */
 typedef void (*process_func)(struct stream *left, struct stream *right, size_t n);
@@ -30,14 +35,22 @@ typedef void (*process_func)(struct stream *left, struct stream *right, size_t n
 		size_t i;\
 		double *lh, rh;\
 		for (i = 0; i < n; i += 4 * sizeof(double)) {\
-			lh = ((double *)(left->buf + i)) + 0, rh = ((double *)(right->buf + i))[0];\
-			ALGO;\
-			lh = ((double *)(left->buf + i)) + 1, rh = ((double *)(right->buf + i))[1];\
-			ALGO;\
-			lh = ((double *)(left->buf + i)) + 2, rh = ((double *)(right->buf + i))[2];\
-			ALGO;\
-			lh = ((double *)(left->buf + i)) + 3, rh = ((double *)(right->buf + i))[3];\
-			ALGO;\
+			if (!skip_x) {\
+				lh = ((double *)(left->buf + i)) + 0, rh = ((double *)(right->buf + i))[0];\
+				ALGO;\
+			}\
+			if (!skip_y) {\
+				lh = ((double *)(left->buf + i)) + 1, rh = ((double *)(right->buf + i))[1];\
+				ALGO;\
+			}\
+			if (!skip_z) {\
+				lh = ((double *)(left->buf + i)) + 2, rh = ((double *)(right->buf + i))[2];\
+				ALGO;\
+			}\
+			if (!skip_a) {\
+				lh = ((double *)(left->buf + i)) + 3, rh = ((double *)(right->buf + i))[3];\
+				ALGO;\
+			}\
 		}\
 	}
 LIST_OPERATORS
@@ -60,7 +73,25 @@ main(int argc, char *argv[])
 	struct stream left, right;
 	process_func process = NULL;
 
-	ENOFLAGS(argc != 2);
+	ARGBEGIN {
+	case 'a':
+		skip_a = 1;
+		break;
+	case 'x':
+		skip_x = 1;
+		break;
+	case 'y':
+		skip_y = 1;
+		break;
+	case 'z':
+		skip_z = 1;
+		break;
+	default:
+		usage();
+	} ARGEND;
+
+	if (argc != 2)
+		usage();
 
 	left.file = "<stdin>";
 	left.fd = STDIN_FILENO;

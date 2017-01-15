@@ -55,14 +55,14 @@ main(int argc, char *argv[])
 	stream.fd = STDIN_FILENO;
 	stream.file = "<stdin>";
 	einit_stream(&stream);
-	fprint_stream_head(stdout, &stream);
-	efflush(stdout, "<stdout>");
 
 	if (!strcmp(stream.pixfmt, "xyza"))
 		process = reverse ? process_xyza_r : process_xyza;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
+	fprint_stream_head(stdout, &stream);
+	efflush(stdout, "<stdout>");
 	fmd = fm = stream.frames - 1;
 	process_each_frame_segmented(&stream, STDOUT_FILENO, "<stdout>", process);
 

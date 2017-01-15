@@ -64,6 +64,8 @@ main(int argc, char *argv[])
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 
+	fprint_stream_head(stdout, &colour);
+	efflush(stdout, "<stdout>");
 	process_two_streams(&colour, &alpha, STDOUT_FILENO, "<stdout>", process);
 	return 0;
 }

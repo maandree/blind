@@ -13,16 +13,23 @@ static void
 process_xyza(struct stream *colour, struct stream *satur, size_t n)
 {
 	size_t i;
-	double s, *x, *z, X, Z;
+	double s, *x, y, *z, X, Z;
 	X = D65_XYY_X / D65_XYY_Y;
 	Z = 1 / D65_XYY_Y - 1 - X;
 	for (i = 0; i < n; i += colour->pixel_size) {
 		s = ((double *)(satur->buf + i))[1];
 		s *= ((double *)(satur->buf + i))[3];
 		x = ((double *)(colour->buf + i)) + 0;
+		y = ((double *)(colour->buf + i))[1];
 		z = ((double *)(colour->buf + i)) + 2;
-		*x = (*x - X) * s + X;
-		*z = (*z - Z) * s + Z;
+		*x = ((*x / X - y) * s + y) * X;
+		*z = ((*z / Z - y) * s + y) * Z;
+		/*
+		 * Explaination:
+		 *   Y is the luma and ((X / Xn - Y / Yn), (Z / Zn - Y / Yn))
+		 *   is the chroma (according to CIELAB), where (Xn, Yn, Zn)
+		 *   is the white point.
+		 */
 	}
 }
 
@@ -30,16 +37,17 @@ static void
 process_xyza_w(struct stream *colour, struct stream *satur, size_t n)
 {
 	size_t i;
-	double s, *x, *z, X, Z;
+	double s, *x, y, *z, X, Z;
 	for (i = 0; i < n; i += colour->pixel_size) {
 		X = ((double *)(satur->buf + i))[0];
 		Z = ((double *)(satur->buf + i))[2];
 		s = ((double *)(satur->buf + i))[1];
 		s *= ((double *)(satur->buf + i))[3];
 		x = ((double *)(colour->buf + i)) + 0;
+		y = ((double *)(colour->buf + i))[1];
 		z = ((double *)(colour->buf + i)) + 2;
-		*x = (*x - X) * s + X;
-		*z = (*z - Z) * s + Z;
+		*x = ((*x / X - y) * s + y) * X;
+		*z = ((*z / Z - y) * s + y) * Z;
 	}
 }
 
@@ -74,6 +82,8 @@ main(int argc, char *argv[])
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 
+	fprint_stream_head(stdout, &colour);
+	efflush(stdout, "<stdout>");
 	process_two_streams(&colour, &satur, STDOUT_FILENO, "<stdout>", process);
 	return 0;
 }

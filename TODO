@@ -10,17 +10,10 @@ blind-apply-kernel	apply a convolution matrix
 blind-find-frame	a graphical tool for locating frames, should highlight key frames
 
 UNTESTED:
-	blind-colour-srgb
 	blind-crop
 	blind-cut
-	blind-dissolve
 	blind-extend
 	blind-from-text
 	blind-gauss-blur
-	blind-invert-luma
 	blind-rewrite-head
-	blind-set-alpha
-	blind-set-luma
-	blind-set-saturation
-	blind-split
 	blind-to-text
