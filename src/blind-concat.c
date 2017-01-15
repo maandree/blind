@@ -2,7 +2,7 @@
 #include "stream.h"
 #include "util.h"
 
-#if defined(HAVE_SYS_EPOLL_H)
+#if defined(HAVE_EPOLL)
 # include <sys/epoll.h>
 #endif
 #include <sys/mman.h>
@@ -98,6 +98,12 @@ concat_to_file(int argc, char *argv[], char *output_file)
 static void
 concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 {
+#if !defined(HAVE_EPOLL)
+	int fd = eopen(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	if (fd != STDOUT_FILENO && dup2(fd, STDOUT_FILENO) == -1)
+		eprintf("dup2:");
+	concat_to_stdout(argc, argv, output_file);
+#else
 	struct epoll_event *events;
 	struct stream *streams;
 	size_t *ptrs;
@@ -105,14 +111,6 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 	size_t ptr, frame_size, frames = 0, next = 0, j;
 	ssize_t headlen;
 	int fd, i, n, pollfd;
-
-#if !defined(HAVE_SYS_EPOLL_H)
-	fd = eopen(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	if (fd != STDOUT_FILENO && dup2(fd, STDOUT_FILENO) == -1)
-		eprintf("dup2:");
-	concat_to_stdout(argc, argv, output_file);
-	return;
-#else
 
 	if (jobs > (size_t)argc)
 		jobs = (size_t)argc;
@@ -153,7 +151,7 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 	if (pollfd == -1)
 		eprintf("epoll_create1:");
 
-	epwriteall(fd, head, (size_t)head_len, 0, output_file);
+	epwriteall(fd, head, (size_t)headlen, 0, output_file);
 	for (i = 0; i < argc; i++) {
 		epwriteall(fd, streams[i].buf, streams[i].ptr, ptrs[i], output_file);
 		ptrs[i] += streams[i].ptr;
@@ -177,7 +175,7 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 			eprintf("epoll_wait:");
 		for (i = 0; i < n; i++) {
 			j = events[i].data.u64;
-			if (!eread_stream(streams + j)) {
+			if (!eread_stream(streams + j, SIZE_MAX)) {
 				close(streams[j].fd);
 				if (next < (size_t)argc) {
 					events->events = EPOLLIN;
@@ -203,7 +201,6 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 	free(events);
 	free(streams);
 	free(ptrs);
-
 #endif
 }
 
