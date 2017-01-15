@@ -8,7 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 
-USAGE("right-hand-stream")
+USAGE("operation right-hand-stream")
 
 /* Because the syntax for a function returning a function pointer is disgusting. */
 typedef void (*process_func)(struct stream *left, struct stream *right, size_t n);
@@ -60,7 +60,7 @@ main(int argc, char *argv[])
 	struct stream left, right;
 	process_func process = NULL;
 
-	ENOFLAGS(argc != 1);
+	ENOFLAGS(argc != 2);
 
 	left.file = "<stdin>";
 	left.fd = STDIN_FILENO;
@@ -75,6 +75,8 @@ main(int argc, char *argv[])
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", left.pixfmt);
 
+	fprint_stream_head(stdout, &left);
+	efflush(stdout, "<stdout>");
 	process_two_streams(&left, &right, STDOUT_FILENO, "<stdout>", process);
 	return 0;
 }

@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#include "stream.h"
 #include "util.h"
 
 #include <arpa/inet.h>

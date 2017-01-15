@@ -49,7 +49,7 @@ main(int argc, char *argv[])
 	if (argc < 3) {
 		X = D65_XYY_X / D65_XYY_Y;
 		Z = 1 / D65_XYY_Y - 1 - X;
-		Y = etolf_arg("the Y value", argv[1]);
+		Y = etolf_arg("the Y value", argv[0]);
 	} else {
 		X = etolf_arg("the X value", argv[0]);
 		Y = etolf_arg("the Y value", argv[1]);
