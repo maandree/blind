@@ -258,7 +258,7 @@ main(int argc, char *argv[])
 	}
 
 	if (skip_length) {
-		sprintf(head, "%zu %zu %zu %s\n%cuivf%zn", frames, width, height, "xyza", 0, &headlen);
+		SPRINTF_HEAD_ZN(head, frames, width, height, "xyza", &headlen);
 		ewriteall(outfd, head, (size_t)headlen, outfile);
 	}
 
@@ -273,7 +273,7 @@ main(int argc, char *argv[])
 	frames = length / frame_size;
 
 	if (!skip_length) {
-		sprintf(head, "%zu %zu %zu %s\n%cuivf%zn", frames, width, height, "xyza", 0, &headlen);
+		SPRINTF_HEAD_ZN(head, frames, width, height, "xyza", &headlen);
 		ewriteall(outfd, head, (size_t)headlen, outfile);
 		data = mmap(0, length + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_SHARED, outfd, 0);
 		memmove(data + headlen, data, length);

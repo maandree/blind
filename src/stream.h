@@ -4,6 +4,18 @@
 
 #define STREAM_HEAD_MAX (3 * 3 * sizeof(size_t) + sizeof(((struct stream *)0)->pixfmt) + 10)
 
+#define SPRINTF_HEAD_ZN(BUF, FRAMES, WIDTH, HEIGHT, PIXFMT, LENP)\
+	sprintf(BUF, "%zu %zu %zu %s\n%cuivf%zn",\
+		FRAMES, WIDTH, HEIGHT, PIXFMT, 0, LENP)
+
+#define SPRINTF_HEAD(BUF, FRAMES, WIDTH, HEIGHT, PIXFMT)\
+	sprintf(BUF, "%zu %zu %zu %s\n%cuivf",\
+		FRAMES, WIDTH, HEIGHT, PIXFMT, 0)
+
+#define FPRINTF_HEAD(FP, FRAMES, WIDTH, HEIGHT, PIXFMT)\
+	fprintf(fp, "%zu %zu %zu %s\n%cuivf",\
+		FRAMES, WIDTH, HEIGHT, PIXFMT, 0)
+
 #define einit_stream(...)      eninit_stream(1, __VA_ARGS__)
 #define eset_pixel_size(...)   enset_pixel_size(1, __VA_ARGS__)
 #define eread_stream(...)      enread_stream(1, __VA_ARGS__)

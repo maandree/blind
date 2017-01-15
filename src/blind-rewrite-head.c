@@ -38,8 +38,7 @@ rewrite(struct stream *stream, int frames_auto)
 	else if (stream->frames != frame_count)
 		eprintf("%s: frame count mismatch\n", stream->file);
 
-	sprintf(head, "%zu %zu %zu %s\n%cuivf%zn",
-		stream->frames, stream->width, stream->height, stream->pixfmt, 0, &headlen);
+	SPRINTF_HEAD_ZN(head, stream->frames, stream->width, stream->height, stream->pixfmt, &headlen);
 
 	length = stream->frames * frame_size;
 	if (length > (size_t)SSIZE_MAX || (size_t)headlen > (size_t)SSIZE_MAX - length)

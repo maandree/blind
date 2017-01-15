@@ -113,8 +113,7 @@ enset_pixel_size(int status, struct stream *stream)
 void
 fprint_stream_head(FILE *fp, struct stream *stream)
 {
-	fprintf(fp, "%zu %zu %zu %s\n%cuivf",
-		stream->frames, stream->width, stream->height, stream->pixfmt, 0);
+	FPRINTF_HEAD(fp, stream->frames, stream->width, stream->height, stream->pixfmt);
 }
 
 

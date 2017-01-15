@@ -47,7 +47,7 @@ main(int argc, char *argv[])
 			eprintf("<stdin>: no input\n");
 	}
 	if (len && line[len - 1] == '\n')
-		line[--len] = '\n';
+		line[--len] = '\0';
 	if ((size_t)len + 6 > sizeof(stream.buf))
 		eprintf("<stdin>: head is too long\n");
 	stream.fd = -1;

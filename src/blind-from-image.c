@@ -254,7 +254,7 @@ after_fork:
 		eprintf("%s\n", conv_fail_msg);
 
 	if (!headless) {
-		printf("1 %s %s xyza\n%cuivf", width, height, 0);
+		FPRINTF_HEAD(stdout, 1, width, height, "xyza");
 		efflush(stdout, "<stdout>");
 	}
 

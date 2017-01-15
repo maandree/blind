@@ -80,9 +80,7 @@ concat_to_file(int argc, char *argv[], char *output_file)
 		close(stream.fd);
 	}
 
-	sprintf(head, "%zu %zu %zu %s\n%cuivf%zn",
-		stream.frames, stream.width, stream.height, stream.pixfmt, 0, &headlen);
-
+	SPRINTF_HEAD_ZN(head, stream.frames, stream.width, stream.height, stream.pixfmt, &headlen);
 	ewriteall(fd, head, (size_t)headlen, output_file);
 
 	data = mmap(0, size + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
@@ -131,8 +129,7 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 		frames += streams[i].frames;
 	}
 
-	sprintf(head, "%zu %zu %zu %s\n%cuivf%zn",
-		frames, streams->width, streams->height, streams->pixfmt, 0, &headlen);
+	SPRINTF_HEAD_ZN(head, frames, streams->width, streams->height, streams->pixfmt, &headlen);
 
 	echeck_frame_size(streams->width, streams->height, streams->pixel_size, 0, output_file);
 	frame_size = streams->width * streams->height * streams->pixel_size;
