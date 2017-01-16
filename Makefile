@@ -33,6 +33,11 @@ BIN =\
 	blind-transpose\
 	blind-write-head
 
+SCRIPTS =\
+	blind-rotate-90\
+	blind-rotate-180\
+	blind-rotate-270
+
 all: $(BIN)
 
 %: %.o util.o stream.o

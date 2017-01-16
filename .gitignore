@@ -8,3 +8,6 @@
 *.o
 *.out
 /blind-*
+!/blind-rotate-90
+!/blind-rotate-180
+!/blind-rotate-270
