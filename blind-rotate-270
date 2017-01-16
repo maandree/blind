@@ -12,7 +12,7 @@ if ! test $# = 0; then
 	fi
 fi
 
-transpose="$(printf '%s\n' "$0" | sed 's/[^/]*$/blind-transpose/')"
-flop="$(     printf '%s\n' "$0" | sed 's/[^/]*$/blind-flop/')"
+transpose="$(printf '%s\n' "$0" | tr '/\n' '\n/' | sed '$s/^.*$/blind-transpose\//' | tr '/\n' '\n/')"
+flop="$(     printf '%s\n' "$0" | tr '/\n' '\n/' | sed '$s/^.*$/blind-flop\//'      | tr '/\n' '\n/')"
 
 "$flop" | "$transpose"
