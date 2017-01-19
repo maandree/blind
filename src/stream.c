@@ -356,7 +356,5 @@ nprocess_each_frame_two_streams(int status, struct stream *left, struct stream *
 			enwriteall(status, output_fd, image, lframe_size, output_fname);
 	}
 
-	free(lbuf);
-	free(rbuf);
 	munmap(image, 2 * lframe_size + rframe_size);
 }

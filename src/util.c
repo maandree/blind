@@ -167,35 +167,56 @@ enfork(int status)
 }
 
 
+/* If <() is used in Bash (possibily other shells), that process becomes
+ * child of the process for each <() is used. Therefore, we cannot simply
+ * wait until the last child has been reaped, or even the expected number
+ * of children has been reaped, we must instead remember the PID of each
+ * child we created and wait for all of them to be reaped. { */
+
 int
-enfork_jobs(int status, size_t *start, size_t *end, size_t jobs)
+enfork_jobs(int status, size_t *start, size_t *end, size_t jobs, pid_t **pids)
 {
 	size_t j, s = *start, n = *end - *start;
-	if (jobs < 2)
+	pid_t pid;
+	if (jobs < 2) {
+		*pids = NULL;
 		return 1;
+	}
 	*end = n / jobs + s;
+	*pids = enmalloc(status, jobs * sizeof(**pids));
 	for (j = 1; j < jobs; j++) {
-		if (!enfork(status)) {
+		pid = enfork(status);
+		if (!pid) {
 #if defined(HAVE_PRCTL) && defined(PR_SET_PDEATHSIG)
 			prctl(PR_SET_PDEATHSIG, SIGKILL);
 #endif
 			*start = n * (j + 0) / jobs + s;
 			*end   = n * (j + 1) / jobs + s;
 			return 0;
+		} else {
+			(*pids)[j - 1] = pid;
 		}
 	}
+	(*pids)[jobs - 1] = -1;
 	return 1;
 }
 
 void
-enjoin_jobs(int status, int is_master)
+enjoin_jobs(int status, int is_master, pid_t *pids)
 {
 	int stat;
+	size_t i;
 	if (!is_master)
 		exit(0);
-	while (wait(&stat) != -1)
-		if (!stat)
+	if (!pids)
+		return;
+	for (i = 0; pids[i] != -1; i++) {
+		if (waitpid(pids[i], &stat, 0) == -1)
+			enprintf(status, "waitpid:");
+		if (stat)
 			exit(status);
-	if (errno != ECHILD)
-		enprintf(status, "wait:");
+	}
+	free(pids);
 }
+
+/* } */

@@ -16,6 +16,10 @@
 	fprintf(FP, "%zu %zu %zu %s\n%cuivf",\
 		(size_t)(FRAMES), (size_t)(WIDTH), (size_t)(HEIGHT), PIXFMT, 0)
 
+#define FPRINTF_HEAD_FMT(FP, FFRAMES, FRAMES, FWIDTH, WIDTH, FHEIGHT, HEIGHT, PIXFMT)\
+	fprintf(FP, FFRAMES" "FWIDTH" "FHEIGHT" %s\n%cuivf",\
+		FRAMES, WIDTH, HEIGHT, PIXFMT, 0)
+
 #define einit_stream(...)      eninit_stream(1, __VA_ARGS__)
 #define eset_pixel_size(...)   enset_pixel_size(1, __VA_ARGS__)
 #define eread_stream(...)      enread_stream(1, __VA_ARGS__)

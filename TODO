@@ -15,6 +15,5 @@ UNTESTED:
 	blind-cut
 	blind-extend
 	blind-from-text
-	blind-gauss-blur
 	blind-rewrite-head
 	blind-to-text
