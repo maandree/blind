@@ -37,7 +37,8 @@ main(int argc, char *argv[])
 	stream.file = "<stdin>";
 	stream.fd = STDIN_FILENO;
 	einit_stream(&stream);
-	if (left + width > stream.width || top + height > stream.height)
+	if (left > SIZE_MAX - width || left + width > stream.width ||
+	    top > SIZE_MAX - height || top + height > stream.height)
 		eprintf("crop area extends beyond original image\n");
 	if (tile) {
 		fprint_stream_head(stdout, &stream);
@@ -59,10 +60,10 @@ main(int argc, char *argv[])
 
 	left *= stream.pixel_size;
 	if (!tile) {
-		off = top * irown;
+		off = top * irown + left;
 	} else {
-		off  = (orown  - (left % orown))  % orown;
-		yoff = (height - (top  % height)) % height;
+		off  = (orown  - left % orown)  % orown;
+		yoff = (height - top  % height) % height;
 	}
 
 	memcpy(buf, stream.buf, ptr = stream.ptr);
@@ -72,9 +73,9 @@ main(int argc, char *argv[])
 				memcpy(image + y * orown, buf + y * irown + off, orown);
 		} else {
 			for (ptr = y = 0; y < stream.height; y++) {
-				p = buf + ((y + yoff) % height) * irown + left;
+				p = buf + ((y + yoff) % height + top) * irown;
 				for (x = 0; x < irown; x++, ptr++)
-					image[ptr++] = p[(x + off) % orown];
+					image[ptr] = p[(x + off) % orown + left];
 			}
 		}
 		ewriteall(STDOUT_FILENO, image, m, "<stdout>");
