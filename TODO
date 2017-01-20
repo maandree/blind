@@ -13,5 +13,4 @@ blind-find-frame	a graphical tool for locating frames, should highlight key fram
 Add [-j jobs] to blind-from-video and blind-to-video.
 
 UNTESTED:
-	blind-cut
 	blind-rewrite-head

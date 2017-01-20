@@ -24,7 +24,7 @@ main(int argc, char *argv[])
 	if (!strcmp(argv[0], "end"))
 		eprintf("refusing to create video with zero frames\n");
 	else
-		start = etozu_arg("the start point", argv[1], 0, SIZE_MAX);
+		start = etozu_arg("the start point", argv[0], 0, SIZE_MAX);
 
 	if (!strcmp(argv[1], "end"))
 		to_end = 1;
