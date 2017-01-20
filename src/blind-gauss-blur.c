@@ -135,8 +135,8 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 	if (chroma || measure_y_only) {\
 		k[0] = sig[i1][1] * sig[i1][3];\
 		if (auto_spread)\
-			spread = (size_t)(k[0] * 3 + 0.5);\
-		blur[2] = blur[0] = !!k[0];\
+			spread = k[0] > 0 ? (size_t)(k[0] * 3 + 0.5) : 0;\
+		blur[2] = blur[0] = k[0] > 0;\
 		c[0] = k[0] *= k[0] * 2, c[0] = sqrt(c[0] * M_PI);\
 		k[0] = 1 / -k[0], c[0] = 1 / c[0];\
 		if (chroma) {\
@@ -154,15 +154,17 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 			spread = 0;\
 		for (i = 0; i < 3; i++) {\
 			k[i] = sig[i1][i] * sig[i1][3];\
-			if (auto_spread && spread < (size_t)(k[i] * 3 + 0.5))\
+			if (auto_spread && k[i] > 0 && spread < (size_t)(k[i] * 3 + 0.5))\
 				spread = (size_t)(k[i] * 3 + 0.5);\
-			blur[i] = !!k[i];\
+			blur[i] = k[i] > 0;\
 			c[i] = k[i] *= k[i] * 2, c[i] = sqrt(c[i] * M_PI);\
 			k[i] = 1 / -k[i], c[i] = 1 / c[i];\
 		}\
 	}\
 	if (blur[0] + blur[1] + blur[2] == 0)\
-		goto no_blur_##DIR;
+		goto no_blur_##DIR;\
+	if (spread < 1)\
+		spread = 1;
 
 #define BLUR_PIXEL(START, LOOP, DISTANCE)\
 	if (k[0] == k[1] && k[1] == k[2]) {\
