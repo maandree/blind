@@ -18,6 +18,7 @@ to stdout.
 The operation with operands from the same colour
 parameters on the sames pixels on the same frames
 on the two videos.
+.P
 If stdin is longer than
 .IR right-hand-stream ,
 the remainder or stdin is printed without any changes.
@@ -25,7 +26,7 @@ If stdin is shorter than
 .IR right-hand-stream ,
 the remainder of
 .I right-hand-stream
-is ignored and will not be read.
+is ignored but may be partially read.
 .SH OPERATIONS
 .TP
 .B add
