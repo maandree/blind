@@ -38,10 +38,10 @@ main(int argc, char *argv[])
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
-	printf("%zu %zu %zu %s", stream.frames, stream.width, stream.height, stream.pixfmt);
+	printf("%zu %zu %zu %s\n", stream.frames, stream.width, stream.height, stream.pixfmt);
 
 	while ((n = eread_stream(&stream, SIZE_MAX))) {
-		n -= n % stream.pixel_size;
+		n = stream.ptr - (stream.ptr % stream.pixel_size);
 		process(&stream, n);
 		memmove(stream.buf, stream.buf + n, stream.ptr -= n);
 	}

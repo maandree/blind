@@ -16,6 +16,4 @@ UNTESTED:
 	blind-crop
 	blind-cut
 	blind-extend
-	blind-from-text
 	blind-rewrite-head
-	blind-to-text
