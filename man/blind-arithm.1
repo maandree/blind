@@ -1,0 +1,74 @@
+.TH BLIND-ARITHM 1 blind
+.SH NAME
+blind-arithm - Perform simple arithmetic on a video
+.SH SYNOPSIS
+.B blind-arithm
+[-axyz]
+.I operation
+.I right-hand-stream
+.SH DESCRIPTION
+.B blind-arithm
+reads left-hand operands from stdin, and right-hand
+operands from
+.IR right-hand-stream ,
+and perform the choosen
+.I operation
+over the read values and prints the resulting video
+to stdout.
+The operation with operands from the same colour
+parameters on the sames pixels on the same frames
+on the two videos.
+If stdin is longer than
+.IR right-hand-stream ,
+the remainder or stdin is printed without any changes.
+If stdin is shorter than
+.IR right-hand-stream ,
+the remainder of
+.I right-hand-stream
+is ignored and will not be read.
+.SH OPERATIONS
+.TP
+.B add
+Calculate the sum of the operands.
+.TP
+.B sub
+Subtract the right-hand operand from the left-hand operand.
+.TP
+.B mul
+Calculate the product of the operands.
+.TP
+.B div
+Divide the left-hand operand by the right-hand operand.
+.TP
+.B exp
+Raise the left-hand operand to the
+.IR n th
+operand, where
+.I n
+is the value of the right-hand operand.
+.TP
+.B log
+Calculate the logarithm of the left-hand operand
+and divid it by the logarithm of the rigth-hand operand.
+.TP
+.B min
+Select the lowest operand.
+.TP
+.B max
+Select the highest operand.
+.SH OPTIONS
+.TP
+.B -a
+Do not modify the alpha channel (the fourth channel).
+.TP
+.B -x
+Do not modify the X channel (the first channel).
+.TP
+.B -y
+Do not modify the Y channel (the second channel).
+.TP
+.B -z
+Do not modify the Z channel (the third channel).
+.SH AUTHORS
+Mattias Andree
+.RI < maandree@kth.se >

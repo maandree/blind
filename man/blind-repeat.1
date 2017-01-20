@@ -1,0 +1,27 @@
+.TH BLIND-REPEAT 1 blind
+.SH NAME
+blind-repeat - Repeat a video
+.SH SYNOPSIS
+.B blind-repeat
+.RI ( count
+|
+.RB ' inf ')
+.I file
+.SH DESCRIPTION
+.B blind-repeat
+write the a video to stdout that is a loop of the
+selected video. The looped video is read from the
+selected
+.IR file .
+.I file
+must be a regular file.
+The video will be repeated
+.I count
+times, or until there is no process the reads from
+this process's stdout if
+.B inf
+is selected instead of
+.IR count .
+.SH AUTHORS
+Mattias Andree
+.RI < maandree@kth.se >
