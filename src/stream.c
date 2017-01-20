@@ -17,13 +17,17 @@ eninit_stream(int status, struct stream *stream)
 	size_t n;
 	char *p = NULL, *w, *h, *f, *end;
 
-	for (stream->ptr = 0; stream->fd >= 0 && !p;) {
-		r = read(stream->fd, stream->buf + stream->ptr, sizeof(stream->buf) - stream->ptr);
-		if (r < 0)
-			enprintf(status, "read %s:", stream->file);
-		if (r == 0)
-			goto bad_format;
-		stream->ptr += (size_t)r;
+	if (stream->fd >= 0) {
+		for (stream->ptr = 0; !p;) {
+			r = read(stream->fd, stream->buf + stream->ptr, sizeof(stream->buf) - stream->ptr);
+			if (r < 0)
+				enprintf(status, "read %s:", stream->file);
+			if (r == 0)
+				goto bad_format;
+			stream->ptr += (size_t)r;
+			p = memchr(stream->buf, '\n', stream->ptr);
+		}
+	} else {
 		p = memchr(stream->buf, '\n', stream->ptr);
 	}
 
@@ -281,7 +285,7 @@ nprocess_multiple_streams(int status, struct stream *streams, size_t n_streams, 
 	while (n_streams) {
 		n = SIZE_MAX;
 		for (i = 0; i < n_streams; i++) {
-			if (streams[i].ptr < sizeof(streams->buf) && !eread_stream(streams + i, SIZE_MAX)) {
+			if (streams[i].ptr < sizeof(streams->buf) && !enread_stream(status, streams + i, SIZE_MAX)) {
 				close(streams[i].fd);
 				streams[i].fd = -1;
 			}
