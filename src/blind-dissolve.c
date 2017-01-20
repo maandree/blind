@@ -17,7 +17,7 @@ process_xyza(struct stream *stream, size_t n, size_t f)
 	double a;
 	for (i = 0; i < n; i += stream->pixel_size) {
 		a = ((double *)(stream->buf + i))[3];
-		a = a * (double)f / fmd;
+		a = a * (double)(fm - f) / fmd;
 		((double *)(stream->buf + i))[3] = a;
 	}
 }
@@ -29,7 +29,7 @@ process_xyza_r(struct stream *stream, size_t n, size_t f)
 	double a;
 	for (i = 0; i < n; i += stream->pixel_size) {
 		a = ((double *)(stream->buf + i))[3];
-		a = a * (double)(fm - f) / fmd;
+		a = a * (double)f / fmd;
 		((double *)(stream->buf + i))[3] = a;
 	}
 }
