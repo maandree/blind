@@ -1,13 +1,17 @@
 blind-transform		transformation by matrix multiplication, -t for tiling, -s for improve quality
-				on downscaling (pixels' neighbours must not change)
-blind-chroma-key	replace a chroma with transparency
-blind-primary-key	replace a primary with transparency, -g for greyscaled images
+				on downscaling (pixels' neighbours must not change).
+blind-chroma-key	replace a chroma with transparency.
+blind-primary-key	replace a primary with transparency, -g for greyscaled images.
 blind-primaries		given three selectable primaries split the video into three side-by-side which
-				only one primary active
+				only one primary active.
 blind-apply-map		remap pixels (distortion) using the X and Y values, -t for tiling, -s for
-				improve quality on downscaling (pixels' neighbours must not change)
-blind-apply-kernel	apply a convolution matrix
+				improve quality on downscaling (pixels' neighbours must not change).
+blind-apply-kernel	apply a convolution matrix.
 blind-find-frame	a graphical tool for locating frames, should highlight key frames, and
 				play audio. Should support both regular videos files and uivf.
+blind-affine-colour	apply an affine transformation to the colour of each pixel,
+				-a for ignoring the alpha channel,
+				-l for linear transformation,
+				-p for transforming each pixel with their own transformation.
 
 Add [-j jobs] to blind-from-video and blind-to-video.
