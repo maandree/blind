@@ -221,11 +221,13 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 		memset(img, 0, cn);\
 		start = 0, end = colour->height;\
 		is_master = efork_jobs(&start, &end, jobs, &children);\
-		i1 = start * colour->width;\
-		if (noalpha)\
+		if (noalpha) {\
+			i1 = start * colour->width;\
 			for (y1 = start; y1 < end; y1++)\
 				for (x1 = 0; x1 < colour->width; x1++, i1++)\
 					img[i1][3] = 1;\
+		}\
+		i1 = start * colour->width;\
 		for (y1 = start; y1 < end; y1++) {\
 			for (x1 = 0; x1 < colour->width; x1++, i1++) {\
 				BLUR_PIXEL_PROLOGUE(DIR);\
