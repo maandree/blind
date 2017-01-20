@@ -30,7 +30,7 @@ rewrite(struct stream *stream, int frames_auto)
 		eprintf("%s: not a regular file\n", stream->file);
 
 	frame_count = (size_t)(st.st_size) / frame_size;
-	if (frame_count * frame_size != (size_t)(st.st_size))
+	if (frame_count * frame_size != (size_t)(st.st_size) - stream->headlen)
 		eprintf("%s: given the select width and height, "
 			"the file has an incomplete frame\n", stream->file);
 	if (frames_auto)
@@ -117,8 +117,6 @@ main(int argc, char *argv[])
 			eprintf("choosen pixel format is unsupported\n");
 	} else if (headless) {
 		eprintf("cannot use both 'same' and -h\n");
-	} else if (argc > 1) {
-		usage();
 	}
 
 
