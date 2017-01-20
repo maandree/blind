@@ -77,8 +77,8 @@ main(int argc, char *argv[])
 	right *= stream.pixel_size;
 	rown = stream.width * stream.pixel_size;
 
-	xoff = (rown          - (left % rown))          % rown;
-	yoff = (stream.height - (top  % stream.height)) % stream.height;
+	xoff = (rown          - left % rown)          % rown;
+	yoff = (stream.height - top  % stream.height) % stream.height;
 
 	memcpy(buf, stream.buf, ptr = stream.ptr);
 	while (eread_frame(&stream, buf, n)) {
@@ -88,11 +88,11 @@ main(int argc, char *argv[])
 		} else {
 			for (y = 0; y < stream.height; y++)
 				for (x = 0; x < imgw; x++)
-					image[x + (y + top) * imgw] = buf[((x + xoff) % rown) + y * rown];
+					image[x + (y + top) * imgw] = buf[(x + xoff) % rown + y * rown];
 			for (y = 0; y < top; y++)
-				memcpy(image + y * imgw, image + (((y + yoff) % stream.height) + top) * imgw, imgw);
+				memcpy(image + y * imgw, image + ((y + yoff) % stream.height + top) * imgw, imgw);
 			for (y = top + stream.height; y < h; y++)
-				memcpy(image + y * imgw, image + (((y + yoff) % stream.height) + top) * imgw, imgw);
+				memcpy(image + y * imgw, image + ((y + yoff) % stream.height + top) * imgw, imgw);
 		}
 		ewriteall(STDOUT_FILENO, image, m, "<stdout>");
 	}
