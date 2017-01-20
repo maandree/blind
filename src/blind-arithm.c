@@ -8,7 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 
-USAGE("[-ayxz] operation right-hand-stream")
+USAGE("[-axyz] operation right-hand-stream")
 
 static int skip_a = 0;
 static int skip_x = 0;
