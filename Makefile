@@ -27,6 +27,7 @@ BIN =\
 	blind-single-colour\
 	blind-split\
 	blind-stack\
+	blind-time-blur\
 	blind-to-image\
 	blind-to-text\
 	blind-to-video\
