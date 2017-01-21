@@ -227,7 +227,7 @@ int
 xenopen(int status, const char *path, int flags, int mode, ...)
 {
 	int fd;
-	if (strncmp(path, "/dev/fd/", sizeof("/dev/fd/") - 1))
+	if (!strncmp(path, "/dev/fd/", sizeof("/dev/fd/") - 1))
 		if (!toi(path + sizeof("/dev/fd/") - 1, 0, INT_MAX, &fd))
 			return fd;
 	fd = open(path, flags, mode);
