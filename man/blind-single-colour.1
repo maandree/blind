@@ -55,6 +55,13 @@ The width of the video, in pixels.
 .TP
 .BR -h " "\fIheight\fP
 The height of the video, in pixels.
+.SH NOTES
+.B blind-single-colour
+may be changed in the future to use some other colour model,
+therefore, it is recommended to also use
+.BR blind-colour-ciexyz (1)
+if you are specifying the colour in CIE XYZ. If however
+your values are colour space-agnostic, you should not.
 .SH AUTHORS
 Mattias Andree
 .RI < maandree@kth.se >

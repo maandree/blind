@@ -1,6 +1,6 @@
 .TH BLIND-COLOUR-SRGB 1 blind
 .SH NAME
-blind-colour-srgb - Convert sRGB to CIE XYZ
+blind-colour-srgb - Convert sRGB for use with blind-single-colour(1)
 .SH SYNOPSIS
 .B blind-colour-srgb
 [-d
@@ -19,6 +19,13 @@ and
 values to CIE XYZ and prints the result to stdout
 in plain text, such that it can be used with
 .BR blind-single-colour (1).
+If
+.BR blind-single-colour (1)
+is modified in the future to use another colour
+model than CIE XYZ,
+.B blind-colour-srgb
+will be modified to convert the values into
+that colour model.
 .P
 .IR red ,
 .IR green ,

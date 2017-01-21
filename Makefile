@@ -3,6 +3,7 @@ include $(CONFIGFILE)
 
 BIN =\
 	blind-arithm\
+	blind-colour-ciexyz\
 	blind-colour-srgb\
 	blind-concat\
 	blind-crop\
