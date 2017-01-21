@@ -21,6 +21,15 @@ If stdin is shorter than
 the remainder of
 .I alpha-stream
 is ignored but may be partially read.
+.SH NOTES
+In most cases, this is not what you want to use, instead
+you probably want to use
+.BR blind-arithm (1)
+to multiple the X, Y and Z values on one value. This
+produces the same affect as reducing the intensity of
+the light sources, which is not what
+.B blind-set-luma
+does.
 .SH AUTHORS
 Mattias Andree
 .RI < maandree@kth.se >

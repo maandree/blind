@@ -14,5 +14,6 @@ blind-affine-colour	apply an affine transformation to the colour of each pixel,
 				-l for linear transformation,
 				-p for transforming each pixel with their own transformation.
 blind-translate		animated translation
+blind-invert-chroma	invert the chroma
 
 Add [-j jobs] to blind-from-video and blind-to-video.
