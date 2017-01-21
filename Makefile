@@ -40,7 +40,7 @@ SCRIPTS =\
 	blind-rotate-180\
 	blind-rotate-270
 
-MAN = $(BIN:=.1) $(SCRIPTS:=.1)
+MAN1 = $(BIN:=.1) $(SCRIPTS:=.1)
 
 all: $(BIN)
 
