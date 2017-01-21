@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -220,3 +221,17 @@ enjoin_jobs(int status, int is_master, pid_t *pids)
 }
 
 /* } */
+
+
+int
+xenopen(int status, const char *path, int flags, int mode, ...)
+{
+	int fd;
+	if (strncmp(path, "/dev/fd/", sizeof("/dev/fd/") - 1))
+		if (!toi(path + sizeof("/dev/fd/") - 1, 0, INT_MAX, &fd))
+			return fd;
+	fd = open(path, flags, mode);
+	if (fd < 0)
+		enprintf(status, "open %s:", path);
+	return fd;
+}
