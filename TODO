@@ -1,5 +1,5 @@
-blind-transform		transformation by matrix multiplication, -t for tiling, -s for improve quality
-				on downscaling (pixels' neighbours must not change).
+blind-transform		affine transformation by matrix multiplication, -t for tiling, -s for
+				improve quality on downscaling (pixels' neighbours must not change).
 blind-chroma-key	replace a chroma with transparency.
 blind-primary-key	replace a primary with transparency, -g for greyscaled images.
 blind-primaries		given three selectable primaries split the video into three side-by-side which
@@ -13,5 +13,6 @@ blind-affine-colour	apply an affine transformation to the colour of each pixel,
 				-a for ignoring the alpha channel,
 				-l for linear transformation,
 				-p for transforming each pixel with their own transformation.
+blind-translate		animated translation
 
 Add [-j jobs] to blind-from-video and blind-to-video.
