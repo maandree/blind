@@ -45,7 +45,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream *streams;
-	size_t n_streams, i;
+	size_t n_streams, i, frames = 0, tmp;
 	int blend = 0;
 	void (*process)(struct stream *streams, size_t n_streams, size_t n) = NULL;
 
@@ -67,6 +67,8 @@ main(int argc, char *argv[])
 		streams[i].file = argv[i];
 		streams[i].fd = eopen(streams[i].file, O_RDONLY);
 		einit_stream(streams + i);
+		if (streams[i].frames > frames)
+			frames = streams[i].frames;
 	}
 
 	if (!strcmp(streams->pixfmt, "xyza"))
@@ -74,8 +76,10 @@ main(int argc, char *argv[])
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", streams->pixfmt);
 
+	tmp = streams->frames, streams->frames = frames;
 	fprint_stream_head(stdout, streams);
 	efflush(stdout, "<stdout>");
+	streams->frames = tmp;
 	process_multiple_streams(streams, n_streams, STDOUT_FILENO, "<stdout>", process);
 
 	free(streams);
