@@ -50,6 +50,8 @@ main(int argc, char *argv[])
 		X = D65_XYY_X / D65_XYY_Y;
 		Z = 1 / D65_XYY_Y - 1 - X;
 		Y = etolf_arg("the Y value", argv[0]);
+		X *= Y;
+		Z *= Y;
 	} else {
 		X = etolf_arg("the X value", argv[0]);
 		Y = etolf_arg("the Y value", argv[1]);
