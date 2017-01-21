@@ -1,12 +1,44 @@
-.TH BLIND-FLOP 1 blind
+.TH BLIND-CROP 1 blind
 .SH NAME
-blind-flop - Mirror a video horizontally
+blind-crop - Extract subframes for all frames
 .SH SYNOPSIS
-.B blind-flop
+.B blind-crop
+[-t]
+.I width
+.I height
+.I left
+.I top
 .SH DESCRIPTION
-.B blind-flop
-reads a video from stdin and prints it, mirrored
-horizontally, to stdout.
+.B blind-crop
+reads a video from stdin and prints a cropped
+version of the video to stdout. The new video
+with have the specified
+.I width
+and
+.IR height ,
+and will have the same length as the input video.
+The left-most pixels of the subvideo will be
+.I left
+pixels rightward of the left-most pixels of the
+input video. The top-most pixels of the subvideo
+will be
+.I top
+pixels downward of the top-most pixels of the
+input video.
+.P
+The selected subvideo may not extend beyond the
+input video.
+.SH OPTIONS
+.TP
+.B -t
+Instead of changing the width and height of
+the output video, put the subvideo side-by-side.
+The subvideo's left-most pixel will be positioned
+.I left
+pixels rightward of the output video's left-most pixel,
+and the subvideo's top-most pixel will be positioned
+.I top
+pixels downward of the output video's left-most pixel.
 .SH AUTHORS
 Mattias Andree
 .RI < maandree@kth.se >
