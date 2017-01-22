@@ -1,0 +1,41 @@
+.TH BLIND-TO-TEXT 1 blind
+.SH NAME
+blind-to-text - Convert a video to text
+.SH SYNOPSIS
+.B blind-to-text
+.SH DESCRIPTION
+.B blind-to-text
+reads a video from stdin and prints it
+in text format to stdout. The first line
+in the output is the head. It will contain:
+the number of frames, <space>, the width,
+<space>, the height, <space>, and the pixel
+format. The result of the lines will be
+one line per pixel, each of these line will
+contain the values of the pixel's colur in
+textual representation of a floating-point
+value, each separated by a <space>. The
+order of the values are: X, Y, Z, and alpha,
+where X, Y, and Z are the parameters of the
+colour's CIE XYZ representation.
+.P
+If the width of the video is
+.I w
+and the height of the video is
+.IR h ,
+the first
+.I w
+lines after the head are the pixels in the
+first row in the first frame of the video,
+the following
+.I w
+lines are the pixels in the second row,
+and so on until the the
+.IR w*h :th
+line, after the head, where the second
+frame begins. The pixels are printed
+from left to right, from top to bottom,
+and from first frame to last frame.
+.SH AUTHORS
+Mattias Andrée
+.RI < maandree@kth.se >
