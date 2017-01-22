@@ -163,7 +163,7 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 	}\
 	if (blur[0] + blur[1] + blur[2] == 0)\
 		goto no_blur_##DIR;\
-	if (spread < 1)\
+	if (auto_spread && spread < 1)\
 		spread = 1;
 
 #define BLUR_PIXEL(START, LOOP, DISTANCE)\
