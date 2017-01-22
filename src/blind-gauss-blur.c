@@ -176,8 +176,7 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 			img[i2][0] += clr[i1][0] * m;\
 			img[i2][1] += clr[i1][1] * m;\
 			img[i2][2] += clr[i1][2] * m;\
-			if (!noalpha)\
-				img[i2][3] += clr[i1][3] * m;\
+			img[i2][3] += clr[i1][3] * m;\
 		}\
 	} else {\
 		blurred = 0;\
@@ -191,21 +190,12 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 			if (!blur[i])\
 				continue;\
 			START;\
-			if (!noalpha) {\
-				for (LOOP) {\
-					d = (DISTANCE);\
-					d *= d;\
-					m = c[i] * exp(d * k[i]);\
-					img[i2][i] += clr[i1][i] * m;\
-					img[i2][3] += clr[i1][3] * m / blurred;\
-				}\
-			} else {\
-				for (LOOP) {\
-					d = (DISTANCE);\
-					d *= d;\
-					m = c[i] * exp(d * k[i]);\
-					img[i2][i] += clr[i1][i] * m;\
-				}\
+			for (LOOP) {\
+				d = (DISTANCE);\
+				d *= d;\
+				m = c[i] * exp(d * k[i]);\
+				img[i2][i] += clr[i1][i] * m;\
+				img[i2][3] += clr[i1][3] * m / blurred;\
 			}\
 		}\
 	}
@@ -262,37 +252,41 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 		     y2 = y2start; y2 < y2end; (y2++, i2 += colour->width),
 		     (ssize_t)y1 - (ssize_t)y2);
 
-	if (chroma || !noalpha) {
-		start = 0, end = colour->height;
-		is_master = efork_jobs(&start, &end, jobs, &children);
+	start = 0, end = colour->height;
+	is_master = efork_jobs(&start, &end, jobs, &children);
 
-		/* convert back to CIE XYZ */
-		if (chroma) {
-			i1 = start * colour->width;
-			for (y1 = start; y1 < end; y1++) {
-				for (x1 = 0; x1 < colour->width; x1++, i1++) {
-					img[i1][0] = (img[i1][0] + img[i1][1]) * X;
-					img[i1][2] = (img[i1][2] + img[i1][1]) * Z;
-				}
+	/* convert back to CIE XYZ */
+	if (chroma) {
+		i1 = start * colour->width;
+		for (y1 = start; y1 < end; y1++) {
+			for (x1 = 0; x1 < colour->width; x1++, i1++) {
+				img[i1][0] = (img[i1][0] + img[i1][1]) * X;
+				img[i1][2] = (img[i1][2] + img[i1][1]) * Z;
 			}
 		}
-
-		/* unpremultiply alpha channel */
-		if (!noalpha) {
-			i1 = start * colour->width;
-			for (y1 = start; y1 < end; y1++) {
-				for (x1 = 0; x1 < colour->width; x1++, i1++) {
-					if (!img[i1][3])
-						continue;
-					img[i1][0] /= img[i1][3];
-					img[i1][1] /= img[i1][3];
-					img[i1][2] /= img[i1][3];
-				}
-			}
-		}
-
-		ejoin_jobs(is_master, children);
 	}
+
+	/* unpremultiply alpha channel */
+	i1 = start * colour->width;
+	for (y1 = start; y1 < end; y1++) {
+		for (x1 = 0; x1 < colour->width; x1++, i1++) {
+			if (!img[i1][3])
+				continue;
+			img[i1][0] /= img[i1][3];
+			img[i1][1] /= img[i1][3];
+			img[i1][2] /= img[i1][3];
+		}
+	}
+
+	/* ensure the video if opaque if -a was used */
+	if (!noalpha) {
+		i1 = start * colour->width;
+		for (y1 = start; y1 < end; y1++)
+			for (x1 = 0; x1 < colour->width; x1++, i1++)
+				img[i1][3] = 1;
+	}
+
+	ejoin_jobs(is_master, children);
 
 	(void) sigma;
 	(void) sn;
