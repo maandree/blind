@@ -1,20 +1,2 @@
-RATIONALE
-
-•  It's source control friendly and it's easy for a user to
-   resolve merge conflicts and identify changes.
-
-•  Rendering can take a very long time. With this approach,
-   the user can use Make to only rerender parts that have
-   been changes.
-
-•  No room for buggy GUIs, which currently is a problem on
-   the large video editors for Linux.
-
-•  Less chance that the user makes a change by mistake
-   without noticing it, such as moving a clip in the editor
-   by mistake instead of for example resizing.
-
-•  Even old, crappy computers can be used for large projects.
-
-•  Very easy to utilise command line image editors for modify
-   frames, or to add your own tools for custom effects.
+blind is a collection of command line video editing utilities.
+Read more about blind on <http://tools.suckless.org/blind/>.
