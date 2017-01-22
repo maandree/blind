@@ -1,2 +1,123 @@
-blind is a collection of command line video editing utilities.
-Read more about blind on <http://tools.suckless.org/blind/>.
+NAME
+       blind - Collection of command line video editing utilities
+
+DESCRIPTION
+       blind is a collection of command line video editing utilities. blind uses a
+       custom raw video format with a simple container. If you have a video file
+       you want to edit, you first have to convert it with blind-from-video(1). To
+       be able to play your video in a video play, you have to convert it with
+       blind-to-video(1).
+
+       Raw video takes up tremendous amount of space, you should therefore avoid
+       storing the video without first convert it with blind-to-video(1).
+
+UTILITIES
+       blind-arithm(1)
+              Perform simple arithmetic on a video
+
+       blind-colour-ciexyz(1)
+              Convert CIE XYZ for use with blind-single-colour(1)
+
+       blind-colour-srgb(1)
+              Convert sRGB for use with blind-single-colour(1)
+
+       blind-concat(1)
+              Concatenate videos
+
+       blind-crop(1)
+              Extract subframes for all frames
+
+       blind-cut(1)
+              Retain consecutive frames
+
+       blind-dissolve(1)
+              Fade a video by chaning it's alpha channel
+
+       blind-extend(1)
+              Add margins to a video
+
+       blind-flip(1)
+              Mirror a video vertically
+
+       blind-flop(1)
+              Mirror a video horizontally
+
+       blind-from-image(1)
+              Convert an image to a frame
+
+       blind-from-text(1)
+              Convert text to a video
+
+       blind-from-video(1)
+              Converts a regular, cooked video to a blind video
+
+       blind-gauss-blur(1)
+              Apply Gaussian blur to a video
+
+       blind-invert-luma(1)
+              Invert the luminosity of a video
+
+       blind-next-frame(1)
+              Extracts the next frame from a video
+
+       blind-read-head(1)
+              Reads the head from a video
+
+       blind-repeat(1)
+              Repeat a video
+
+       blind-reverse(1)
+              Reverse a video
+
+       blind-rewrite-head(1)
+              Rewrite the head of a video
+
+       blind-rotate-90(1)
+              Rotate a video 90 degrees clockwise
+
+       blind-rotate-180(1)
+              Rotate a video 180 degrees
+
+       blind-rotate-270(1)
+              Rotate a video 270 degrees clockwise
+
+       blind-set-alpha(1)
+              Multiply the alpha channel of a video
+
+       blind-set-luma(1)
+              Multiply the luminosity of a video
+
+       blind-set-saturation(1)
+              Multiply the saturation of a video
+
+       blind-single-colour(1)
+              Generate a single-colour video
+
+       blind-split(1)
+              Split a video, by frame, into multiple videos
+
+       blind-stack(1)
+              Overlay videos
+
+       blind-time-blur(1)
+              Draw new frames on top of old frames with partial alpha
+
+       blind-to-image(1)
+              Convert a frame to an image
+
+       blind-to-text(1)
+              Convert a video to text
+
+       blind-to-video(1)
+              Converts blind video to a regular video
+
+       blind-transpose(1)
+              Transpose a video
+
+       blind-write-head(1)
+              Writes the head of a video
+
+SEE ALSO
+       ffmpeg(1), ffprobe(1), convert(1), sox(1), rubberband(1), soundstretch(1)
+
+       blind's website: <http://tools.suckless.org/blind/>.

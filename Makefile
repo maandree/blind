@@ -41,6 +41,7 @@ SCRIPTS =\
 	blind-rotate-270
 
 MAN1 = $(BIN:=.1) $(SCRIPTS:=.1)
+MAN7 = blind.7
 
 all: $(BIN)
 

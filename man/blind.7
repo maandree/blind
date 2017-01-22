@@ -1,0 +1,139 @@
+.TH BLIND 7 blind
+.SH NAME
+blind - Collection of command line video editing utilities
+.SH DESCRIPTION
+.B blind
+is a collection of command line video editing utilities.
+.B blind
+uses a custom raw video format with a simple container.
+If you have a video file you want to edit, you first
+have to convert it with
+.BR blind-from-video (1).
+To be able to play your video in a video play, you
+have to convert it with
+.BR blind-to-video (1).
+.P
+Raw video takes up tremendous amount of space, you
+should therefore avoid storing the video without
+first convert it with
+.BR blind-to-video (1).
+.SH UTILITIES
+.TP
+.BR blind-arithm (1)
+Perform simple arithmetic on a video
+.TP
+.BR blind-colour-ciexyz (1)
+Convert CIE XYZ for use with blind-single-colour(1)
+.TP
+.BR blind-colour-srgb (1)
+Convert sRGB for use with blind-single-colour(1)
+.TP
+.BR blind-concat (1)
+Concatenate videos
+.TP
+.BR blind-crop (1)
+Extract subframes for all frames
+.TP
+.BR blind-cut (1)
+Retain consecutive frames
+.TP
+.BR blind-dissolve (1)
+Fade a video by chaning it's alpha channel
+.TP
+.BR blind-extend (1)
+Add margins to a video
+.TP
+.BR blind-flip (1)
+Mirror a video vertically
+.TP
+.BR blind-flop (1)
+Mirror a video horizontally
+.TP
+.BR blind-from-image (1)
+Convert an image to a frame
+.TP
+.BR blind-from-text (1)
+Convert text to a video
+.TP
+.BR blind-from-video (1)
+Converts a regular, cooked video to a blind video
+.TP
+.BR blind-gauss-blur (1)
+Apply Gaussian blur to a video
+.TP
+.BR blind-invert-luma (1)
+Invert the luminosity of a video
+.TP
+.BR blind-next-frame (1)
+Extracts the next frame from a video
+.TP
+.BR blind-read-head (1)
+Reads the head from a video
+.TP
+.BR blind-repeat (1)
+Repeat a video
+.TP
+.BR blind-reverse (1)
+Reverse a video
+.TP
+.BR blind-rewrite-head (1)
+Rewrite the head of a video
+.TP
+.BR blind-rotate-90 (1)
+Rotate a video 90 degrees clockwise
+.TP
+.BR blind-rotate-180 (1)
+Rotate a video 180 degrees
+.TP
+.BR blind-rotate-270 (1)
+Rotate a video 270 degrees clockwise
+.TP
+.BR blind-set-alpha (1)
+Multiply the alpha channel of a video
+.TP
+.BR blind-set-luma (1)
+Multiply the luminosity of a video
+.TP
+.BR blind-set-saturation (1)
+Multiply the saturation of a video
+.TP
+.BR blind-single-colour (1)
+Generate a single-colour video
+.TP
+.BR blind-split (1)
+Split a video, by frame, into multiple videos
+.TP
+.BR blind-stack (1)
+Overlay videos
+.TP
+.BR blind-time-blur (1)
+Draw new frames on top of old frames with partial alpha
+.TP
+.BR blind-to-image (1)
+Convert a frame to an image
+.TP
+.BR blind-to-text (1)
+Convert a video to text
+.TP
+.BR blind-to-video (1)
+Converts blind video to a regular video
+.TP
+.BR blind-transpose (1)
+Transpose a video
+.TP
+.BR blind-write-head (1)
+Writes the head of a video
+.SH SEE ALSO
+.BR ffmpeg (1),
+.BR ffprobe (1),
+.BR convert (1),
+.BR sox (1),
+.BR rubberband (1),
+.BR soundstretch (1)
+.P
+.BR blind 's
+website:
+.RI < http://tools.suckless.org/blind/ >.
+.SH AUTHORS
+Mattias Andrée
+.RI < maandree@kth.se >
