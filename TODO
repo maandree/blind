@@ -17,3 +17,8 @@ blind-translate		animated translation
 blind-invert-chroma	invert the chroma
 
 Add [-j jobs] to blind-from-video and blind-to-video.
+
+
+HELP REQUIRED:
+	blind-z-map		create a Z-map video from two or more videos
+	blind-track		track the movement of a point
