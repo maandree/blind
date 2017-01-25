@@ -26,7 +26,8 @@ typedef void (*process_func)(struct stream *left, struct stream *right, size_t n
 	X(exp, *lh = pow(*lh, rh))\
 	X(log, *lh = log(*lh) / log(rh))\
 	X(min, *lh = *lh < rh ? *lh : rh)\
-	X(max, *lh = *lh > rh ? *lh : rh)
+	X(max, *lh = *lh > rh ? *lh : rh)\
+	X(abs, *lh = fabs(*lh - rh) + rh)
 
 #define X(NAME, ALGO)\
 	static void\
