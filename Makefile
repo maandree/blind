@@ -5,9 +5,11 @@ BIN =\
 	blind-arithm\
 	blind-colour-ciexyz\
 	blind-colour-srgb\
+	blind-compress\
 	blind-concat\
 	blind-crop\
 	blind-cut\
+	blind-decompress\
 	blind-dissolve\
 	blind-extend\
 	blind-flip\
