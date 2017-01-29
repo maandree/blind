@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-USAGE("[-t] width height left top")
+USAGE("[-s | -S | -t] width height left top")
 
 int
 main(int argc, char *argv[])
@@ -15,10 +15,17 @@ main(int argc, char *argv[])
 	struct stream stream;
 	char *buf, *image, *p;
 	size_t width = 0, height = 0, left = 0, top = 0;
+	size_t right, right_start, bottom, bottom_start;
 	size_t off, yoff = 0, x, y, irown, orown, ptr, n, m;
-	int tile = 0;
+	int tile = 0, keepsize = 0, keepsize_inv = 0;
 
 	ARGBEGIN {
+	case 's':
+		keepsize = 1;
+		break;
+	case 'S':
+		keepsize_inv = 1;
+		break;
 	case 't':
 		tile = 1;
 		break;
@@ -26,7 +33,7 @@ main(int argc, char *argv[])
 		usage();
 	} ARGEND;
 
-	if (argc != 4)
+	if (argc != 4 || tile + keepsize + keepsize_inv > 1)
 		usage();
 
 	width  = etozu_arg("the width",         argv[0], 1, SIZE_MAX);
@@ -40,7 +47,7 @@ main(int argc, char *argv[])
 	if (left > SIZE_MAX - width || left + width > stream.width ||
 	    top > SIZE_MAX - height || top + height > stream.height)
 		eprintf("crop area extends beyond original image\n");
-	if (tile) {
+	if (tile || keepsize || keepsize_inv) {
 		fprint_stream_head(stdout, &stream);
 	} else {
 		x = stream.width,  stream.width  = width;
@@ -55,8 +62,8 @@ main(int argc, char *argv[])
 	n = stream.height * (irown = stream.width * stream.pixel_size);
 	buf = emalloc(n);
 	orown = width * stream.pixel_size;
-	m = tile ? n : height * orown;
-	image = emalloc(m);
+	m = (tile || keepsize || keepsize_inv) ? n : height * orown;
+	image = (keepsize || keepsize_inv) ? buf : malloc(m);
 
 	left *= stream.pixel_size;
 	if (!tile) {
@@ -65,23 +72,38 @@ main(int argc, char *argv[])
 		off  = (orown  - left % orown)  % orown;
 		yoff = (height - top  % height) % height;
 	}
+	bottom_start = top + height;
+	bottom = stream.height - bottom_start;
+	right_start = left + orown;
+	right = irown - right_start;
 
 	memcpy(buf, stream.buf, ptr = stream.ptr);
 	while (eread_frame(&stream, buf, n)) {
-		if (!tile) {
-			for (y = 0; y < height; y++)
-				memcpy(image + y * orown, buf + y * irown + off, orown);
-		} else {
+		if (tile) {
 			for (ptr = y = 0; y < stream.height; y++) {
 				p = buf + ((y + yoff) % height + top) * irown;
 				for (x = 0; x < irown; x++, ptr++)
 					image[ptr] = p[(x + off) % orown + left];
 			}
+		} else if (keepsize) {
+			memset(image, 0, top * irown);
+			memset(image + bottom_start * irown, 0, bottom * irown);
+			for (y = top; y < bottom_start; y++) {
+				memset(image + y * irown, 0, left);
+				memset(image + y * irown + right_start, 0, right);
+			}
+		} else if (keepsize_inv) {
+			for (y = top; y < bottom_start; y++)
+				memset(image + y * irown + left, 0, orown);
+		} else {
+			for (y = 0; y < height; y++)
+				memcpy(image + y * orown, buf + y * irown + off, orown);
 		}
 		ewriteall(STDOUT_FILENO, image, m, "<stdout>");
 	}
 
+	if (buf != image)
+		free(image);
 	free(buf);
-	free(image);
 	return 0;
 }

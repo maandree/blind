@@ -3,7 +3,7 @@
 blind-crop - Extract subframes for all frames
 .SH SYNOPSIS
 .B blind-crop
-[-t]
+[-s | -S | -t]
 .I width
 .I height
 .I left
@@ -29,6 +29,16 @@ input video.
 The selected subvideo may not extend beyond the
 input video.
 .SH OPTIONS
+.TP
+.B -s
+Instead of resizing the video, set alpha (and
+all colour parameters) to 0 on each pixel outside
+the selected region.
+.TP
+.B -S
+Instead of resizing the video, set alpha (and
+all colour parameters) to 0 on each pixel inside
+the selected region.
 .TP
 .B -t
 Instead of changing the width and height of
