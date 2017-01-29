@@ -13,8 +13,6 @@ write the a video to stdout that is a loop of the
 selected video. The looped video is read from the
 selected
 .IR file .
-.I file
-must be a regular file.
 The video will be repeated
 .I count
 times, or until there is no process the reads from
@@ -22,6 +20,19 @@ this process's stdout if
 .B inf
 is selected instead of
 .IR count .
+.P
+.I file
+must be a regular file, or
+.RB ' - '.
+If
+.I file
+is
+.RB ' - ',
+.B blind-repeat
+will read stdin into memory; you are highly discouraged
+from using this unless stdin is a single frame, or known
+to only be a very small number of frames, is it can
+potentially use all of the computer's memory.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-from-image (1)
