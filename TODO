@@ -16,6 +16,7 @@ blind-affine-colour	apply an affine transformation to the colour of each pixel,
 blind-translate		animated translation
 blind-invert-chroma	invert the chroma
 blind-skip-pattern	discard frames according to pattern, e.g. every other frame
+blind-from-sent		convert a sent presentation to a one-frame-per-slide blind video
 
 blind-from-video: add options to:
 	* just run ffmpeg just print the output
