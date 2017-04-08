@@ -161,7 +161,7 @@ encheck_frame_size(int status, size_t width, size_t height, size_t pixel_size, c
 {
 	if (!check_frame_size(width, height, pixel_size))
 		enprintf(status, "%s: %s%svideo frame is too large\n",
-			 prefix ? prefix : "", (prefix && *prefix) ? " " : "", fname);
+			 fname, prefix ? prefix : "", (prefix && *prefix) ? " " : "");
 }
 
 
@@ -218,9 +218,10 @@ nprocess_each_frame_segmented(int status, struct stream *stream, int output_fd, 
 
 	for (frame = 0; frame < stream->frames; frame++) {
 		for (n = frame_size; n; n -= r) {
-			if (!enread_stream(status, stream, n))
+			if (stream->ptr < n && !enread_stream(status, stream, SIZE_MAX))
 				enprintf(status, "%s: file is shorter than expected\n", stream->file);
 			r = stream->ptr - (stream->ptr % stream->pixel_size);
+			r = r < n ? r : n;
 			(process)(stream, r, frame);
 			enwriteall(status, output_fd, stream->buf, r, output_fname);
 			memmove(stream->buf, stream->buf + r, stream->ptr -= r);
@@ -301,6 +302,8 @@ nprocess_multiple_streams(int status, struct stream *streams, size_t n_streams, 
 			if (streams[i].ptr && streams[i].ptr < n)
 				n = streams[i].ptr;
 		}
+		if (n == SIZE_MAX)
+			break;
 		n -= n % streams->pixel_size;
 
 		process(streams, n_streams, n);
@@ -308,13 +311,14 @@ nprocess_multiple_streams(int status, struct stream *streams, size_t n_streams, 
 
 		closed = SIZE_MAX;
 		for (i = 0; i < n_streams; i++) {
-			memmove(streams[i].buf, streams[i].buf + n, streams[i].ptr -= n);
+			if (streams[i].ptr)
+				memmove(streams[i].buf, streams[i].buf + n, streams[i].ptr -= n);
 			if (streams[i].ptr < streams->pixel_size && streams[i].fd < 0 && closed == SIZE_MAX)
 				closed = i;
 		}
 		if (closed != SIZE_MAX) {
 			for (i = (j = closed) + 1; i < n_streams; i++)
-				if (streams[i].ptr < streams->pixel_size && streams[i].fd < 0)
+				if (streams[i].ptr >= streams->pixel_size || streams[i].fd >= 0)
 					streams[j++] = streams[i];
 			n_streams = j;
 		}

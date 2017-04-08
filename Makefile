@@ -34,6 +34,7 @@ BIN =\
 	blind-to-image\
 	blind-to-text\
 	blind-to-video\
+	blind-translate\
 	blind-transpose\
 	blind-write-head
 

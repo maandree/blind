@@ -157,6 +157,18 @@ pwriteall(int fd, void *buf, size_t n, size_t ptr)
 	return 0;
 }
 
+int
+writezeroes(int fd, void *buf, size_t bufsize, size_t n)
+{
+	size_t p, m;
+	for (p = 0; p < n; p += m) {
+		m = bufsize < n - p ? bufsize : n - p;
+		if (writeall(fd, buf, m))
+			return -1;
+	}
+	return 0;
+}
+
 
 static inline pid_t
 enfork(int status)

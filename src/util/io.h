@@ -1,8 +1,9 @@
 /* See LICENSE file for copyright and license details. */
 
-#define ewriteall(...)  enwriteall(1, __VA_ARGS__)
-#define ereadall(...)   enreadall(1, __VA_ARGS__)
-#define epwriteall(...) enpwriteall(1, __VA_ARGS__)
+#define ewriteall(...)     enwriteall(1, __VA_ARGS__)
+#define ereadall(...)      enreadall(1, __VA_ARGS__)
+#define epwriteall(...)    enpwriteall(1, __VA_ARGS__)
+#define ewritezeroes(...)  enwritezeroes(1, __VA_ARGS__)
 
 int writeall(int fd, void *buf, size_t n);
 
@@ -31,4 +32,13 @@ enpwriteall(int status, int fd, void *buf, size_t n, size_t ptr, const char *fna
 {
 	if (pwriteall(fd, buf, n, ptr))
 		enprintf(status, "pwrite %s:", fname);
+}
+
+int writezeroes(int fd, void *buf, size_t bufsize, size_t n);
+
+static inline void
+enwritezeroes(int status, int fd, void *buf, size_t bufsize, size_t n, const char *fname)
+{
+	if (writezeroes(fd, buf, bufsize, n))
+		enprintf(status, "write %s:", fname);
 }
