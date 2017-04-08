@@ -73,9 +73,9 @@ extern char *argv0;
 					(&argv[0][1]) :\
 					(argc--, argv++, argv[0])))
 
-#define LNGARG()	&argv[0][0]
+#define UARGF()		EARGF(usage())
 
-#define EARG()		EARGF(usage())
+#define LNGARG()	&argv[0][0]
 
 #define ENOFLAGS(...)	ARGBEGIN {\
 			default:\

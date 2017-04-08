@@ -7,6 +7,11 @@ blind-flop - Mirror a video horizontally
 .B blind-flop
 reads a video from stdin and prints it, mirrored
 horizontally, to stdout.
+.SH REQUIREMENTS
+.B blind-flop
+requires enough free memory to load two frame rows into memory.
+A frame row requires 32 bytes per pixel it contains, that is,
+32 bytes times the width of the video in pixel.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-flip (1),

@@ -18,6 +18,10 @@ It is recommended to combine
 .B blind-compress
 with
 .BR "lz4 -1" .
+.SH REQUIREMENTS
+.B blind-compress
+requires enough free memory to load two full frames into
+memory. A frame requires 32 bytes per pixel it contains.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-decompress (1),

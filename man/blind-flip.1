@@ -7,6 +7,10 @@ blind-flip - Mirror a video vertically
 .B blind-flip
 reads a video from stdin and prints it, mirrored
 vertically, to stdout.
+.SH REQUIREMENTS
+.B blind-flip
+requires enough free memory to load one full frame into
+memory. A frame requires 32 bytes per pixel it contains.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-flop (1),

@@ -26,7 +26,6 @@ main(int argc, char *argv[])
 	n = stream.height * (row_size = stream.width * stream.pixel_size);
 	buf = emalloc(n);
 
-	memcpy(buf, stream.buf, stream.ptr);
 	while (eread_frame(&stream, buf, n))
 		for (ptr = n; ptr;)
 			ewriteall(STDOUT_FILENO, buf + (ptr -= row_size), row_size, "<stdout>");

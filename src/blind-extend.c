@@ -14,23 +14,23 @@ main(int argc, char *argv[])
 {
 	struct stream stream;
 	char *buf, *image;
-	size_t ptr, n, m, imgw, imgh, rown;
+	size_t n, m, imgw, imgh, rown;
 	size_t xoff, yoff, h, x, y;
 	size_t left = 0, right = 0, top = 0, bottom = 0;
 	int tile = 0;
 
 	ARGBEGIN {
 	case 'l':
-		left = etozu_flag('l', EARG(), 0, SIZE_MAX);
+		left = etozu_flag('l', UARGF(), 0, SIZE_MAX);
 		break;
 	case 'r':
-		right = etozu_flag('r', EARG(), 0, SIZE_MAX);
+		right = etozu_flag('r', UARGF(), 0, SIZE_MAX);
 		break;
 	case 'a':
-		top = etozu_flag('a', EARG(), 0, SIZE_MAX);
+		top = etozu_flag('a', UARGF(), 0, SIZE_MAX);
 		break;
 	case 'b':
-		bottom = etozu_flag('b', EARG(), 0, SIZE_MAX);
+		bottom = etozu_flag('b', UARGF(), 0, SIZE_MAX);
 		break;
 	case 't':
 		tile = 1;
@@ -80,7 +80,6 @@ main(int argc, char *argv[])
 	xoff = (rown          - left % rown)          % rown;
 	yoff = (stream.height - top  % stream.height) % stream.height;
 
-	memcpy(buf, stream.buf, ptr = stream.ptr);
 	while (eread_frame(&stream, buf, n)) {
 		if (!tile) {
 			for (y = 0; y < stream.height; y++)

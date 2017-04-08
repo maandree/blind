@@ -123,7 +123,7 @@ main(int argc, char *argv[])
 		if (dup2(pipe_rw[0], STDIN_FILENO) == -1)
 			eprintf("dup2:");
 		close(pipe_rw[0]);
-		execvp("ffmpeg", cmd);
+		execvp("ffmpeg", (char **)(void *)cmd);
 		eprintf("exec ffmpeg:");
 	}
 

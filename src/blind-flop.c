@@ -30,7 +30,6 @@ main(int argc, char *argv[])
 	image = emalloc(n);
 
 	m = n - stream.pixel_size;
-	memcpy(buf, stream.buf, stream.ptr);
 	while (eread_row(&stream, buf, n)) {
 		for (i = 0; i < stream.pixel_size; i++)
 			for (j = 0; j < n; j += stream.pixel_size)

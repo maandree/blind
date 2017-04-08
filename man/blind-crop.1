@@ -49,6 +49,21 @@ pixels rightward of the output video's left-most pixel,
 and the subvideo's top-most pixel will be positioned
 .I top
 pixels downward of the output video's left-most pixel.
+.SH REQUIREMENTS
+.B blind-crop
+requires enough free memory to load two full frames into
+memory, one of the size of the source video's frames,
+and one of the size of the target video's frames. However,
+if
+.B -s
+or
+.B -S
+is used, only memory for one full frame, of the size of
+the source video's frames, are required. A frame requires
+32 bytes per pixel it contains.
+.B blind-crop
+has not been optimised for memory usage, but instead
+for code simplicity.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-extend (1)

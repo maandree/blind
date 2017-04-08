@@ -77,7 +77,6 @@ main(int argc, char *argv[])
 	right_start = left + orown;
 	right = irown - right_start;
 
-	memcpy(buf, stream.buf, ptr = stream.ptr);
 	while (eread_frame(&stream, buf, n)) {
 		if (tile) {
 			for (ptr = y = 0; y < stream.height; y++) {

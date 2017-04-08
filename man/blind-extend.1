@@ -52,6 +52,15 @@ of the input videos in the new room, such that the
 right-most part of the video has is put side-by-side
 with the left-most part of the video, and analogously
 for the other sides.
+.SH REQUIREMENTS
+.B blind-extend
+requires enough free memory to load two full frames into
+memory, one of the size of the source video's frames,
+and one of the size of the target video's frames. A frame
+requires 32 bytes per pixel it contains.
+.B blind-extend
+has not been optimised for memory usage, but instead
+for code simplicity.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-crop (1)

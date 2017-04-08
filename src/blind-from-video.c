@@ -172,7 +172,7 @@ convert(const char *infile, int outfd, const char *outfile, size_t width, size_t
 		if (dup2(pipe_rw[1], STDOUT_FILENO) == -1)
 			eprintf("dup2:");
 		close(pipe_rw[1]);
-		execvp("ffmpeg", cmd);
+		execvp("ffmpeg", (char **)(void *)cmd);
 		eprintf("exec ffmpeg:");
 	}
 
@@ -221,13 +221,13 @@ main(int argc, char *argv[])
 		skip_length = 1;
 		break;
 	case 'r':
-		frame_rate = EARG();
+		frame_rate = UARGF();
 		break;
 	case 'w':
-		width = etozu_flag('w', EARG(), 1, SIZE_MAX);
+		width = etozu_flag('w', UARGF(), 1, SIZE_MAX);
 		break;
 	case 'h':
-		height = etozu_flag('h', EARG(), 1, SIZE_MAX);
+		height = etozu_flag('h', UARGF(), 1, SIZE_MAX);
 		break;
 	default:
 		usage();

@@ -35,7 +35,6 @@ main(int argc, char *argv[])
 	srch *= ps;
 	srcw *= dx = imgw * ps;
 	imgw *= ps;
-	memcpy(buf, stream.buf, stream.ptr);
 	while (eread_frame(&stream, buf, n)) {
 		for (b = y = 0; y < srch; y += ps)
 			for (x = 0; x < srcw; x += dx)

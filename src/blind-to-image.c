@@ -91,7 +91,7 @@ main(int argc, char *argv[])
 
 	ARGBEGIN {
 	case 'd':
-		depth = etoi_flag('d', EARG(), 1, 64);
+		depth = etoi_flag('d', UARGF(), 1, 64);
 		break;
 	case 'f':
 		farbfeld = 1;

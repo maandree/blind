@@ -10,6 +10,13 @@ transposed, to stdout.
 .P
 To transpose a videos means to swap the
 X and Y coordinates.
+.SH REQUIREMENTS
+.B blind-transpose
+requires enough free memory to load two full frames into
+memory. A frame requires 32 bytes per pixel it contains.
+.B blind-transpose
+has not been optimised for memory usage, but instead
+for code simplicity.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-flip (1),

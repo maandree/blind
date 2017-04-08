@@ -209,10 +209,10 @@ main(int argc, char *argv[])
 
 	ARGBEGIN {
 	case 'o':
-		output_file = EARG();
+		output_file = UARGF();
 		break;
 	case 'j':
-		jobs = etozu_flag('j', EARG(), 1, SHRT_MAX);
+		jobs = etozu_flag('j', UARGF(), 1, SHRT_MAX);
 		break;
 	default:
 		usage();

@@ -33,6 +33,12 @@ will read stdin into memory; you are highly discouraged
 from using this unless stdin is a single frame, or known
 to only be a very small number of frames, is it can
 potentially use all of the computer's memory.
+.SH REQUIREMENTS
+.B blind-repeat
+requires enough free memory to load the entire video
+into memory if it is read from stdin. A frame requires
+32 bytes per pixel it contains. So for a 720p video at
+25 Hz, 1 GB is reached in just below 1.5 seconds.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-from-image (1)

@@ -16,7 +16,7 @@ main(int argc, char *argv[])
 	struct stream stream;
 	double X, Y, Z, alpha = 1;
 	size_t x, y, n;
-	pixel_t buf[1024];
+	pixel_t buf[BUFSIZ / 4];
 	ssize_t r;
 	int inf = 0;
 	char *arg;
@@ -27,17 +27,17 @@ main(int argc, char *argv[])
 
 	ARGBEGIN {
 	case 'f':
-		arg = EARG();
+		arg = UARGF();
 		if (!strcmp(arg, "inf"))
 			inf = 1, stream.frames = 0;
 		else
 			stream.frames = etozu_flag('f', arg, 1, SIZE_MAX);
 		break;
 	case 'w':
-		stream.width = etozu_flag('w', EARG(), 1, SIZE_MAX);
+		stream.width = etozu_flag('w', UARGF(), 1, SIZE_MAX);
 		break;
 	case 'h':
-		stream.height = etozu_flag('h', EARG(), 1, SIZE_MAX);
+		stream.height = etozu_flag('h', UARGF(), 1, SIZE_MAX);
 		break;
 	default:
 		usage();

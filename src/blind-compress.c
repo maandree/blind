@@ -51,7 +51,6 @@ main(int argc, char *argv[])
 	buf[0] = emalloc(n);
 	buf[1] = ecalloc(1, n);
 
-	memcpy(buf[0], stream.buf, stream.ptr);
 	for (i = 0; eread_frame(&stream, buf[i], n); i ^= 1) {
 		parts = compare(buf[i], buf[i ^ 1], n, &cmp, &cmpsize);
 		for (off = part = 0; part < parts; part += 2) {

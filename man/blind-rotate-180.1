@@ -7,6 +7,17 @@ blind-rotate-180 - Rotate a video 180 degrees
 .B blind-rotate-180
 reads a video from stdin and prints it, rotated
 180 degrees, to stdout.
+.SH REQUIREMENTS
+.B blind-rotate-180
+is implemented as a shell script pipeline of
+.BR blind-flip (1)
+and
+.BR blind-flop (1),
+see those for details on requirements.
+.B blind-rotate-180
+is not been optimised for memory usage, but instead
+for code simplicity, however, it does not exceed the
+optimum greatly.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-rotate-90 (1),

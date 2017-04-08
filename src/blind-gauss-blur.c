@@ -317,10 +317,10 @@ main(int argc, char *argv[])
 		measure_y_only = 1;
 		break;
 	case 'j':
-		jobs = etozu_flag('j', EARG(), 1, SHRT_MAX);
+		jobs = etozu_flag('j', UARGF(), 1, SHRT_MAX);
 		break;
 	case 's':
-		arg = EARG();
+		arg = UARGF();
 		if (!strcmp(arg, "auto"))
 			auto_spread = 1;
 		else

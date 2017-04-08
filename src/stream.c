@@ -32,14 +32,11 @@ eninit_stream(int status, struct stream *stream)
 	}
 
 	*p = '\0';
-	w = strchr(stream->buf, ' ');
-	if (!w)
+	if (!(w = strchr(stream->buf, ' ')))
 		goto bad_format;
-	h = strchr(w + 1, ' ');
-	if (!h)
+	if (!(h = strchr(w + 1, ' ')))
 		goto bad_format;
-	f = strchr(h + 1, ' ');
-	if (!f)
+	if (!(f = strchr(h + 1, ' ')))
 		goto bad_format;
 	*w++ = *h++ = *f++ = '\0';
 
@@ -88,6 +85,8 @@ eninit_stream(int status, struct stream *stream)
 	stream->headlen = n + 5;
 
 	enset_pixel_size(status, stream);
+
+	stream->xptr = 0;
 
 	return;
 bad_format:
@@ -181,19 +180,29 @@ enread_frame(int status, struct stream *stream, void *buf, size_t n)
 {
 	char *buffer = buf;
 	ssize_t r;
-	for (; stream->ptr < n; stream->ptr += (size_t)r) {
-		r = read(stream->fd, buffer + stream->ptr, n - stream->ptr);
+	size_t m;
+
+	if (stream->ptr) {
+		m = stream->ptr < n ? stream->ptr : n;
+		memcpy(buffer + stream->xptr, stream->buf, m);
+		memmove(stream->buf, stream->buf + m, stream->ptr -= m);
+		stream->xptr += m;
+	}
+
+	for (; stream->xptr < n; stream->xptr += (size_t)r) {
+		r = read(stream->fd, buffer + stream->xptr, n - stream->xptr);
 		if (r < 0) {
 			enprintf(status, "read %s:", stream->file);
 		} else if (r == 0) {
-			if (!stream->ptr)
+			if (!stream->xptr)
 				break;
 			enprintf(status, "%s: incomplete frame", stream->file);
 		}
 	}
-	if (!stream->ptr)
+
+	if (!stream->xptr)
 		return 0;
-	stream->ptr -= n;
+	stream->xptr -= n;
 	return 1;
 }
 
