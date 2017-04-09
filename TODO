@@ -14,7 +14,6 @@ blind-affine-colour	apply an affine transformation to the colour of each pixel,
 				-l for linear transformation,
 				-p for transforming each pixel with their own transformation.
 blind-invert-chroma	invert the chroma
-blind-skip-pattern	discard frames according to pattern, e.g. every other frame
 blind-from-sent		convert a sent presentation to a one-frame-per-slide blind video
 
 blind-from-video: add options to:

@@ -28,6 +28,7 @@ BIN =\
 	blind-set-luma\
 	blind-set-saturation\
 	blind-single-colour\
+	blind-skip-pattern\
 	blind-split\
 	blind-stack\
 	blind-time-blur\
