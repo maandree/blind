@@ -77,7 +77,7 @@ extern char *argv0;
 
 #define LNGARG()	&argv[0][0]
 
-#define ENOFLAGS(...)	ARGBEGIN {\
+#define UNOFLAGS(...)	ARGBEGIN {\
 			default:\
 				usage();\
 			} ARGEND;\

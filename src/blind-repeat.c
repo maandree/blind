@@ -98,7 +98,7 @@ main(int argc, char *argv[])
 	size_t count = 0;
 	int inf = 0;
 
-	ENOFLAGS(argc != 2);
+	UNOFLAGS(argc != 2);
 
 	if (!strcmp(argv[0], "inf"))
 		inf = 1;

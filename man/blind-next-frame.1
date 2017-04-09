@@ -3,6 +3,8 @@
 blind-next-frame - Extracts the next frame from a video
 .SH SYNOPSIS
 .B blind-next-frame
+[-f
+.IR frames ]
 .I width
 .I height
 .IR pixel-format " ..."
@@ -27,6 +29,12 @@ And argument following
 is appended to
 .I pixel-format
 with <space> in between.
+.SH OPTIONS
+.TP
+.BR -f " "\fIframes\fP
+Read and output the first
+.I frames
+frames rather than the first single frame.
 .SH EXIT STATUS
 .TP
 0

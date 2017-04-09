@@ -37,7 +37,7 @@ main(int argc, char *argv[])
 	ssize_t len;
 	void (*process)(void) = NULL;
 
-	ENOFLAGS(argc);
+	UNOFLAGS(argc);
 
 	len = getline(&line, &size, stdin);
 	if (len < 0) {

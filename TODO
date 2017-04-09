@@ -25,8 +25,6 @@ blind-from-video: add options to:
 	  print to stdout (up to user to direct to /dev/null
 	  for discarding)
 
-blind-next-frame: add option to read multiple frames
-
 Add [-j jobs] to blind-from-video and blind-to-video.
 
 

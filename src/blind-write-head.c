@@ -6,7 +6,7 @@ USAGE("parameters ...")
 int
 main(int argc, char *argv[])
 {
-	ENOFLAGS(!argc);
+	UNOFLAGS(!argc);
 
 	printf("%s", *argv++);
 	while (*argv)

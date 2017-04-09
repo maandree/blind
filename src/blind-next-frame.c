@@ -6,19 +6,27 @@
 #include <string.h>
 #include <unistd.h>
 
-USAGE("width height pixel-format ...")
+USAGE("[-f frames] width height pixel-format ...")
 
 int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t n, w;
+	size_t n, w, h = 0;
 	int i, anything = 0;
 	char *p;
 
-	ENOFLAGS(argc < 3);
-
 	stream.frames = 1;
+
+	ARGBEGIN {
+	case 'f':
+		stream.frames = etozu_flag('f', UARGF(), 1, SIZE_MAX);
+		break;
+	} ARGEND;
+
+	if (argc < 3)
+		usage();
+
 	stream.fd = STDIN_FILENO;
 	stream.file = "<stdin>";
 	stream.pixfmt[0] = '\0';
@@ -44,20 +52,23 @@ main(int argc, char *argv[])
 	enfflush(2, stdout, "<stdout>");
 
 	w = stream.width * stream.pixel_size;
-	while (stream.height) {
-		stream.height--;
-		for (n = w; n; n -= stream.ptr) {
-			stream.ptr = 0;
-			if (!enread_stream(2, &stream, n))
-				goto done;
-			anything = 1;
-			enwriteall(2, STDOUT_FILENO, stream.buf, stream.ptr, "<stdout>");
+	while (stream.frames) {
+		stream.frames--;
+		for (h = stream.height; h;) {
+			h--;
+			for (n = w; n; n -= stream.ptr) {
+				stream.ptr = 0;
+				if (!enread_stream(2, &stream, n))
+					goto done;
+				anything = 1;
+				enwriteall(2, STDOUT_FILENO, stream.buf, stream.ptr, "<stdout>");
+			}
 		}
 	}
 done:
 
-	if (anything && (stream.height || n))
-		enprintf(2, "incomplete frame\n");
+	if (anything && (h || n || stream.frames))
+		enprintf(2, "%s: is shorted than expected\n", stream.file);
 
 	return !anything;
 }

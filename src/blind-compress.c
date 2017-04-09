@@ -38,7 +38,7 @@ main(int argc, char *argv[])
 	size_t *cmp = NULL;
 	size_t cmpsize = 0;
 
-	ENOFLAGS(argc);
+	UNOFLAGS(argc);
 
 	stream.file = "<stdin>";
 	stream.fd = STDIN_FILENO;

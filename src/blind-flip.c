@@ -14,7 +14,7 @@ main(int argc, char *argv[])
 	size_t n, ptr, row_size;
 	char *buf;
 
-	ENOFLAGS(argc);
+	UNOFLAGS(argc);
 
 	stream.file = "<stdin>";
 	stream.fd = STDIN_FILENO;

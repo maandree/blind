@@ -27,7 +27,7 @@ main(int argc, char *argv[])
 	size_t n;
 	void (*process)(struct stream *stream, size_t n) = NULL;
 
-	ENOFLAGS(argc);
+	UNOFLAGS(argc);
 
 	stream.file = "<stdin>";
 	stream.fd = STDIN_FILENO;

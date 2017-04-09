@@ -16,7 +16,7 @@ main(int argc, char *argv[])
 	char *buf, *image;
 	size_t n, imgw, srcw, srch, ps, x, y, i, b, dx;
 
-	ENOFLAGS(argc);
+	UNOFLAGS(argc);
 
 	stream.file = "<stdin>";
 	stream.fd = STDIN_FILENO;

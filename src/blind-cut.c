@@ -19,7 +19,7 @@ main(int argc, char *argv[])
 	char buf[BUFSIZ];
 	int to_end = 0;
 
-	ENOFLAGS(argc != 3);
+	UNOFLAGS(argc != 3);
 
 	if (!strcmp(argv[0], "end"))
 		eprintf("refusing to create video with zero frames\n");

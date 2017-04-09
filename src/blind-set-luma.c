@@ -92,7 +92,7 @@ main(int argc, char *argv[])
 	struct stream colour, luma;
 	void (*process)(struct stream *colour, struct stream *luma, size_t n);
 
-	ENOFLAGS(argc != 1);
+	UNOFLAGS(argc != 1);
 
 	colour.file = "<stdin>";
 	colour.fd = STDIN_FILENO;
