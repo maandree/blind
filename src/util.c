@@ -1,9 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 #include "util.h"
 
-#if defined(HAVE_PRCTL)
-# include <sys/prctl.h>
-#endif
 #include <sys/wait.h>
 #include <ctype.h>
 #include <errno.h>
@@ -200,9 +197,7 @@ enfork_jobs(int status, size_t *start, size_t *end, size_t jobs, pid_t **pids)
 	for (j = 1; j < jobs; j++) {
 		pid = enfork(status);
 		if (!pid) {
-#if defined(HAVE_PRCTL) && defined(PR_SET_PDEATHSIG)
-			prctl(PR_SET_PDEATHSIG, SIGKILL);
-#endif
+			pdeath(SIGKILL);
 			*start = n * (j + 0) / jobs + s;
 			*end   = n * (j + 1) / jobs + s;
 			return 0;

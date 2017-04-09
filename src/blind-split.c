@@ -28,12 +28,10 @@ main(int argc, char *argv[])
 		usage();
 	} ARGEND;
 
-	if (argc < 2 || argc % 2)
+	if (argc % 2 || !argc)
 		usage();
 
-	stream.file = "<stdin>";
-	stream.fd = STDIN_FILENO;
-	einit_stream(&stream);
+	eopen_stream(&stream, NULL);
 	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
 	frame_size = stream.width * stream.height * stream.pixel_size;
 	if (stream.frames > (size_t)SSIZE_MAX / frame_size)

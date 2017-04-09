@@ -61,6 +61,7 @@ HDR =\
 	util/colour.h\
 	util/io.h\
 	util/efflush.h\
+	util/efunc.h\
 	util/eprintf.h\
 	util/fshut.h
 

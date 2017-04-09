@@ -17,14 +17,11 @@ main(int argc, char *argv[])
 
 	UNOFLAGS(argc);
 
-	stream.file = "<stdin>";
-	stream.fd = STDIN_FILENO;
-	einit_stream(&stream);
+	eopen_stream(&stream, NULL);
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
-	if (stream.width > SIZE_MAX / stream.pixel_size)
-		eprintf("<stdin>: video frame is too wide\n");
+	echeck_frame_size(stream.width, 1, stream.pixel_size, 0, stream.file);
 	n = stream.width * stream.pixel_size;
 	buf   = emalloc(n);
 	image = emalloc(n);

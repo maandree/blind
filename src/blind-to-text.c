@@ -24,14 +24,11 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t n;
 	void (*process)(struct stream *stream, size_t n) = NULL;
 
 	UNOFLAGS(argc);
 
-	stream.file = "<stdin>";
-	stream.fd = STDIN_FILENO;
-	einit_stream(&stream);
+	eopen_stream(&stream, NULL);
 
 	if (!strcmp(stream.pixfmt, "xyza"))
 		process = process_xyza;
@@ -40,12 +37,7 @@ main(int argc, char *argv[])
 
 	printf("%zu %zu %zu %s\n", stream.frames, stream.width, stream.height, stream.pixfmt);
 
-	while ((n = eread_stream(&stream, SIZE_MAX))) {
-		n = stream.ptr - (stream.ptr % stream.pixel_size);
-		process(&stream, n);
-		memmove(stream.buf, stream.buf + n, stream.ptr -= n);
-	}
-
+	process_stream(&stream, process);
 	efshut(stdout, "<stdout>");
 	return 0;
 }

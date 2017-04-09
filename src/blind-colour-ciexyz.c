@@ -6,10 +6,7 @@ USAGE("(X Y Z | Y)")
 int
 main(int argc, char *argv[])
 {
-	ARGBEGIN {
-	default:
-		usage();
-	} ARGEND;
+	UNOFLAGS(0);
 
 	if (argc == 1)
 		printf("%s\n", argv[0]);

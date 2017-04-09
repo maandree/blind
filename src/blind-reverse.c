@@ -18,10 +18,7 @@ to_stdout(struct stream *stream, size_t frame_size)
 		ptr = stream->frames * frame_size + stream->headlen;
 		end = ptr + frame_size;
 		while (ptr < end) {
-			r = pread(stream->fd, buf, sizeof(buf), ptr);
-			if (r < 0)
-				eprintf("pread %s:", stream->file);
-			else if (r == 0)
+			if (!(r = epread(stream->fd, buf, sizeof(buf), ptr, stream->file)))
 				eprintf("%s: file is shorter than expected\n", stream->file);
 			ptr += n = (size_t)r;
 			ewriteall(STDOUT_FILENO, buf, n, "<stdout>");
@@ -32,9 +29,7 @@ to_stdout(struct stream *stream, size_t frame_size)
 static void
 elseek_set(int fd, off_t offset, const char *fname)
 {
-	off_t r = lseek(fd, offset, SEEK_SET);
-	if (r < 0)
-		eprintf("lseek %s:", fname);
+	off_t r = elseek(fd, offset, SEEK_SET, fname);
 	if (r != offset)
 		eprintf("%s: file is shorter than expected\n", fname);
 }
@@ -92,20 +87,15 @@ main(int argc, char *argv[])
 	}
 	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
 	frame_size = stream.width * stream.height * stream.pixel_size;
-	if (stream.frames > (size_t)SSIZE_MAX / frame_size)
-		eprintf("%s: video is too large\n", stream.file);
-	if (stream.frames * frame_size > (size_t)SSIZE_MAX - stream.headlen)
+	if (stream.frames > (size_t)SSIZE_MAX / frame_size ||
+	    stream.frames * frame_size > (size_t)SSIZE_MAX - stream.headlen)
 		eprintf("%s: video is too large\n", stream.file);
 
 #if defined(POSIX_FADV_RANDOM)
 	posix_fadvise(stream.fd, 0, 0, POSIX_FADV_RANDOM);
 #endif
 
-	if (inplace)
-		in_place(&stream, frame_size);
-	else
-		to_stdout(&stream, frame_size);
-
+	(inplace ? in_place : to_stdout)(&stream, frame_size);
 	close(stream.fd);
 	return 0;
 }

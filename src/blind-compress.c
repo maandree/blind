@@ -40,9 +40,7 @@ main(int argc, char *argv[])
 
 	UNOFLAGS(argc);
 
-	stream.file = "<stdin>";
-	stream.fd = STDIN_FILENO;
-	einit_stream(&stream);
+	eopen_stream(&stream, NULL);
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 

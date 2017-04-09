@@ -51,13 +51,8 @@ main(int argc, char *argv[])
 	if (argc != 1)
 		usage();
 
-	colour.file = "<stdin>";
-	colour.fd = STDIN_FILENO;
-	einit_stream(&colour);
-
-	alpha.file = argv[0];
-	alpha.fd = eopen(alpha.file, O_RDONLY);
-	einit_stream(&alpha);
+	eopen_stream(&colour, NULL);
+	eopen_stream(&alpha, argv[0]);
 
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = invert ? process_xyza_i : process_xyza;

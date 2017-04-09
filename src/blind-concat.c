@@ -7,7 +7,6 @@
 #endif
 #include <sys/mman.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <string.h>
@@ -25,9 +24,7 @@ concat_to_stdout(int argc, char *argv[], const char *fname)
 	streams = emalloc((size_t)argc * sizeof(*streams));
 
 	for (i = 0; i < argc; i++) {
-		streams[i].file = argv[i];
-		streams[i].fd = eopen(streams[i].file, O_RDONLY);
-		einit_stream(streams + i);
+		eopen_stream(streams + i, argv[i]);
 		if (i)
 			echeck_compat(streams + i, streams);
 		if (streams[i].frames > SIZE_MAX - frames)
@@ -40,8 +37,10 @@ concat_to_stdout(int argc, char *argv[], const char *fname)
 	efflush(stdout, fname);
 
 	for (i = 0; i < argc; i++) {
-		for (; eread_stream(streams + i, SIZE_MAX); streams[i].ptr = 0)
+		do {
 			ewriteall(STDOUT_FILENO, streams[i].buf, streams[i].ptr, fname);
+			streams[i].ptr = 0;
+		} while (eread_stream(streams + i, SIZE_MAX));
 		close(streams[i].fd);
 	}
 
@@ -59,9 +58,7 @@ concat_to_file(int argc, char *argv[], char *output_file)
 	char *data;
 
 	for (; argc--; argv++) {
-		stream.file = *argv;
-		stream.fd = eopen(stream.file, O_RDONLY);
-		einit_stream(&stream);
+		eopen_stream(&stream, *argv);
 
 		if (first) {
 			refstream = stream;
@@ -73,10 +70,11 @@ concat_to_file(int argc, char *argv[], char *output_file)
 			echeck_compat(&stream, &refstream);
 		}
 
-		for (; eread_stream(&stream, SIZE_MAX); stream.ptr = 0) {
+		do {
 			ewriteall(fd, stream.buf, stream.ptr, output_file);
 			size += stream.ptr;
-		}
+			stream.ptr = 0;
+		} while (eread_stream(&stream, SIZE_MAX));
 		close(stream.fd);
 	}
 
@@ -98,8 +96,8 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 {
 #if !defined(HAVE_EPOLL)
 	int fd = eopen(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	if (fd != STDOUT_FILENO && dup2(fd, STDOUT_FILENO) == -1)
-		eprintf("dup2:");
+	if (fd != STDOUT_FILENO)
+		edup2(fd, STDOUT_FILENO);
 	concat_to_stdout(argc, argv, output_file);
 #else
 	struct epoll_event *events;
@@ -119,9 +117,7 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 	ptrs    = emalloc((size_t)argc * sizeof(*ptrs));
 
 	for (i = 0; i < argc; i++) {
-		streams[i].file = argv[i];
-		streams[i].fd = eopen(streams[i].file, O_RDONLY);
-		einit_stream(streams + i);
+		eopen_stream(streams + i, argv[i]);
 		if (i)
 			echeck_compat(streams + i, streams);
 		if (streams[i].frames > SIZE_MAX - frames)
@@ -140,9 +136,7 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 	}
 	if (ftruncate(fd, (off_t)ptr))
 		eprintf("ftruncate %s:", output_file);
-#if defined(POSIX_FADV_RANDOM)
-        posix_fadvise(fd, (size_t)headlen, 0, POSIX_FADV_RANDOM);
-#endif
+        fadvise_random(fd, (size_t)headlen, 0);
 
 	pollfd = epoll_create1(0);
 	if (pollfd == -1)
@@ -158,7 +152,7 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 	for (j = 0; j < jobs; j++, next++) {
 		events->events = EPOLLIN;
 		events->data.u64 = next;
-		if (epoll_ctl(pollfd, EPOLL_CTL_ADD, streams[next].fd, events) == -1) {
+		if (epoll_ctl(pollfd, EPOLL_CTL_ADD, streams[next].fd, events)) {
 			if ((errno == ENOMEM || errno == ENOSPC) && j)
 				break;
 			eprintf("epoll_ctl:");
@@ -172,24 +166,25 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 			eprintf("epoll_wait:");
 		for (i = 0; i < n; i++) {
 			j = events[i].data.u64;
-			if (!eread_stream(streams + j, SIZE_MAX)) {
-				close(streams[j].fd);
-				if (next < (size_t)argc) {
-					events->events = EPOLLIN;
-					events->data.u64 = next;
-					if (epoll_ctl(pollfd, EPOLL_CTL_ADD, streams[next].fd, events) == -1) {
-						if ((errno == ENOMEM || errno == ENOSPC) && j)
-							break;
-						eprintf("epoll_ctl:");
-					}
-					next++;
-				} else {
-					jobs--;
-				}
-			} else {
+			if (streams[j].ptr || eread_stream(streams + j, SIZE_MAX)) {
 				epwriteall(fd, streams[j].buf, streams[j].ptr, ptrs[j], output_file);
 				ptrs[j] += streams[j].ptr;
 				streams[j].ptr = 0;
+				continue;
+			}
+
+			close(streams[j].fd);
+			if (next < (size_t)argc) {
+				events->events = EPOLLIN;
+				events->data.u64 = next;
+				if (epoll_ctl(pollfd, EPOLL_CTL_ADD, streams[next].fd, events)) {
+					if ((errno == ENOMEM || errno == ENOSPC) && j)
+						break;
+					eprintf("epoll_ctl:");
+				}
+				next++;
+			} else {
+				jobs--;
 			}
 		}
 	}

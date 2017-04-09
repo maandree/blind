@@ -2,17 +2,12 @@
 #include "stream.h"
 #include "util.h"
 
-#if defined(HAVE_PRCTL)
-# include <sys/prctl.h>
-#endif
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-r frame-rate] [-w width -h height] [-dL] input-file output-file")
 
@@ -55,28 +50,19 @@ get_metadata(char *file, size_t *width, size_t *height)
 	pid_t pid;
 	int status;
 
-	if (pipe(pipe_rw))
-		eprintf("pipe:");
-
-	pid = fork();
-	if (pid == -1)
-		eprintf("fork:");
+	epipe(pipe_rw);
+	pid = efork();
 
 	if (!pid) {
-#if defined(HAVE_PRCTL) && defined(PR_SET_PDEATHSIG)
-		prctl(PR_SET_PDEATHSIG, SIGKILL);
-#endif
+		pdeath(SIGKILL);
 		fd = eopen(file, O_RDONLY);
-		if (dup2(fd, STDIN_FILENO) == -1)
-			eprintf("dup2:");
+		edup2(fd, STDIN_FILENO);
 		close(fd);
 		close(pipe_rw[0]);
-		if (dup2(pipe_rw[1], STDOUT_FILENO) == -1)
-			eprintf("dup2:");
+		edup2(pipe_rw[1], STDOUT_FILENO);
 		close(pipe_rw[1]);
-		execlp("ffprobe", "ffprobe", "-v", "quiet", "-show_streams",
-		       "-select_streams", "v", "-", NULL);
-		eprintf("exec ffprobe:");
+		eexeclp("ffprobe", "ffprobe", "-v", "quiet", "-show_streams",
+			"-select_streams", "v", "-", NULL);
 	}
 
 	close(pipe_rw[1]);
@@ -87,8 +73,7 @@ get_metadata(char *file, size_t *width, size_t *height)
 	fclose(fp);
 	close(pipe_rw[0]);
 
-	if (waitpid(pid, &status, 0) == -1)
-		eprintf("waitpid:");
+	ewaitpid(pid, &status, 0);
 	if (status)
 		exit(1);
 }
@@ -157,32 +142,21 @@ convert(const char *infile, int outfd, const char *outfile, size_t width, size_t
 	cmd[i++] = "-";
 	cmd[i++] = NULL;
 
-	if (pipe(pipe_rw))
-		eprintf("pipe:");
-
-	pid = fork();
-	if (pid == -1)
-		eprintf("fork:");
+	epipe(pipe_rw);
+	pid = efork();
 
 	if (!pid) {
-#if defined(HAVE_PRCTL) && defined(PR_SET_PDEATHSIG)
-		prctl(PR_SET_PDEATHSIG, SIGKILL);
-#endif
+		pdeath(SIGKILL);
 		close(pipe_rw[0]);
-		if (dup2(pipe_rw[1], STDOUT_FILENO) == -1)
-			eprintf("dup2:");
+		edup2(pipe_rw[1], STDOUT_FILENO);
 		close(pipe_rw[1]);
-		execvp("ffmpeg", (char **)(void *)cmd);
-		eprintf("exec ffmpeg:");
+		eexecvp("ffmpeg", (char **)(void *)cmd);
 	}
 
 	close(pipe_rw[1]);
 
 	for (ptr = 0;;) {
-		r = read(pipe_rw[0], buf + ptr, sizeof(buf) - ptr);
-		if (r < 0)
-			eprintf("read <subprocess>:");
-		if (r == 0)
+		if (!(r = eread(pipe_rw[0], buf + ptr, sizeof(buf) - ptr, "<subprocess>")))
 			break;
 		ptr += (size_t)r;
 		n = ptr - (ptr % 8);
@@ -193,8 +167,7 @@ convert(const char *infile, int outfd, const char *outfile, size_t width, size_t
 		eprintf("<subprocess>: incomplete frame\n");
 
 	close(pipe_rw[0]);
-	if (waitpid(pid, &status, 0) == -1)
-		eprintf("waitpid:");
+	ewaitpid(pid, &status, 0);
 	if (status)
 		exit(1);
 }

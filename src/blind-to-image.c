@@ -14,6 +14,8 @@ USAGE("[-d depth | -f]")
 static int luma_warning_triggered = 0;
 static int gamut_warning_triggered = 0;
 static int alpha_warning_triggered = 0;
+static unsigned long long int max;
+static int bytes;
 
 static void
 write_pixel(double R, double G, double B, double A, int bytes, unsigned long long int max)
@@ -57,7 +59,7 @@ write_pixel(double R, double G, double B, double A, int bytes, unsigned long lon
 }
 
 static void
-process_xyza(struct stream *stream, size_t n, int bytes, unsigned long long int max)
+process_xyza(struct stream *stream, size_t n)
 {
 	size_t i;
 	double X, Y, Z, A, R, G, B;
@@ -84,10 +86,8 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	int depth = 16, bytes, farbfeld = 0;
-	unsigned long long int max;
-	size_t n;
-	void (*process)(struct stream *stream, size_t n, int bytes, unsigned long long int max);
+	int depth = 16, farbfeld = 0;
+	void (*process)(struct stream *stream, size_t n);
 
 	ARGBEGIN {
 	case 'd':
@@ -103,9 +103,7 @@ main(int argc, char *argv[])
 	if (argc || (farbfeld && depth != 16))
 		usage();
 
-	stream.fd = STDIN_FILENO;
-	stream.file = "<stdin.h>";
-	einit_stream(&stream);
+	eopen_stream(&stream, NULL);
 
 	max = 1ULL << (depth - 1);
 	max |= max - 1;
@@ -140,11 +138,6 @@ main(int argc, char *argv[])
 	}
 	efflush(stdout, "<stdout>");
 
-	do {
-		n = stream.ptr - (stream.ptr % stream.pixel_size);
-		process(&stream, n, bytes, max);
-		memmove(stream.buf, stream.buf + n, stream.ptr -= n);
-	} while (eread_stream(&stream, SIZE_MAX));
-
+	process_stream(&stream, process);
 	return 0;
 }

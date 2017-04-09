@@ -52,9 +52,7 @@ main(int argc, char *argv[])
 	if (argc)
 		usage();
 
-	stream.fd = STDIN_FILENO;
-	stream.file = "<stdin>";
-	einit_stream(&stream);
+	eopen_stream(&stream, NULL);
 
 	if (!strcmp(stream.pixfmt, "xyza"))
 		process = reverse ? process_xyza_r : process_xyza;
@@ -65,6 +63,5 @@ main(int argc, char *argv[])
 	efflush(stdout, "<stdout>");
 	fmd = fm = stream.frames - 1;
 	process_each_frame_segmented(&stream, STDOUT_FILENO, "<stdout>", process);
-
 	return 0;
 }

@@ -18,16 +18,14 @@ main(int argc, char *argv[])
 
 	UNOFLAGS(argc);
 
-	stream.file = "<stdin>";
-	stream.fd = STDIN_FILENO;
-	einit_stream(&stream);
+	eopen_stream(&stream, NULL);
 	imgw = srch = stream.height;
 	stream.height = srcw = stream.width;
 	stream.width = imgw;
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
-	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, "<stdin>");
+	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
 	n = stream.width * stream.height * (ps = stream.pixel_size);
 	buf   = emalloc(n);
 	image = emalloc(n); /* TODO optimise to a frame row */

@@ -37,7 +37,6 @@ main(int argc, char *argv[])
 
 	srgb_to_ciexyz(red, green, blue, &X, &Y, &Z);
 	printf("%lf %lf %lf\n", X, Y, Z);
-
 	efshut(stdout, "<stdout>");
 	return 0;
 }

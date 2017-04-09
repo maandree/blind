@@ -17,6 +17,12 @@ must be a regular file.
 .B -i
 Reverse the file in place rather than printing
 it to stdout.
+.SH REQUIREMENTS
+.B blind-reverse
+requires enough free memory to load two full frames into
+memory if
+.B -i
+is used. A frame requires 32 bytes per pixel it contains.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-split (1),

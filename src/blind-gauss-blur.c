@@ -336,13 +336,8 @@ main(int argc, char *argv[])
 	if (!vertical && !horizontal)
 		vertical = horizontal = 1;
 
-	colour.file = "<stdin>";
-	colour.fd = STDIN_FILENO;
-	einit_stream(&colour);
-
-	sigma.file = argv[0];
-	sigma.fd = eopen(sigma.file, O_RDONLY);
-	einit_stream(&sigma);
+	eopen_stream(&colour, NULL);
+	eopen_stream(&sigma, argv[0]);
 
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = process_xyza;

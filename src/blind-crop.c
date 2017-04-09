@@ -41,9 +41,7 @@ main(int argc, char *argv[])
 	left   = etozu_arg("the left position", argv[2], 0, SIZE_MAX);
 	top    = etozu_arg("the top position",  argv[3], 0, SIZE_MAX);
 
-	stream.file = "<stdin>";
-	stream.fd = STDIN_FILENO;
-	einit_stream(&stream);
+	eopen_stream(&stream, NULL);
 	if (left > SIZE_MAX - width || left + width > stream.width ||
 	    top > SIZE_MAX - height || top + height > stream.height)
 		eprintf("crop area extends beyond original image\n");
@@ -72,10 +70,8 @@ main(int argc, char *argv[])
 		off  = (orown  - left % orown)  % orown;
 		yoff = (height - top  % height) % height;
 	}
-	bottom_start = top + height;
-	bottom = stream.height - bottom_start;
-	right_start = left + orown;
-	right = irown - right_start;
+	bottom = stream.height - (bottom_start = top  + height);
+	right  = irown         - (right_start  = left + orown);
 
 	while (eread_frame(&stream, buf, n)) {
 		if (tile) {

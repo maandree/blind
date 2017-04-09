@@ -64,9 +64,7 @@ main(int argc, char *argv[])
 	streams = ecalloc(n_streams, sizeof(*streams));
 
 	for (i = 0; i < n_streams; i++) {
-		streams[i].file = argv[i];
-		streams[i].fd = eopen(streams[i].file, O_RDONLY);
-		einit_stream(streams + i);
+		eopen_stream(streams + i, argv[i]);
 		if (streams[i].frames > frames)
 			frames = streams[i].frames;
 	}

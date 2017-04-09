@@ -14,15 +14,11 @@ main(int argc, char *argv[])
 	char magic[] = {'\0', 'u', 'i', 'v', 'f'};
 	char b, *p;
 	size_t i, ptr;
-	ssize_t r;
 
 	UNOFLAGS(argc);
 
 	for (ptr = 0; ptr < sizeof(buf);) {
-		r = read(STDIN_FILENO, buf + ptr, 1);
-		if (r < 0)
-			eprintf("read <stdin>:");
-		if (r == 0)
+		if (!eread(STDIN_FILENO, buf + ptr, 1, "<stdin>"))
 			goto bad_format;
 		if (buf[ptr++] == '\n')
 			break;
@@ -31,13 +27,9 @@ main(int argc, char *argv[])
 		goto bad_format;
 
 	p = buf;
-	for (i = 0; i < 5; i++) {
-		r = read(STDIN_FILENO, &b, 1);
-		if (r < 0)
-			eprintf("read <stdin>:");
-		if (r == 0 || b != magic[i])
+	for (i = 0; i < 5; i++)
+		if (!eread(STDIN_FILENO, &b, 1, "<stdin>") || b != magic[i])
 			goto bad_format;
-	}
 
 	for (i = 0; i < 3; i++) {
 		if (!isdigit(*p))

@@ -14,8 +14,7 @@ process_frame(struct stream *stream, int include, size_t rown)
 	size_t h, n;
 	int anything = 0;
 
-	for (h = stream->height; h;) {
-		h--;
+	for (h = stream->height; h; h--) {
 		for (n = rown; n; n -= stream->ptr) {
 			stream->ptr = 0;
 			if (!eread_stream(stream, n))
@@ -27,7 +26,7 @@ process_frame(struct stream *stream, int include, size_t rown)
 	}
 done:
 
-	if (anything && (h || n || stream->frames))
+	if (anything && h)
 		eprintf("%s: is shorted than expected\n", stream->file);
 
 	return !anything;
@@ -44,9 +43,7 @@ main(int argc, char *argv[])
 
 	UNOFLAGS(!argc);
 
-	stream.fd = STDIN_FILENO;
-	stream.file = "<stdin>";
-	einit_stream(&stream);
+	eopen_stream(&stream, NULL);
 
 	includes = emalloc((size_t)argc);
 	ns = ecalloc((size_t)argc, sizeof(*ns));
@@ -67,11 +64,12 @@ main(int argc, char *argv[])
 			total += (size_t)include;
 	}
 
+	echeck_frame_size(stream.width, 1, stream.pixel_size, 0, stream.file);
+	rown = stream.width * stream.pixel_size;
 	stream.frames = total;
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
-	rown = stream.width * stream.pixel_size;
 	for (i = 0;; i = (i + 1) % argc) {
 		include = (int)includes[i];
 		n = ns[i];

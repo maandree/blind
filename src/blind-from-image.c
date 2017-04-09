@@ -102,10 +102,7 @@ pam_head(int fd, const char *fname)
 	char *p;
 	unsigned long long int maxval = UINT8_MAX;
 	for (ptr = 0;;) {
-		r = read(fd, buf + ptr, sizeof(buf) - 1);
-		if (r < 0)
-			eprintf("read %s:", fname);
-		if (r == 0)
+		if (!(r = eread(fd, buf + ptr, sizeof(buf) - 1, fname)))
 			eprintf("%s\n", conv_fail_msg);
 		ptr += (size_t)r;
 		for (;;) {
@@ -214,33 +211,25 @@ main(int argc, char *argv[])
 		goto after_fork;
 	}
 
-	if (pipe(pipe_rw))
-		eprintf("pipe:");
+	epipe(pipe_rw);
 	if (pipe_rw[0] == STDIN_FILENO || pipe_rw[1] == STDIN_FILENO)
 		eprintf("no stdin open\n");
 	if (pipe_rw[0] == STDOUT_FILENO || pipe_rw[1] == STDOUT_FILENO)
 		eprintf("no stdout open\n");
 	for (i = 0; i < 2; i++) {
 		if (pipe_rw[i] == STDERR_FILENO) {
-			pipe_rw[i] = dup(old_fd = pipe_rw[i]);
-			if (pipe_rw[i] < 0)
-				eprintf("dup:");
+			pipe_rw[i] = edup(old_fd = pipe_rw[i]);
 			close(old_fd);
 		}
 	}
 
-	pid = fork();
-	if (pid < 0)
-		eprintf("fork:");
-
+	pid = efork();
 	if (!pid) {
 		close(pipe_rw[0]);
-		if (dup2(pipe_rw[1], STDOUT_FILENO) == -1)
-			eprintf("dup2:");
+		edup2(pipe_rw[1], STDOUT_FILENO);
 		close(pipe_rw[1]);
 		/* XXX Is there a way to convert directly to raw XYZ? (Would avoid gamut truncation) */
-		execlp("convert", "convert", "-", "-depth", "32", "-alpha", "activate", "pam:-", NULL);
-		eprintf("exec convert:");
+		eexeclp("convert", "convert", "-", "-depth", "32", "-alpha", "activate", "pam:-", NULL);
 	}
 
 	close(pipe_rw[1]);

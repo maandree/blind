@@ -83,13 +83,8 @@ main(int argc, char *argv[])
 	if (argc != 2)
 		usage();
 
-	left.file = "<stdin>";
-	left.fd = STDIN_FILENO;
-	einit_stream(&left);
-
-	right.file = argv[1];
-	right.fd = eopen(right.file, O_RDONLY);
-	einit_stream(&right);
+	eopen_stream(&left, NULL);
+	eopen_stream(&right, argv[1]);
 
 	if (!strcmp(left.pixfmt, "xyza"))
 		process = get_lf_process(argv[0]);

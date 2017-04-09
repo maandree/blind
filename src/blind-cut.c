@@ -2,7 +2,6 @@
 #include "stream.h"
 #include "util.h"
 
-#include <fcntl.h>
 #include <limits.h>
 #include <stdint.h>
 #include <string.h>
@@ -31,9 +30,7 @@ main(int argc, char *argv[])
 	else
 		end = etozu_arg("the end point", argv[1], 0, SIZE_MAX);
 
-	stream.file = argv[2];
-	stream.fd = eopen(stream.file, O_RDONLY);
-	einit_stream(&stream);
+	eopen_stream(&stream, argv[2]);
 	if (to_end)
 		end = stream.frames;
 	else if (end > stream.frames)
@@ -53,16 +50,11 @@ main(int argc, char *argv[])
 	end   = end   * frame_size + stream.headlen;
 	start = start * frame_size + stream.headlen;
 
-#if defined(POSIX_FADV_SEQUENTIAL)
-	posix_fadvise(stream.fd, start, end - start, POSIX_FADV_SEQUENTIAL);
-#endif
+	fadvise_sequential(stream.fd, start, end - start);
 	for (ptr = start; ptr < end; ptr += (size_t)r) {
 		max = end - ptr;
 		max = MIN(max, sizeof(buf));
-		r = pread(stream.fd, buf, max, ptr);
-		if (r < 0)
-			eprintf("pread %s:", stream.file);
-		if (r == 0)
+		if (!(r = epread(stream.fd, buf, max, ptr, stream.file)))
 			eprintf("%s: file is shorter than expected\n", stream.file);
 		ewriteall(STDOUT_FILENO, buf, (size_t)r, "<stdout>");
 	}

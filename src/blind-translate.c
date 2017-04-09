@@ -2,7 +2,6 @@
 #include "stream.h"
 #include "util.h"
 
-#include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
 #include <string.h>
@@ -65,8 +64,6 @@ process_frame(struct stream *stream, char *buf, size_t n,
 eof:
 	eprintf("%s: file is shorter than expected\n", stream->file);
 	return 0;
-
-#undef ZEROES
 }
 
 static void
@@ -80,8 +77,7 @@ process(struct stream *stream, struct stream *trstream)
 
 	memset(zeroes, 0, sizeof(zeroes));
 
-	if (!check_frame_size(stream->width, 1, stream->pixel_size))
-		eprintf("%s: video frame is too wide\n", stream->file);
+	echeck_frame_size(stream->width, 1, stream->pixel_size, 0, stream->file);
 	n = stream->width * stream->pixel_size;
 	buf = emalloc(n);
 
@@ -156,20 +152,15 @@ main(int argc, char *argv[])
 	case 'p':
 		invtrans = 1;
 		break;
+	default:
+		usage();
 	} ARGEND;
 
 	if (argc != 1)
 		usage();
 
-	stream.file = "<stdin>";
-	stream.fd = STDIN_FILENO;
-	einit_stream(&stream);
-	fprint_stream_head(stdout, &stream);
-	efflush(stdout, "<stdout>");
-
-	trstream.file = argv[0];
-	trstream.fd = eopen(trstream.file, O_RDONLY);
-	einit_stream(&trstream);
+	eopen_stream(&stream, NULL);
+	eopen_stream(&trstream, argv[0]);
 
 	if (trstream.width != 1 || trstream.height != 1)
 		eprintf("translation-stream does not have 1x1 geometry\n");
@@ -177,6 +168,9 @@ main(int argc, char *argv[])
 	if (strcmp(trstream.pixfmt, "xyza"))
 		eprintf("pixel format of translation-stream %s "
 			"is not supported, try xyza\n", trstream.pixfmt);
+
+	fprint_stream_head(stdout, &stream);
+	efflush(stdout, "<stdout>");
 
 	(wrap ? process_wrap : process)(&stream, &trstream);
 	close(trstream.fd);

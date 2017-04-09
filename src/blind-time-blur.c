@@ -56,13 +56,8 @@ main(int argc, char *argv[])
 	if (argc != 1)
 		usage();
 
-	colour.file = "<stdin>";
-	colour.fd = STDIN_FILENO;
-	einit_stream(&colour);
-
-	alpha.file = argv[0];
-	alpha.fd = eopen(alpha.file, O_RDONLY);
-	einit_stream(&alpha);
+	eopen_stream(&colour, NULL);
+	eopen_stream(&alpha, argv[0]);
 
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = process_xyza;
@@ -74,6 +69,5 @@ main(int argc, char *argv[])
 	fprint_stream_head(stdout, &colour);
 	efflush(stdout, "<stdout>");
 	process_each_frame_two_streams(&colour, &alpha, STDOUT_FILENO, "<stdout>", process);
-
 	return 0;
 }

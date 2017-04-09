@@ -94,6 +94,15 @@ bad_format:
 }
 
 
+void
+enopen_stream(int status, struct stream *stream, const char *file)
+{
+	stream->file = file ? file : "<stdin>";
+	stream->fd = file ? enopen(status, file, O_RDONLY) : STDIN_FILENO;
+	eninit_stream(status, stream);
+}
+
+
 int
 set_pixel_size(struct stream *stream)
 {
@@ -146,21 +155,24 @@ eninf_check_fd(int status, int fd, const char *file)
 int
 check_frame_size(size_t width, size_t height, size_t pixel_size)
 {
-	if (!width || !height || !pixel_size)
+	if (!height)
+		return !width || !pixel_size || !(width > SIZE_MAX / pixel_size);
+	if (!width)
+		return !height || !pixel_size || !(height > SIZE_MAX / pixel_size);
+	if (!pixel_size)
 		return 1;
 	if (width > SIZE_MAX / height)
 		return 0;
-	if (width * height > SIZE_MAX / pixel_size)
-		return 0;
-	return 1;
+	return !(width * height > SIZE_MAX / pixel_size);
 }
 
 void
 encheck_frame_size(int status, size_t width, size_t height, size_t pixel_size, const char *prefix, const char *fname)
 {
 	if (!check_frame_size(width, height, pixel_size))
-		enprintf(status, "%s: %s%svideo frame is too large\n",
-			 fname, prefix ? prefix : "", (prefix && *prefix) ? " " : "");
+		enprintf(status, "%s: %s%svideo frame is too %s\n",
+			 fname, prefix ? prefix : "", (prefix && *prefix) ? " " : "",
+			 width <= 1 ? "tall" : height <= 1 ? "wide" : "large");
 }
 
 
@@ -207,6 +219,18 @@ enread_frame(int status, struct stream *stream, void *buf, size_t n)
 
 
 void
+nprocess_stream(int status, struct stream *stream, void (*process)(struct stream *stream, size_t n))
+{
+	size_t n;
+	do {
+		n = stream->ptr - (stream->ptr % stream->pixel_size);
+		process(stream, n);
+		memmove(stream->buf, stream->buf + n, stream->ptr -= n);
+	} while (enread_stream(status, stream, SIZE_MAX));
+}
+
+
+void
 nprocess_each_frame_segmented(int status, struct stream *stream, int output_fd, const char* output_fname,
 			      void (*process)(struct stream *stream, size_t n, size_t frame))
 {
@@ -221,7 +245,7 @@ nprocess_each_frame_segmented(int status, struct stream *stream, int output_fd, 
 				enprintf(status, "%s: file is shorter than expected\n", stream->file);
 			r = stream->ptr - (stream->ptr % stream->pixel_size);
 			r = MIN(r, n);
-			(process)(stream, r, frame);
+			process(stream, r, frame);
 			enwriteall(status, output_fd, stream->buf, r, output_fname);
 			memmove(stream->buf, stream->buf + r, stream->ptr -= r);
 		}

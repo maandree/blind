@@ -20,3 +20,4 @@
 #include "util/io.h"
 #include "util/jobs.h"
 #include "util/endian.h"
+#include "util/efunc.h"

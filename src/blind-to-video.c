@@ -2,23 +2,20 @@
 #include "stream.h"
 #include "util.h"
 
-#if defined(HAVE_PRCTL)
-# include <sys/prctl.h>
-#endif
-#include <sys/wait.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-d] frame-rate ffmpeg-arguments ...")
 
 static int draft = 0;
+static int fd;
 
 static void
-process_xyza(char *buf, size_t n, int fd, const char *fname)
+process_xyza(struct stream *stream, size_t n)
 {
+	char *buf = stream->buf;
 	double *pixel, r, g, b;
 	uint16_t *pixels, *end;
 	uint16_t pixbuf[1024];
@@ -38,7 +35,7 @@ process_xyza(char *buf, size_t n, int fd, const char *fname)
 			*pixels++ = htole16((uint16_t)CLIP(0, u, 0xFFFFL));
 			*pixels++ = htole16((uint16_t)CLIP(0, v, 0xFFFFL));
 			if (pixels == end)
-				ewriteall(fd, pixels = pixbuf, sizeof(pixbuf), fname);
+				ewriteall(fd, pixels = pixbuf, sizeof(pixbuf), "<subprocess>");
 		}
 	} else {
 		for (ptr = 0; ptr < n; ptr += 4 * sizeof(double)) {
@@ -57,11 +54,10 @@ process_xyza(char *buf, size_t n, int fd, const char *fname)
 			*pixels++ = htole16((uint16_t)CLIP(0, u, 0xFFFFL));
 			*pixels++ = htole16((uint16_t)CLIP(0, v, 0xFFFFL));
 			if (pixels == end)
-				ewriteall(fd, pixels = pixbuf, sizeof(pixbuf), fname);
+				ewriteall(fd, pixels = pixbuf, sizeof(pixbuf), "<subprocess>");
 		}
 	}
-	if (pixels != pixbuf)
-		ewriteall(fd, pixbuf, (size_t)(pixels - pixbuf) * sizeof(*pixels), fname);
+	ewriteall(fd, pixbuf, (size_t)(pixels - pixbuf) * sizeof(*pixels), "<subprocess>");
 }
 
 int
@@ -74,7 +70,7 @@ main(int argc, char *argv[])
 	size_t n = 0;
 	int status, pipe_rw[2];
 	pid_t pid;
-	void (*process)(char *buf, size_t n, int fd, const char *fname) = NULL;
+	void (*process)(struct stream *stream, size_t n) = NULL;
 
 	ARGBEGIN {
 	case 'd':
@@ -97,9 +93,7 @@ main(int argc, char *argv[])
 	cmd[n++] = "-i",       cmd[n++] = "-";
 	memcpy(cmd + n, argv, (size_t)argc * sizeof(*cmd));
 
-	stream.file = "<stdin>";
-	stream.fd = STDIN_FILENO;
-	einit_stream(&stream);
+	eopen_stream(&stream, NULL);
 
 	sprintf(geometry, "%zux%zu", stream.width, stream.height);
 
@@ -108,37 +102,24 @@ main(int argc, char *argv[])
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
-	if (pipe(pipe_rw))
-		eprintf("pipe:");
-
-	pid = fork();
-	if (pid < 0)
-		eprintf("fork:");
+	epipe(pipe_rw);
+	pid = efork();
 
 	if (!pid) {
-#if defined(HAVE_PRCTL) && defined(PR_SET_PDEATHSIG)
-		prctl(PR_SET_PDEATHSIG, SIGKILL);
-#endif
+		pdeath(SIGKILL);
 		close(pipe_rw[1]);
-		if (dup2(pipe_rw[0], STDIN_FILENO) == -1)
-			eprintf("dup2:");
+		edup2(pipe_rw[0], STDIN_FILENO);
 		close(pipe_rw[0]);
-		execvp("ffmpeg", (char **)(void *)cmd);
-		eprintf("exec ffmpeg:");
+		eexecvp("ffmpeg", (char **)(void *)cmd);
 	}
 
 	free(cmd);
 
 	close(pipe_rw[0]);
-	while (eread_stream(&stream, SIZE_MAX)) {
-		n = stream.ptr - (stream.ptr % stream.pixel_size);
-		process(stream.buf, n, pipe_rw[1], "<subprocess>");
-		memmove(stream.buf, stream.buf + n, stream.ptr -= n);
-	}
-	close(pipe_rw[1]);
+	fd = pipe_rw[1];
+	process_stream(&stream, process);
+	close(fd);
 
-	if (waitpid(pid, &status, 0) == -1)
-		eprintf("waitpid:");
-
+	ewaitpid(pid, &status, 0);
 	return !!status;
 }

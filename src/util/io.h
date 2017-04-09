@@ -1,4 +1,17 @@
 /* See LICENSE file for copyright and license details. */
+#include <fcntl.h>
+
+#if defined(POSIX_FADV_SEQUENTIAL)
+# define fadvise_sequential(...)  posix_fadvise(__VA_ARGS__, POSIX_FADV_SEQUENTIAL)
+#else
+# define fadvise_sequential(...)
+#endif
+
+#if defined(POSIX_FADV_RANDOM)
+# define fadvise_random(...)  posix_fadvise(__VA_ARGS__, POSIX_FADV_RANDOM)
+#else
+# define fadvise_random(...)
+#endif
 
 #define ewriteall(...)     enwriteall(1, __VA_ARGS__)
 #define ereadall(...)      enreadall(1, __VA_ARGS__)

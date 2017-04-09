@@ -108,13 +108,8 @@ main(int argc, char *argv[])
 	if (argc != 1)
 		usage();
 
-	colour.file = "<stdin>";
-	colour.fd = STDIN_FILENO;
-	einit_stream(&colour);
-
-	mask.file = argv[0];
-	mask.fd = eopen(mask.file, O_RDONLY);
-	einit_stream(&mask);
+	eopen_stream(&colour, NULL);
+	eopen_stream(&mask, argv[0]);
 
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = invert ? whitepoint ? process_xyza_iw : process_xyza_i

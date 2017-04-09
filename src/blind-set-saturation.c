@@ -69,13 +69,8 @@ main(int argc, char *argv[])
 	if (argc != 1)
 		usage();
 
-	colour.file = "<stdin>";
-	colour.fd = STDIN_FILENO;
-	einit_stream(&colour);
-
-	satur.file = argv[0];
-	satur.fd = eopen(satur.file, O_RDONLY);
-	einit_stream(&satur);
+	eopen_stream(&colour, NULL);
+	eopen_stream(&satur, argv[0]);
 
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = whitepoint ? process_xyza_w : process_xyza;

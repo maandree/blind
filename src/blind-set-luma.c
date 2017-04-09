@@ -94,13 +94,8 @@ main(int argc, char *argv[])
 
 	UNOFLAGS(argc != 1);
 
-	colour.file = "<stdin>";
-	colour.fd = STDIN_FILENO;
-	einit_stream(&colour);
-
-	luma.file = argv[0];
-	luma.fd = eopen(luma.file, O_RDONLY);
-	einit_stream(&luma);
+	eopen_stream(&colour, NULL);
+	eopen_stream(&luma, argv[0]);
 
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = process_xyza;

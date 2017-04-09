@@ -42,9 +42,7 @@ main(int argc, char *argv[])
 	if (argc)
 		usage();
 
-	stream.file = "<stdin>";
-	stream.fd = STDIN_FILENO;
-	einit_stream(&stream);
+	eopen_stream(&stream, NULL);
 
 	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
 	n = stream.height * stream.width * stream.pixel_size;
