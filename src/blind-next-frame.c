@@ -22,6 +22,8 @@ main(int argc, char *argv[])
 	case 'f':
 		stream.frames = etozu_flag('f', UARGF(), 1, SIZE_MAX);
 		break;
+	default:
+		usage();
 	} ARGEND;
 
 	if (argc < 3)
@@ -52,10 +54,8 @@ main(int argc, char *argv[])
 	enfflush(2, stdout, "<stdout>");
 
 	w = stream.width * stream.pixel_size;
-	while (stream.frames) {
-		stream.frames--;
-		for (h = stream.height; h;) {
-			h--;
+	for (; stream.frames; stream.frames--) {
+		for (h = stream.height; h; h--) {
 			for (n = w; n; n -= stream.ptr) {
 				stream.ptr = 0;
 				if (!enread_stream(2, &stream, n))
@@ -67,7 +67,7 @@ main(int argc, char *argv[])
 	}
 done:
 
-	if (anything && (h || n || stream.frames))
+	if (anything && stream.frames)
 		enprintf(2, "%s: is shorted than expected\n", stream.file);
 
 	return !anything;

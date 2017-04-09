@@ -28,9 +28,9 @@ write_pixel(double R, double G, double B, double A, int bytes, unsigned long lon
 			weprintf("warning: out-of-gamut colour detected\n");
 		}
 		; /* TODO gamut */
-		R = R < 0 ? 0 : R > 1 ? 1 : R;
-		G = G < 0 ? 0 : G > 1 ? 1 : G;
-		B = B < 0 ? 0 : B > 1 ? 1 : B;
+		R = CLIP(0, R, 1);
+		G = CLIP(0, G, 1);
+		B = CLIP(0, B, 1);
 	}
 
 	if (A < 0 || A > 1) {
@@ -133,7 +133,7 @@ main(int argc, char *argv[])
 		printf("P7\n"
 		       "WIDTH %zu\n"
 		       "HEIGHT %zu\n"
-		       "DEPTH 4\n" /* Depth actually means channels */
+		       "DEPTH 4\n" /* channels */
 		       "MAXVAL %llu\n"
 		       "TUPLTYPE RGB_ALPHA\n"
 		       "ENDHDR\n", stream.width, stream.height, max);

@@ -58,7 +58,7 @@ main(int argc, char *argv[])
 #endif
 	for (ptr = start; ptr < end; ptr += (size_t)r) {
 		max = end - ptr;
-		max = max < sizeof(buf) ? max : sizeof(buf);
+		max = MIN(max, sizeof(buf));
 		r = pread(stream.fd, buf, max, ptr);
 		if (r < 0)
 			eprintf("pread %s:", stream.file);

@@ -31,15 +31,15 @@ main(int argc, char *argv[])
 		sptr = 0;
 	again:
 		while (same) {
-			m = same < n - fptr ? same : n - fptr;
+			m = MIN(same, n - fptr);
 			ewriteall(STDOUT_FILENO, buf + fptr, m, "<stdout>");
 			fptr = (fptr + m) % n;
 			same -= m;
 		}
 
 		while (diff && sptr < stream.ptr) {
-			m = diff < n - fptr ? diff : n - fptr;
-			m = m < stream.ptr - sptr ? m : stream.ptr - sptr;
+			m = MIN(diff, n - fptr);
+			m = MIN(m, stream.ptr - sptr);
 			memcpy(buf + fptr, stream.buf + sptr, m);
 			ewriteall(STDOUT_FILENO, buf + fptr, m, "<stdout>");
 			fptr = (fptr + m) % n;

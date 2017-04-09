@@ -11,7 +11,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t n, ptr, row_size;
+	size_t n, rown, ptr;
 	char *buf;
 
 	UNOFLAGS(argc);
@@ -23,12 +23,12 @@ main(int argc, char *argv[])
 	efflush(stdout, "<stdout>");
 
 	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
-	n = stream.height * (row_size = stream.width * stream.pixel_size);
+	n = stream.height * (rown = stream.width * stream.pixel_size);
 	buf = emalloc(n);
 
 	while (eread_frame(&stream, buf, n))
 		for (ptr = n; ptr;)
-			ewriteall(STDOUT_FILENO, buf + (ptr -= row_size), row_size, "<stdout>");
+			ewriteall(STDOUT_FILENO, buf + (ptr -= rown), rown, "<stdout>");
 
 	free(buf);
 	return 0;

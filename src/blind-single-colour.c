@@ -76,7 +76,7 @@ main(int argc, char *argv[])
 	while (inf || stream.frames--) {
 		for (y = stream.height; y--;) {
 			for (x = stream.width; x;) {
-				x -= n = ELEMENTSOF(buf) < x ? ELEMENTSOF(buf) : x;
+				x -= n = MIN(ELEMENTSOF(buf), x);
 				for (n *= sizeof(*buf); n; n -= (size_t)r) {
 					r = write(STDOUT_FILENO, buf, n);
 					if (r < 0)

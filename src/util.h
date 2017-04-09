@@ -2,6 +2,9 @@
 #include "arg.h"
 
 #define ELEMENTSOF(ARRAY) (sizeof(ARRAY) / sizeof(*(ARRAY)))
+#define MIN(A, B)         ((A) < (B) ? (A) : (B))
+#define MAX(A, B)         ((A) > (B) ? (A) : (B))
+#define CLIP(A, B, C)     ((B) < (A) ? (A) : (B) > (C) ? (C) : (B))
 
 #define USAGE(SYNOPSIS)\
 	static void usage(void)\

@@ -124,8 +124,7 @@ size_t
 enread_stream(int status, struct stream *stream, size_t n)
 {
 	ssize_t r = read(stream->fd, stream->buf + stream->ptr,
-			 sizeof(stream->buf) - stream->ptr < n ?
-			 sizeof(stream->buf) - stream->ptr : n);
+			 MIN(sizeof(stream->buf) - stream->ptr, n));
 	if (r < 0)
 		enprintf(status, "read %s:", stream->file);
 	stream->ptr += (size_t)r;
@@ -183,7 +182,7 @@ enread_frame(int status, struct stream *stream, void *buf, size_t n)
 	size_t m;
 
 	if (stream->ptr) {
-		m = stream->ptr < n ? stream->ptr : n;
+		m = MIN(stream->ptr, n);
 		memcpy(buffer + stream->xptr, stream->buf, m);
 		memmove(stream->buf, stream->buf + m, stream->ptr -= m);
 		stream->xptr += m;
@@ -221,7 +220,7 @@ nprocess_each_frame_segmented(int status, struct stream *stream, int output_fd, 
 			if (stream->ptr < n && !enread_stream(status, stream, SIZE_MAX))
 				enprintf(status, "%s: file is shorter than expected\n", stream->file);
 			r = stream->ptr - (stream->ptr % stream->pixel_size);
-			r = r < n ? r : n;
+			r = MIN(r, n);
 			(process)(stream, r, frame);
 			enwriteall(status, output_fd, stream->buf, r, output_fname);
 			memmove(stream->buf, stream->buf + r, stream->ptr -= r);
@@ -250,7 +249,7 @@ nprocess_two_streams(int status, struct stream *left, struct stream *right, int 
 			break;
 		}
 
-		n = left->ptr < right->ptr ? left->ptr : right->ptr;
+		n = MIN(left->ptr, right->ptr);
 		n -= n % left->pixel_size;
 		left->ptr -= n;
 		right->ptr -= n;

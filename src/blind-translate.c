@@ -95,10 +95,10 @@ process(struct stream *stream, struct stream *trstream)
 			left  = (trx > 0 ? (size_t)trx  : 0) * stream->pixel_size;
 			right = (trx < 0 ? (size_t)-trx : 0) * stream->pixel_size;
 
-			above = above < stream->height ? above : stream->height;
-			below = below < stream->height ? below : stream->height;
-			left  = left  < n ? left  : n;
-			right = right < n ? right : n;
+			above = MIN(above, stream->height);
+			below = MIN(below, stream->height);
+			left  = MIN(left,  n);
+			right = MIN(right, n);
 		}
 	} while (process_frame(stream, buf, n, above, below, left, right));
 

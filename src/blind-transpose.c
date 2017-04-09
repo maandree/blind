@@ -30,7 +30,7 @@ main(int argc, char *argv[])
 	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, "<stdin>");
 	n = stream.width * stream.height * (ps = stream.pixel_size);
 	buf   = emalloc(n);
-	image = emalloc(n);
+	image = emalloc(n); /* TODO optimise to a frame row */
 
 	srch *= ps;
 	srcw *= dx = imgw * ps;

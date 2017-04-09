@@ -63,7 +63,7 @@ main(int argc, char *argv[])
 	buf = emalloc(n);
 	orown = width * stream.pixel_size;
 	m = (tile || keepsize || keepsize_inv) ? n : height * orown;
-	image = (keepsize || keepsize_inv) ? buf : malloc(m);
+	image = (keepsize || keepsize_inv) ? buf : emalloc(m);
 
 	left *= stream.pixel_size;
 	if (!tile) {

@@ -71,7 +71,7 @@ main(int argc, char *argv[])
 		for (end = to_end[i] ? SIZE_MAX : ends[i] * frame_size; ptr < end; ptr += n) {
 			n = end - ptr;
 			if (stream.ptr) {
-				n = stream.ptr < n ? stream.ptr : n;
+				n = MIN(stream.ptr, n);
 				ewriteall(fd, stream.buf, n, argv[i * 2]);
 				memmove(stream.buf, stream.buf + n, stream.ptr -= n);
 			} else if ((n = eread_stream(&stream, n))) {

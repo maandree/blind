@@ -25,9 +25,14 @@ typedef void (*process_func)(struct stream *left, struct stream *right, size_t n
 	X(div, *lh /= rh)\
 	X(exp, *lh = pow(*lh, rh))\
 	X(log, *lh = log(*lh) / log(rh))\
-	X(min, *lh = *lh < rh ? *lh : rh)\
-	X(max, *lh = *lh > rh ? *lh : rh)\
+	X(min, *lh = MIN(*lh, rh))\
+	X(max, *lh = MAX(*lh, rh))\
 	X(abs, *lh = fabs(*lh - rh) + rh)
+
+#define C(CH, CHI, ALGO)\
+	(!skip_##CH ? ((lh = ((double *)(left->buf + i)) + (CHI),\
+			rh = ((double *)(right->buf + i))[CHI],\
+			(ALGO)), 0) : 0)
 
 #define X(NAME, ALGO)\
 	static void\
@@ -35,24 +40,8 @@ typedef void (*process_func)(struct stream *left, struct stream *right, size_t n
 	{\
 		size_t i;\
 		double *lh, rh;\
-		for (i = 0; i < n; i += 4 * sizeof(double)) {\
-			if (!skip_x) {\
-				lh = ((double *)(left->buf + i)) + 0, rh = ((double *)(right->buf + i))[0];\
-				ALGO;\
-			}\
-			if (!skip_y) {\
-				lh = ((double *)(left->buf + i)) + 1, rh = ((double *)(right->buf + i))[1];\
-				ALGO;\
-			}\
-			if (!skip_z) {\
-				lh = ((double *)(left->buf + i)) + 2, rh = ((double *)(right->buf + i))[2];\
-				ALGO;\
-			}\
-			if (!skip_a) {\
-				lh = ((double *)(left->buf + i)) + 3, rh = ((double *)(right->buf + i))[3];\
-				ALGO;\
-			}\
-		}\
+		for (i = 0; i < n; i += 4 * sizeof(double))\
+			C(x, 0, ALGO), C(y, 1, ALGO), C(z, 2, ALGO), C(a, 3, ALGO);\
 	}
 LIST_OPERATORS
 #undef X
