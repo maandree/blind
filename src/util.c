@@ -243,6 +243,11 @@ xenopen(int status, const char *path, int flags, int mode, ...)
 		return STDOUT_FILENO;
 	} else if (!strcmp(path, "/dev/stderr")) {
 		return STDERR_FILENO;
+	} else if (!strcmp(path, "-")) {
+		if ((flags & O_ACCMODE) == O_RDONLY)
+			return STDIN_FILENO;
+		else
+			return STDOUT_FILENO;
 	}
 	fd = open(path, flags, mode);
 	if (fd < 0)
