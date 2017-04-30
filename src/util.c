@@ -234,9 +234,16 @@ int
 xenopen(int status, const char *path, int flags, int mode, ...)
 {
 	int fd;
-	if (!strncmp(path, "/dev/fd/", sizeof("/dev/fd/") - 1))
+	if (!strncmp(path, "/dev/fd/", sizeof("/dev/fd/") - 1)) {
 		if (!toi(path + sizeof("/dev/fd/") - 1, 0, INT_MAX, &fd))
 			return fd;
+	} else if (!strcmp(path, "/dev/stdin")) {
+		return STDIN_FILENO;
+	} else if (!strcmp(path, "/dev/stdout")) {
+		return STDOUT_FILENO;
+	} else if (!strcmp(path, "/dev/stderr")) {
+		return STDERR_FILENO;
+	}
 	fd = open(path, flags, mode);
 	if (fd < 0)
 		enprintf(status, "open %s:", path);
