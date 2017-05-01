@@ -18,7 +18,7 @@ static unsigned long long int max;
 static int bytes;
 
 static void
-write_pixel(double R, double G, double B, double A, int bytes, unsigned long long int max)
+write_pixel(double R, double G, double B, double A)
 {
 	unsigned long long int colours[4];
 	unsigned char buf[4 * 8];
@@ -78,7 +78,7 @@ process_xyza(struct stream *stream, size_t n)
 		}
 
 		ciexyz_to_srgb(X, Y, Z, &R, &G, &B);
-		write_pixel(R, G, B, A, bytes, max);
+		write_pixel(R, G, B, A);
 	}
 }
 
