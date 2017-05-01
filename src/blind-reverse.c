@@ -18,7 +18,7 @@ to_stdout(struct stream *stream, size_t frame_size)
 		ptr = stream->frames * frame_size + stream->headlen;
 		end = ptr + frame_size;
 		while (ptr < end) {
-			if (!(r = epread(stream->fd, buf, sizeof(buf), ptr, stream->file)))
+			if (!(r = epread(stream->fd, buf, MIN(sizeof(buf), end - ptr), ptr, stream->file)))
 				eprintf("%s: file is shorter than expected\n", stream->file);
 			ptr += n = (size_t)r;
 			ewriteall(STDOUT_FILENO, buf, n, "<stdout>");
@@ -35,6 +35,21 @@ elseek_set(int fd, off_t offset, const char *fname)
 }
 
 static void
+epread_frame(struct stream *stream, char *buf, off_t off, size_t n)
+{
+	stream->ptr = stream->xptr = 0;
+	elseek_set(stream->fd, off, stream->file);
+	eread_frame(stream, buf, n);
+}
+
+static void
+epwrite_frame(struct stream *stream, char *buf, off_t off, size_t n)
+{
+	elseek_set(stream->fd, off, stream->file);
+	ewriteall(stream->fd, buf, n, stream->file);
+}
+
+static void
 in_place(struct stream *stream, size_t frame_size)
 {
 	size_t f, fm = stream->frames - 1;
@@ -47,13 +62,12 @@ in_place(struct stream *stream, size_t frame_size)
 	for (f = 0; f < stream->frames >> 1; f++) {
 		pa = f        * frame_size + stream->headlen;
 		pb = (fm - f) * frame_size + stream->headlen;
-		eread_frame(stream, bufa, frame_size);
-		elseek_set(stream->fd, pb, stream->file);
-		eread_frame(stream, bufb, frame_size);
-		elseek_set(stream->fd, pb, stream->file);
-		ewriteall(stream->fd, bufa, frame_size, stream->file);
-		elseek_set(stream->fd, pa, stream->file);
-		ewriteall(stream->fd, bufb, frame_size, stream->file);
+
+		epread_frame(stream, bufa, pa, frame_size);
+		epread_frame(stream, bufb, pb, frame_size);
+
+		epwrite_frame(stream, bufa, pb, frame_size);
+		epwrite_frame(stream, bufb, pa, frame_size);
 	}
 
 	free(bufa);
