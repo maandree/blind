@@ -11,17 +11,17 @@ USAGE("(skipped-frames | +included-frames) ...")
 static int
 process_frame(struct stream *stream, int include, size_t rown)
 {
-	size_t h, n;
+	size_t h, n, m;
 	int anything = 0;
 
 	for (h = stream->height; h; h--) {
-		for (n = rown; n; n -= stream->ptr) {
-			stream->ptr = 0;
-			if (!eread_stream(stream, n))
+		for (n = rown; n; n -= m, anything = 1) {
+			if (!stream->ptr && !eread_stream(stream, n))
 				goto done;
-			anything = 1;
+			m = MIN(stream->ptr, n);
 			if (include)
-				ewriteall(STDOUT_FILENO, stream->buf, stream->ptr, "<stdout>");
+				ewriteall(STDOUT_FILENO, stream->buf, m, "<stdout>");
+			memmove(stream->buf, stream->buf + m, stream->ptr -= m);
 		}
 	}
 done:
@@ -29,7 +29,7 @@ done:
 	if (anything && h)
 		eprintf("%s: is shorted than expected\n", stream->file);
 
-	return !anything;
+	return anything;
 }
 
 int
@@ -52,13 +52,13 @@ main(int argc, char *argv[])
 		include = argv[i][0] == '+';
 		n = etozu_arg(include ? "included frame count" : "skipped frame count",
 			      argv[i] + include, 0, SIZE_MAX);
-		ns[i] = n;
+		total += ns[i] = n;
 		includes[i] = (char)include;
 	}
 	if (!total)
 		eprintf("null pattern is not allowed");
 
-	for (i = 0, total = 0, f = stream.frames;; i = (i + 1) % argc) {
+	for (i = 0, total = 0, f = stream.frames; f; i = (i + 1) % argc) {
 		include = (int)includes[i];
 		for (n = ns[i]; n-- && f--;)
 			total += (size_t)include;
@@ -72,10 +72,12 @@ main(int argc, char *argv[])
 
 	for (i = 0;; i = (i + 1) % argc) {
 		include = (int)includes[i];
-		n = ns[i];
-		while (n-- && process_frame(&stream, include, rown));
+		for (n = ns[i]; n--;)
+			if (!process_frame(&stream, include, rown))
+				goto done;
 	}
 
+done:
 	free(includes);
 	free(ns);
 	return 0;
