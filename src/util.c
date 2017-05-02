@@ -221,8 +221,8 @@ enjoin_jobs(int status, int is_master, pid_t *pids)
 	for (i = 0; pids[i] != -1; i++) {
 		if (waitpid(pids[i], &stat, 0) == -1)
 			enprintf(status, "waitpid:");
-		if (stat)
-			exit(status);
+		if (status)
+			exit(WIFEXITED(status) ? WEXITSTATUS(status) : WTERMSIG(status));
 	}
 	free(pids);
 }
