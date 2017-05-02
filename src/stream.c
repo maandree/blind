@@ -10,56 +10,59 @@
 #include <string.h>
 #include <unistd.h>
 
+static inline int
+get_dimension(int status, size_t *out, const char *s, const char *fname, const char *dim)
+{
+	char *end;
+	errno = 0;
+	*out = strtoul(s, &end, 10);
+	if (errno == ERANGE && *s != '-')
+		enprintf(status, "%s: video is too %s\n", fname, dim);
+	return -(errno || *end);
+}
+
+static inline int
+sread(int status, struct stream *stream)
+{
+	ssize_t r;
+	r = read(stream->fd, stream->buf + stream->ptr, sizeof(stream->buf) - stream->ptr);
+	if (r < 0)
+		enprintf(status, "read %s:", stream->file);
+	if (r == 0)
+		return 0;
+	stream->ptr += (size_t)r;
+	return 1;
+}
+
 void
 eninit_stream(int status, struct stream *stream)
 {
-	ssize_t r;
 	size_t n;
-	char *p = NULL, *w, *h, *f, *end;
+	char *p = NULL, *w, *h, *f;
+
+	fadvise_sequential(stream->fd, 0, 0);
 
 	if (stream->fd >= 0) {
-		for (stream->ptr = 0; !p;) {
-			r = read(stream->fd, stream->buf + stream->ptr, sizeof(stream->buf) - stream->ptr);
-			if (r < 0)
-				enprintf(status, "read %s:", stream->file);
-			if (r == 0)
+		for (stream->ptr = 0; !p; p = memchr(stream->buf, '\n', stream->ptr))
+			if (!sread(status, stream))
 				goto bad_format;
-			stream->ptr += (size_t)r;
-			p = memchr(stream->buf, '\n', stream->ptr);
-		}
 	} else {
 		p = memchr(stream->buf, '\n', stream->ptr);
 	}
 
 	*p = '\0';
-	if (!(w = strchr(stream->buf, ' ')))
-		goto bad_format;
-	if (!(h = strchr(w + 1, ' ')))
-		goto bad_format;
-	if (!(f = strchr(h + 1, ' ')))
+	if (!(w = strchr(stream->buf, ' ')) ||
+	    !(h = strchr(w + 1, ' ')) ||
+	    !(f = strchr(h + 1, ' ')))
 		goto bad_format;
 	*w++ = *h++ = *f++ = '\0';
 
 	if (strlen(f) >= sizeof(stream->pixfmt))
 		goto bad_format;
 	strcpy(stream->pixfmt, f);
-	errno = 0;
-	stream->frames = strtoul(stream->buf, &end, 10);
-	if (errno == ERANGE && *stream->buf != '-')
-		eprintf("%s: video is too long\n", stream->file);
-	if (errno || *end)
-		goto bad_format;
-	errno = 0;
-	stream->width = strtoul(w, &end, 10);
-	if (errno == ERANGE && *stream->buf != '-')
-		eprintf("%s: video is too wide\n", stream->file);
-	if (errno || *end)
-		goto bad_format;
-	errno = 0;
-	stream->height = strtoul(h, &end, 10);
-	if (errno == ERANGE && *stream->buf != '-')
-		eprintf("%s: video is too tall\n", stream->file);
-	if (errno || *end)
+	if (get_dimension(status, &stream->frames, stream->buf, stream->file, "long") ||
+	    get_dimension(status, &stream->width,  w,           stream->file, "wide") ||
+	    get_dimension(status, &stream->height, h,           stream->file, "tall"))
 		goto bad_format;
 
 	if (!stream->width)
@@ -69,14 +72,9 @@ eninit_stream(int status, struct stream *stream)
 
 	n = (size_t)(p - stream->buf) + 1;
 	memmove(stream->buf, stream->buf + n, stream->ptr -= n);
-	while (stream->ptr < 5) {
-		r = read(stream->fd, stream->buf + stream->ptr, sizeof(stream->buf) - stream->ptr);
-		if (r < 0)
-			enprintf(status, "read %s:", stream->file);
-		if (r == 0)
+	while (stream->ptr < 5)
+		if (!sread(status, stream))
 			goto bad_format;
-		stream->ptr += (size_t)r;
-	}
 	if (stream->buf[0] != '\0' ||
 	    stream->buf[1] != 'u' || stream->buf[2] != 'i' ||
 	    stream->buf[3] != 'v' || stream->buf[4] != 'f')
@@ -258,19 +256,20 @@ nprocess_two_streams(int status, struct stream *left, struct stream *right, int 
 		     void (*process)(struct stream *left, struct stream *right, size_t n))
 {
 	size_t n;
+	int have_both = 1;
 
 	encheck_compat(status, left, right);
 
-	for (;;) {
+	while (have_both) {
 		if (left->ptr < sizeof(left->buf) && !enread_stream(status, left, SIZE_MAX)) {
 			close(left->fd);
 			left->fd = -1;
-			break;
+			have_both = 0;
 		}
 		if (right->ptr < sizeof(right->buf) && !enread_stream(status, right, SIZE_MAX)) {
 			close(right->fd);
 			right->fd = -1;
-			break;
+			have_both = 0;
 		}
 
 		n = MIN(left->ptr, right->ptr);
