@@ -13,17 +13,13 @@ typedef double pixel_t[4];
 int
 main(int argc, char *argv[])
 {
-	struct stream stream;
+	struct stream stream = { .width = 0, .height = 0, .frames = 1 };
 	double X, Y, Z, alpha = 1;
 	size_t x, y, n;
 	pixel_t buf[BUFSIZ / 4];
 	ssize_t r;
 	int inf = 0;
 	char *arg;
-
-	stream.width = 0;
-	stream.height = 0;
-	stream.frames = 1;
 
 	ARGBEGIN {
 	case 'f':
@@ -71,18 +67,12 @@ main(int argc, char *argv[])
 		buf[x][2] = Z;
 		buf[x][3] = alpha;
 	}
-	while (inf || stream.frames--) {
-		for (y = stream.height; y--;) {
-			for (x = stream.width; x;) {
-				x -= n = MIN(ELEMENTSOF(buf), x);
-				for (n *= sizeof(*buf); n; n -= (size_t)r) {
-					r = write(STDOUT_FILENO, buf, n);
-					if (r < 0)
+	while (inf || stream.frames--)
+		for (y = stream.height; y--;)
+			for (x = stream.width * sizeof(*buf); x;)
+				for (x -= n = MIN(sizeof(buf), x); n; n -= (size_t)r)
+					if ((r = write(STDOUT_FILENO, buf, n)) < 0)
 						eprintf("write <stdout>:");
-				}
-			}
-		}
-	}
 
 	return 0;
 }
