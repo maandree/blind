@@ -13,17 +13,15 @@ static void
 process_xyza(struct stream *colour, struct stream *satur, size_t n)
 {
 	size_t i;
-	double s, *x, y, *z, X, Z;
-	X = D65_XYY_X / D65_XYY_Y;
-	Z = 1 / D65_XYY_Y - 1 - X;
+	double s, *x, y, *z;
 	for (i = 0; i < n; i += colour->pixel_size) {
 		s = ((double *)(satur->buf + i))[1];
 		s *= ((double *)(satur->buf + i))[3];
 		x = ((double *)(colour->buf + i)) + 0;
 		y = ((double *)(colour->buf + i))[1];
 		z = ((double *)(colour->buf + i)) + 2;
-		*x = ((*x / X - y) * s + y) * X;
-		*z = ((*z / Z - y) * s + y) * Z;
+		*x = ((*x / D65_XYZ_X - y) * s + y) * D65_XYZ_X;
+		*z = ((*z / D65_XYZ_Z - y) * s + y) * D65_XYZ_Z;
 		/*
 		 * Explaination:
 		 *   Y is the luma and ((X / Xn - Y / Yn), (Z / Zn - Y / Yn))

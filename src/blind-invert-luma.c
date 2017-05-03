@@ -13,17 +13,15 @@ static void
 process_xyza(struct stream *colour, struct stream *mask, size_t n)
 {
 	size_t i;
-	double w, y, yo, X, Z;
-	X = D65_XYY_X / D65_XYY_Y;
-	Z = 1 / D65_XYY_Y - 1 - X;
+	double w, y, yo;
 	for (i = 0; i < n; i += colour->pixel_size) {
 		w = ((double *)(mask->buf + i))[1];
 		w *= ((double *)(mask->buf + i))[3];
 		yo = ((double *)(colour->buf + i))[1];
 		y = (1 - yo) * w + yo * (1 - w);
-		((double *)(colour->buf + i))[0] += (y - yo) * X;
+		((double *)(colour->buf + i))[0] += (y - yo) * D65_XYZ_X;
 		((double *)(colour->buf + i))[1] = y;
-		((double *)(colour->buf + i))[2] += (y - yo) * Z;
+		((double *)(colour->buf + i))[2] += (y - yo) * D65_XYZ_Z;
 		/*
 		 * Explaination:
 		 *   Y is the luma and ((X / Xn - Y / Yn), (Z / Zn - Y / Yn))
@@ -37,17 +35,15 @@ static void
 process_xyza_i(struct stream *colour, struct stream *mask, size_t n)
 {
 	size_t i;
-	double w, y, yo, X, Z;
-	X = D65_XYY_X / D65_XYY_Y;
-	Z = 1 / D65_XYY_Y - 1 - X;
+	double w, y, yo;
 	for (i = 0; i < n; i += colour->pixel_size) {
 		w = 1 - ((double *)(mask->buf + i))[1];
 		w *= ((double *)(mask->buf + i))[3];
 		yo = ((double *)(colour->buf + i))[1];
 		y = (1 - yo) * w + yo * (1 - w);
-		((double *)(colour->buf + i))[0] += (y - yo) * X;
+		((double *)(colour->buf + i))[0] += (y - yo) * D65_XYZ_X;
 		((double *)(colour->buf + i))[1] = y;
-		((double *)(colour->buf + i))[2] += (y - yo) * Z;
+		((double *)(colour->buf + i))[2] += (y - yo) * D65_XYZ_Z;
 	}
 }
 

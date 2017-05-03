@@ -31,14 +31,11 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 	pixel_t *img = (pixel_t *)output;
 	pixel_t c, k;
 	size_t x1, y1, i1, x2, y2, i2;
-	double d, m, X, Z;
+	double d, m;
 	int i, blurred, blur[3] = {0, 0, 0};
 	size_t start, end, x2start, x2end, y2start, y2end;
 	int is_master;
 	pid_t *children;
-
-	X = D65_XYY_X / D65_XYY_Y;
-	Z = 1 / D65_XYY_Y - 1 - X;
 
 	y2start = x2start = 0;
 	x2end = colour->width;
@@ -65,8 +62,8 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 			i1 = start * colour->width;
 			for (y1 = start; y1 < end; y1++) {
 				for (x1 = 0; x1 < colour->width; x1++, i1++) {
-					clr[i1][0] = clr[i1][0] / X - clr[i1][1];
-					clr[i1][2] = clr[i1][2] / Z - clr[i1][1];
+					clr[i1][0] = clr[i1][0] / D65_XYZ_X - clr[i1][1];
+					clr[i1][2] = clr[i1][2] / D65_XYZ_Z - clr[i1][1];
 					/*
 					 * Explaination:
 					 *   Y is the luma and ((X / Xn - Y / Yn), (Z / Zn - Y / Yn))
@@ -260,8 +257,8 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 		i1 = start * colour->width;
 		for (y1 = start; y1 < end; y1++) {
 			for (x1 = 0; x1 < colour->width; x1++, i1++) {
-				img[i1][0] = (img[i1][0] + img[i1][1]) * X;
-				img[i1][2] = (img[i1][2] + img[i1][1]) * Z;
+				img[i1][0] = (img[i1][0] + img[i1][1]) * D65_XYZ_X;
+				img[i1][2] = (img[i1][2] + img[i1][1]) * D65_XYZ_Z;
 			}
 		}
 	}

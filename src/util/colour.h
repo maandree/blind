@@ -4,6 +4,9 @@
 #define D65_XYY_X 0.312726871026564878786047074755
 #define D65_XYY_Y 0.329023206641284038376227272238
 
+#define D65_XYZ_X (D65_XYY_X / D65_XYY_Y)
+#define D65_XYZ_Z (1 / D65_XYY_Y - 1 - D65_XYZ_X)
+
 static inline double
 srgb_encode(double t)
 {
