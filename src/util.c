@@ -215,14 +215,14 @@ enjoin_jobs(int status, int is_master, pid_t *pids)
 	int stat;
 	size_t i;
 	if (!is_master)
-		exit(0);
+		free(pids), exit(0);
 	if (!pids)
 		return;
 	for (i = 0; pids[i] != -1; i++) {
 		if (waitpid(pids[i], &stat, 0) == -1)
 			enprintf(status, "waitpid:");
-		if (status)
-			exit(WIFEXITED(status) ? WEXITSTATUS(status) : WTERMSIG(status));
+		if (stat)
+			exit(WIFEXITED(stat) ? WEXITSTATUS(stat) : WTERMSIG(stat));
 	}
 	free(pids);
 }
