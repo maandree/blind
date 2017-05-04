@@ -93,6 +93,9 @@ UTILITIES
        blind-single-colour(1)
               Generate a single-colour video
 
+       blind-skip-pattern(1)
+              Skips frames in a video according to pattern
+
        blind-split(1)
               Split a video, by frame, into multiple videos
 
@@ -110,6 +113,9 @@ UTILITIES
 
        blind-to-video(1)
               Converts blind video to a regular video
+
+       blind-translate(1)
+              Perform framewise translation of a video
 
        blind-transpose(1)
               Transpose a video
