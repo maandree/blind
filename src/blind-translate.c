@@ -71,7 +71,7 @@ process(struct stream *stream, struct stream *trstream)
 {
 	char *buf;
 	size_t n, p = 0;
-	double *trans;
+	double *trans, tmp;
 	ssize_t trx = 0, try = 0;
 	size_t above = 0, below = 0, left = 0, right = 0;
 
@@ -83,8 +83,8 @@ process(struct stream *stream, struct stream *trstream)
 
 	do {
 		if ((trans = next_pixel(trstream, &p))) {
-			trx = (ssize_t)round(invtrans ? -trans[0] : trans[0]);
-			try = (ssize_t)round(invtrans ? -trans[1] : trans[1]);
+			trx = (ssize_t)(tmp = round(invtrans ? -trans[0] : trans[0]));
+			try = (ssize_t)(tmp = round(invtrans ? -trans[1] : trans[1]));
 
 			above =  try > 0 ? (size_t)try  : 0;
 			below =  try < 0 ? (size_t)-try : 0;
@@ -106,7 +106,7 @@ process_wrap(struct stream *stream, struct stream *trstream)
 {
 	char *buf, *row;
 	size_t n, rown, p = 0;
-	double *trans;
+	double *trans, tmp;
 	ssize_t trx = 0, try = 0, py;
 	size_t off = 0, y;
 
@@ -116,8 +116,8 @@ process_wrap(struct stream *stream, struct stream *trstream)
 
 	while (eread_frame(stream, buf, n)) {
 		if ((trans = next_pixel(trstream, &p))) {
-			trx = (ssize_t)round(invtrans ? -trans[0] : trans[0]);
-			try = (ssize_t)round(invtrans ? -trans[1] : trans[1]);
+			trx = (ssize_t)(tmp = round(invtrans ? -trans[0] : trans[0]));
+			try = (ssize_t)(tmp = round(invtrans ? -trans[1] : trans[1]));
 			trx %= (ssize_t)stream->width;
 			if (trx < 0)
 				trx += (ssize_t)stream->width;
