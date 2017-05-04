@@ -146,7 +146,7 @@ eninf_check_fd(int status, int fd, const char *file)
 	if (fstat(fd, &st))
 		enprintf(status, "fstat %s:", file);
 	if (S_ISREG(st.st_mode))
-		enprintf(status, "%s is a regular file, refusing infinite write\n");
+		enprintf(status, "%s is a regular file, refusing infinite write\n", file);
 }
 
 
