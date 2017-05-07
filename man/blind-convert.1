@@ -1,0 +1,47 @@
+.TH BLIND-CONVERT 1 blind
+.SH NAME
+blind-convert - Change pixel format of a video
+.SH SYNOPSIS
+.B blind-convert
+.IR pixel-format " ..."
+.SH DESCRIPTION
+.B blind-convert
+converts a video to use the pixel format
+.I pixel-format
+(all arguments are joined together with
+a blank space). Available formats are:
+.TP
+.B xyza f
+Unscaled CIE XYZ with unscaled alpha channel, in the
+order, X, Y, Z, alpha. Each subpixel value is stored
+as a single-precision floating-point number using the
+local machines endianness.
+.TP
+.B xyza !f
+Unscaled CIE XYZ with unscaled alpha channel, in the
+order, X, Y, Z, alpha. Each subpixel value is stored
+as a double-precision floating-point number using the
+local machines endianness. This is the default format
+in other commands.
+.TP
+.B xyza
+Unscaled CIE XYZ with unscaled alpha channel, in the
+order, X, Y, Z, alpha. Each subpixel value is stored
+in the same format as in the input stream.
+.TP
+.B f
+The same colour space as the input stream, but with
+each subpixel value is stored as a single-precision
+floating-point number using the local machines
+endianness.
+.TP
+.B !f
+The same colour space as the input stream, but with
+each subpixel value is stored as a double-precision
+floating-point number using the local machines
+endianness.
+.SH SEE ALSO
+.BR blind (7)
+.SH AUTHORS
+Mattias Andrée
+.RI < maandree@kth.se >

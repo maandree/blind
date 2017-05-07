@@ -8,17 +8,19 @@
 
 USAGE("")
 
-static void
-process_xyza(struct stream *stream, size_t n)
-{
-	size_t i;
-	for (i = 0; i < n; i += stream->pixel_size)
-		printf("%lf %lf %lf %lf\n",
-		       ((double *)(stream->buf + i))[0],
-		       ((double *)(stream->buf + i))[1],
-		       ((double *)(stream->buf + i))[2],
-		       ((double *)(stream->buf + i))[3]);
-}
+#define PROCESS(TYPE, CAST, FMT)\
+	do {\
+		size_t i;\
+		for (i = 0; i < n; i += stream->pixel_size)\
+			printf("%"FMT" %"FMT" %"FMT" %"FMT"\n",\
+			       (CAST)(((TYPE *)(stream->buf + i))[0]),\
+			       (CAST)(((TYPE *)(stream->buf + i))[1]),\
+			       (CAST)(((TYPE *)(stream->buf + i))[2]),\
+			       (CAST)(((TYPE *)(stream->buf + i))[3]));\
+	} while (0)
+
+static void process_xyza (struct stream *stream, size_t n) {PROCESS(double, double, "lf");}
+static void process_xyzaf(struct stream *stream, size_t n) {PROCESS(float,  double, "lf");}
 
 int
 main(int argc, char *argv[])
@@ -32,6 +34,8 @@ main(int argc, char *argv[])
 
 	if (!strcmp(stream.pixfmt, "xyza"))
 		process = process_xyza;
+	else if (!strcmp(stream.pixfmt, "xyza f"))
+		process = process_xyzaf;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 

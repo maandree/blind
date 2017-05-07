@@ -20,111 +20,14 @@ static int auto_spread = 0;
 static size_t jobs = 1;
 static size_t spread = 0;
 
-static void
-process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
-	     struct stream *colour, struct stream *sigma, size_t cn, size_t sn)
-{
-	typedef double pixel_t[4];
-
-	pixel_t *restrict clr = (pixel_t *)cbuf;
-	pixel_t *restrict sig = (pixel_t *)sbuf;
-	pixel_t *img = (pixel_t *)output;
-	pixel_t c, k;
-	size_t x1, y1, i1, x2, y2, i2;
-	double d, m;
-	int i, blurred, blur[3] = {0, 0, 0};
-	size_t start, end, x2start, x2end, y2start, y2end;
-	int is_master;
-	pid_t *children;
-
-	y2start = x2start = 0;
-	x2end = colour->width;
-	y2end = colour->height;
-
-	if (chroma || !noalpha) {
-		start = 0, end = colour->height;
-		is_master = efork_jobs(&start, &end, jobs, &children);
-
-		/* premultiply alpha channel */
-		if (!noalpha) {
-			i1 = start * colour->width;
-			for (y1 = start; y1 < end; y1++) {
-				for (x1 = 0; x1 < colour->width; x1++, i1++) {
-					clr[i1][0] *= clr[i1][3];
-					clr[i1][1] *= clr[i1][3];
-					clr[i1][2] *= clr[i1][3];
-				}
-			}
-		}
-
-		/* convert colour model */
-		if (chroma) {
-			i1 = start * colour->width;
-			for (y1 = start; y1 < end; y1++) {
-				for (x1 = 0; x1 < colour->width; x1++, i1++) {
-					clr[i1][0] = clr[i1][0] / D65_XYZ_X - clr[i1][1];
-					clr[i1][2] = clr[i1][2] / D65_XYZ_Z - clr[i1][1];
-					/*
-					 * Explaination:
-					 *   Y is the luma and ((X / Xn - Y / Yn), (Z / Zn - Y / Yn))
-					 *   is the chroma (according to CIELAB), where (Xn, Yn, Zn)
-					 *   is the white point.
-					 */
-				}
-			}
-		}
-		/* Conversion makes no difference if blur is applied to all
-		 * parameters:
-		 * 
-		 * Gaussian blur:
-		 * 
-		 *                  ∞ ∞
-		 *                  ⌠ ⌠ V(x,y)  −((x−x₀)² + (y−y₀)²)/(2σ²)
-		 *     V′ (x₀,y₀) = │ │ ────── e                            dxdy
-		 *       σ          ⌡ ⌡  2πσ²
-		 *                −∞ −∞
-		 * 
-		 * With linear transformation, F:
-		 * 
-		 *                      ∞ ∞
-		 *                      ⌠ ⌠ F(V(x,y))  −((x−x₀)² + (y−y₀)²)/(2σ²)
-		 *     V′ (x₀,y₀) = F⁻¹ │ │ ───────── e                           dxdy
-		 *       σ              ⌡ ⌡    2πσ²
-		 *                     −∞ −∞
-		 * 
-		 *                      ∞ ∞
-		 *                      ⌠ ⌠  ⎛V(x,y)  −((x−x₀)² + (y−y₀)²)/(2σ²)⎞
-		 *     V′ (x₀,y₀) = F⁻¹ │ │ F⎜────── e                          ⎟ dxdy
-		 *       σ              ⌡ ⌡  ⎝ 2πσ²                             ⎠
-		 *                     −∞ −∞
-		 * 
-		 *                            ∞ ∞
-		 *                            ⌠ ⌠ V(x,y)  −((x−x₀)² + (y−y₀)²)/(2σ²)
-		 *     V′ (x₀,y₀) = (F⁻¹ ∘ F) │ │ ────── e                           dxdy
-		 *       σ                    ⌡ ⌡  2πσ²
-		 *                           −∞ −∞
-		 * 
-		 *                  ∞ ∞
-		 *                  ⌠ ⌠ V(x,y)  −((x−x₀)² + (y−y₀)²)/(2σ²)
-		 *     V′ (x₀,y₀) = │ │ ────── e                           dxdy
-		 *       σ          ⌡ ⌡  2πσ²
-		 *                 −∞ −∞
-		 * 
-		 * Just like expected, the colour space should not affect the
-		 * result of guassian blur as long as it is linear.
-		 */
-
-		ejoin_jobs(is_master, children);
-	}
-
-	/*
-	 * This is not a regular simple gaussian blur implementation.
-	 * This implementation is able to apply different levels of
-	 * blur on different pixels. It's therefore written a bit
-	 * oldly. Instead of going through each pixel and calculate
-	 * the new value for each pixel, it goes through each pixel
-	 * and smears it out to the other pixels.
-	 */
+/*
+ * This is not a regular simple gaussian blur implementation.
+ * This implementation is able to apply different levels of
+ * blur on different pixels. It's therefore written a bit
+ * oldly. Instead of going through each pixel and calculate
+ * the new value for each pixel, it goes through each pixel
+ * and smears it out to the other pixels.
+ */
 
 #define BLUR_PIXEL_PROLOGUE(DIR)\
 	if (sig[i1][3] == 0)\
@@ -163,13 +66,13 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 	if (auto_spread && spread < 1)\
 		spread = 1;
 
-#define BLUR_PIXEL(START, LOOP, DISTANCE)\
+#define BLUR_PIXEL(START, LOOP, DISTANCE, SUFFIX)\
 	if (k[0] == k[1] && k[1] == k[2]) {\
 		START;\
 		for (LOOP) {\
 			d = (DISTANCE);\
 			d *= d;\
-			m = c[0] * exp(d * k[0]);\
+			m = c[0] * exp##SUFFIX(d * k[0]);\
 			img[i2][0] += clr[i1][0] * m;\
 			img[i2][1] += clr[i1][1] * m;\
 			img[i2][2] += clr[i1][2] * m;\
@@ -196,7 +99,7 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 			}\
 		}\
 	}
-	
+
 #define BLUR_PIXEL_EPILOGUE(DIR)\
 	continue;\
 	no_blur_##DIR:\
@@ -205,7 +108,7 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 	img[i1][2] = clr[i1][2];\
 	img[i1][3] = clr[i1][3];
 
-#define BLUR(DIR, SETSTART, SETEND, START, LOOP, DISTANCE)\
+#define BLUR(DIR, SETSTART, SETEND, START, LOOP, DISTANCE, SUFFIX)\
 	do {\
 		memset(img, 0, cn);\
 		start = 0, end = colour->height;\
@@ -218,69 +121,180 @@ process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
 					SETSTART;\
 					SETEND;\
 				}\
-				BLUR_PIXEL(START, LOOP, DISTANCE);\
+				BLUR_PIXEL(START, LOOP, DISTANCE, SUFFIX);\
 				BLUR_PIXEL_EPILOGUE(DIR);\
 			}\
 		}\
 		ejoin_jobs(is_master, children);\
 	} while (0)
 
-	/* blur */
-	if (horizontal)
-		BLUR(horizontal,
-		     x2start = spread > x1 ? 0 : x1 - spread,
-		     x2end = spread + 1 > colour->width - x1 ? colour->width : x1 + spread + 1,
-		     i2 = y1 * colour->width + x2start,
-		     x2 = x2start; x2 < x2end; (x2++, i2++),
-		     (ssize_t)x1 - (ssize_t)x2);
-	if (horizontal && vertical)
-		memcpy(clr, img, cn);
-	if (vertical)
-		BLUR(vertical,
-		     y2start = spread > y1 ? 0 : y1 - spread,
-		     y2end = spread + 1 > colour->height - y1 ? colour->height : y1 + spread + 1,
-		     i2 = y2start * colour->width + x1,
-		     y2 = y2start; y2 < y2end; (y2++, i2 += colour->width),
-		     (ssize_t)y1 - (ssize_t)y2);
+#define PROCESS(TYPE, SUFFIX)\
+	do {\
+		typedef TYPE pixel_t[4];\
+		\
+		pixel_t *restrict clr = (pixel_t *)cbuf;\
+		pixel_t *restrict sig = (pixel_t *)sbuf;\
+		pixel_t *img = (pixel_t *)output;\
+		pixel_t c, k;\
+		size_t x1, y1, i1, x2, y2, i2;\
+		TYPE d, m;\
+		int i, blurred, blur[3] = {0, 0, 0};\
+		size_t start, end, x2start, x2end, y2start, y2end;\
+		int is_master;\
+		pid_t *children;\
+		\
+		y2start = x2start = 0;\
+		x2end = colour->width;\
+		y2end = colour->height;\
+		\
+		if (chroma || !noalpha) {\
+			start = 0, end = colour->height;\
+			is_master = efork_jobs(&start, &end, jobs, &children);\
+			\
+			/* premultiply alpha channel */\
+			if (!noalpha) {\
+				i1 = start * colour->width;\
+				for (y1 = start; y1 < end; y1++) {\
+					for (x1 = 0; x1 < colour->width; x1++, i1++) {\
+						clr[i1][0] *= clr[i1][3];\
+						clr[i1][1] *= clr[i1][3];\
+						clr[i1][2] *= clr[i1][3];\
+					}\
+				}\
+			}\
+			\
+			/* convert colour model */\
+			if (chroma) {\
+				i1 = start * colour->width;\
+				for (y1 = start; y1 < end; y1++) {\
+					for (x1 = 0; x1 < colour->width; x1++, i1++) {\
+						clr[i1][0] = clr[i1][0] / D65_XYZ_X - clr[i1][1];\
+						clr[i1][2] = clr[i1][2] / D65_XYZ_Z - clr[i1][1];\
+						/*
+						 * Explaination:
+						 *   Y is the luma and ((X / Xn - Y / Yn), (Z / Zn - Y / Yn))
+						 *   is the chroma (according to CIELAB), where (Xn, Yn, Zn)
+						 *   is the white point.
+						 */\
+					}\
+				}\
+			}\
+			/* Conversion makes no difference if blur is applied to all
+			 * parameters:
+			 * 
+			 * Gaussian blur:
+			 * 
+			 *                  ∞ ∞
+			 *                  ⌠ ⌠ V(x,y)  −((x−x₀)² + (y−y₀)²)/(2σ²)
+			 *     V′ (x₀,y₀) = │ │ ────── e                            dxdy
+			 *       σ          ⌡ ⌡  2πσ²
+			 *                −∞ −∞
+			 * 
+			 * With linear transformation, F:
+			 * 
+			 *                      ∞ ∞
+			 *                      ⌠ ⌠ F(V(x,y))  −((x−x₀)² + (y−y₀)²)/(2σ²)
+			 *     V′ (x₀,y₀) = F⁻¹ │ │ ───────── e                           dxdy
+			 *       σ              ⌡ ⌡    2πσ²
+			 *                     −∞ −∞
+			 * 
+			 *                      ∞ ∞
+			 *                      ⌠ ⌠  ⎛V(x,y)  −((x−x₀)² + (y−y₀)²)/(2σ²)⎞
+			 *     V′ (x₀,y₀) = F⁻¹ │ │ F⎜────── e                          ⎟ dxdy
+			 *       σ              ⌡ ⌡  ⎝ 2πσ²                             ⎠
+			 *                     −∞ −∞
+			 * 
+			 *                            ∞ ∞
+			 *                            ⌠ ⌠ V(x,y)  −((x−x₀)² + (y−y₀)²)/(2σ²)
+			 *     V′ (x₀,y₀) = (F⁻¹ ∘ F) │ │ ────── e                           dxdy
+			 *       σ                    ⌡ ⌡  2πσ²
+			 *                           −∞ −∞
+			 * 
+			 *                  ∞ ∞
+			 *                  ⌠ ⌠ V(x,y)  −((x−x₀)² + (y−y₀)²)/(2σ²)
+			 *     V′ (x₀,y₀) = │ │ ────── e                           dxdy
+			 *       σ          ⌡ ⌡  2πσ²
+			 *                 −∞ −∞
+			 * 
+			 * Just like expected, the colour space should not affect the
+			 * result of guassian blur as long as it is linear.
+			 */\
+			\
+			ejoin_jobs(is_master, children);\
+		}\
+		\
+		/* blur */\
+		if (horizontal)\
+			BLUR(horizontal,\
+			     x2start = spread > x1 ? 0 : x1 - spread,\
+			     x2end = spread + 1 > colour->width - x1 ? colour->width : x1 + spread + 1,\
+			     i2 = y1 * colour->width + x2start,\
+			     x2 = x2start; x2 < x2end; (x2++, i2++),\
+			     (ssize_t)x1 - (ssize_t)x2,\
+			     SUFFIX);\
+		if (horizontal && vertical)\
+			memcpy(clr, img, cn);\
+		if (vertical)\
+			BLUR(vertical,\
+			     y2start = spread > y1 ? 0 : y1 - spread,\
+			     y2end = spread + 1 > colour->height - y1 ? colour->height : y1 + spread + 1,\
+			     i2 = y2start * colour->width + x1,\
+			     y2 = y2start; y2 < y2end; (y2++, i2 += colour->width),\
+			     (ssize_t)y1 - (ssize_t)y2,\
+			     SUFFIX);\
+		\
+		start = 0, end = colour->height;\
+		is_master = efork_jobs(&start, &end, jobs, &children);\
+		\
+		/* convert back to CIE XYZ */\
+		if (chroma) {\
+			i1 = start * colour->width;\
+			for (y1 = start; y1 < end; y1++) {\
+				for (x1 = 0; x1 < colour->width; x1++, i1++) {\
+					img[i1][0] = (img[i1][0] + img[i1][1]) * D65_XYZ_X;\
+					img[i1][2] = (img[i1][2] + img[i1][1]) * D65_XYZ_Z;\
+				}\
+			}\
+		}\
+		\
+		/* unpremultiply alpha channel */\
+		i1 = start * colour->width;\
+		for (y1 = start; y1 < end; y1++) {\
+			for (x1 = 0; x1 < colour->width; x1++, i1++) {\
+				if (!img[i1][3])\
+					continue;\
+				img[i1][0] /= img[i1][3];\
+				img[i1][1] /= img[i1][3];\
+				img[i1][2] /= img[i1][3];\
+			}\
+		}\
+		\
+		/* ensure the video if opaque if -a was used */\
+		if (noalpha) {\
+			i1 = start * colour->width;\
+			for (y1 = start; y1 < end; y1++)\
+				for (x1 = 0; x1 < colour->width; x1++, i1++)\
+					img[i1][3] = 1;\
+		}\
+		\
+		ejoin_jobs(is_master, children);\
+		\
+		(void) sigma;\
+		(void) sn;\
+	} while (0)
 
-	start = 0, end = colour->height;
-	is_master = efork_jobs(&start, &end, jobs, &children);
+static void
+process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
+	     struct stream *colour, struct stream *sigma, size_t cn, size_t sn)
+{
+	PROCESS(double,);
+}
 
-	/* convert back to CIE XYZ */
-	if (chroma) {
-		i1 = start * colour->width;
-		for (y1 = start; y1 < end; y1++) {
-			for (x1 = 0; x1 < colour->width; x1++, i1++) {
-				img[i1][0] = (img[i1][0] + img[i1][1]) * D65_XYZ_X;
-				img[i1][2] = (img[i1][2] + img[i1][1]) * D65_XYZ_Z;
-			}
-		}
-	}
-
-	/* unpremultiply alpha channel */
-	i1 = start * colour->width;
-	for (y1 = start; y1 < end; y1++) {
-		for (x1 = 0; x1 < colour->width; x1++, i1++) {
-			if (!img[i1][3])
-				continue;
-			img[i1][0] /= img[i1][3];
-			img[i1][1] /= img[i1][3];
-			img[i1][2] /= img[i1][3];
-		}
-	}
-
-	/* ensure the video if opaque if -a was used */
-	if (noalpha) {
-		i1 = start * colour->width;
-		for (y1 = start; y1 < end; y1++)
-			for (x1 = 0; x1 < colour->width; x1++, i1++)
-				img[i1][3] = 1;
-	}
-
-	ejoin_jobs(is_master, children);
-
-	(void) sigma;
-	(void) sn;
+static void
+process_xyzaf(char *restrict output, char *restrict cbuf, char *restrict sbuf,
+	     struct stream *colour, struct stream *sigma, size_t cn, size_t sn)
+{
+	PROCESS(float, f);
 }
 
 int
@@ -332,6 +346,8 @@ main(int argc, char *argv[])
 
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = process_xyza;
+	else if (!strcmp(colour.pixfmt, "xyza f"))
+		process = process_xyzaf;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 

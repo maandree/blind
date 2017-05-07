@@ -62,6 +62,7 @@ void eninf_check_fd(int status, int fd, const char *file);
 int check_frame_size(size_t width, size_t height, size_t pixel_size);
 void encheck_frame_size(int status, size_t width, size_t height, size_t pixel_size, const char *prefix, const char *fname);
 void encheck_compat(int status, const struct stream *a, const struct stream *b);
+const char *get_pixel_format(const char *specified, const char *current);
 int enread_frame(int status, struct stream *stream, void *buf, size_t n);
 
 void nprocess_stream(int status, struct stream *stream, void (*process)(struct stream *stream, size_t n));

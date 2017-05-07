@@ -24,6 +24,9 @@ UTILITIES
        blind-concat(1)
               Concatenate videos
 
+       blind-convert(1)
+              Change pixel format of a video
+
        blind-crop(1)
               Extract subframes for all frames
 

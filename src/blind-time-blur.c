@@ -9,36 +9,48 @@ USAGE("alpha-stream")
 
 static int first = 1;
 
+#define PROCESS(TYPE)\
+	do {\
+		typedef TYPE pixel_t[4];\
+		pixel_t *restrict clr = (pixel_t *)cbuf;\
+		pixel_t *restrict alf = (pixel_t *)abuf;\
+		pixel_t *img = (pixel_t *)output;\
+		size_t i, n = cn / sizeof(pixel_t);\
+		TYPE a1, a2;\
+		\
+		if (first) {\
+			memcpy(output, cbuf, cn);\
+			first = 0;\
+			return;\
+		}\
+		\
+		for (i = 0; i < n; i++, clr++, alf++, img++) {\
+			a1 = (*img)[3];\
+			a2 = (*clr)[3] * (*alf)[1] * (*alf)[3];\
+			a1 *= (1 - a2);\
+			(*img)[0] = (*img)[0] * a1 + (*clr)[0] * a2;\
+			(*img)[1] = (*img)[1] * a1 + (*clr)[1] * a2;\
+			(*img)[2] = (*img)[2] * a1 + (*clr)[2] * a2;\
+			(*img)[3] = a1 + a2;\
+		}\
+		\
+		(void) colour;\
+		(void) alpha;\
+		(void) an;\
+	} while (0)
+
 static void
 process_xyza(char *output, char *restrict cbuf, char *restrict abuf,
 	     struct stream *colour, struct stream *alpha, size_t cn, size_t an)
 {
-	typedef double pixel_t[4];
-	pixel_t *restrict clr = (pixel_t *)cbuf;
-	pixel_t *restrict alf = (pixel_t *)abuf;
-	pixel_t *img = (pixel_t *)output;
-	size_t i, n = cn / sizeof(pixel_t);
-	double a1, a2;
+	PROCESS(double);
+}
 
-	if (first) {
-		memcpy(output, cbuf, cn);
-		first = 0;
-		return;
-	}
-
-	for (i = 0; i < n; i++, clr++, alf++, img++) {
-		a1 = (*img)[3];
-		a2 = (*clr)[3] * (*alf)[1] * (*alf)[3];
-		a1 *= (1 - a2);
-		(*img)[0] = (*img)[0] * a1 + (*clr)[0] * a2;
-		(*img)[1] = (*img)[1] * a1 + (*clr)[1] * a2;
-		(*img)[2] = (*img)[2] * a1 + (*clr)[2] * a2;
-		(*img)[3] = a1 + a2;
-	}
-
-	(void) colour;
-	(void) alpha;
-	(void) an;
+static void
+process_xyzaf(char *output, char *restrict cbuf, char *restrict abuf,
+	      struct stream *colour, struct stream *alpha, size_t cn, size_t an)
+{
+	PROCESS(float);
 }
 
 int
@@ -61,6 +73,8 @@ main(int argc, char *argv[])
 
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = process_xyza;
+	else if (!strcmp(colour.pixfmt, "xyza f"))
+		process = process_xyzaf;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 

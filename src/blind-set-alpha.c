@@ -9,29 +9,21 @@
 
 USAGE("[-i] alpha-stream")
 
-static void
-process_xyza(struct stream *colour, struct stream *alpha, size_t n)
-{
-	size_t i;
-	double a;
-	for (i = 0; i < n; i += colour->pixel_size) {
-		a = ((double *)(alpha->buf + i))[1];
-		a *= ((double *)(alpha->buf + i))[3];
-		((double *)(colour->buf + i))[3] *= a;
-	}
-}
+#define PROCESS(TYPE, INV)\
+	do {\
+		size_t i;\
+		TYPE a;\
+		for (i = 0; i < n; i += colour->pixel_size) {\
+			a = INV ((TYPE *)(alpha->buf + i))[1];\
+			a *= ((TYPE *)(alpha->buf + i))[3];\
+			((TYPE *)(colour->buf + i))[3] *= a;\
+		}\
+	} while (0)
 
-static void
-process_xyza_i(struct stream *colour, struct stream *alpha, size_t n)
-{
-	size_t i;
-	double a;
-	for (i = 0; i < n; i += colour->pixel_size) {
-		a = 1 - ((double *)(alpha->buf + i))[1];
-		a *= ((double *)(alpha->buf + i))[3];
-		((double *)(colour->buf + i))[3] *= a;
-	}
-}
+static void process_xyza   (struct stream *colour, struct stream *alpha, size_t n) {PROCESS(double,);}
+static void process_xyza_i (struct stream *colour, struct stream *alpha, size_t n) {PROCESS(double, 1 -);}
+static void process_xyzaf  (struct stream *colour, struct stream *alpha, size_t n) {PROCESS(float,);}
+static void process_xyzaf_i(struct stream *colour, struct stream *alpha, size_t n) {PROCESS(float, 1 -);}
 
 int
 main(int argc, char *argv[])
@@ -56,6 +48,8 @@ main(int argc, char *argv[])
 
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = invert ? process_xyza_i : process_xyza;
+	else if (!strcmp(colour.pixfmt, "xyza f"))
+		process = invert ? process_xyzaf_i : process_xyzaf;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 

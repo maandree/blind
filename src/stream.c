@@ -184,6 +184,39 @@ encheck_compat(int status, const struct stream *a, const struct stream *b)
 }
 
 
+const char *
+get_pixel_format(const char *specified, const char *current)
+{
+	const char *base = NULL;
+	int as_float = 0;
+
+	if (!strcmp(current, "xyza"))
+		base = "xyza";
+	else if (!strcmp(current, "xyza f"))
+		base = "xyza", as_float = 1;
+	else
+		return specified;
+
+	if (!strcmp(specified, "xyza"))
+		base = "xyza";
+	else if (!strcmp(specified, "xyza f"))
+		return "xyza f";
+	else if (!strcmp(specified, "xyza !f"))
+		return "xyza";
+	else if (!strcmp(specified, "f"))
+		as_float = 1;
+	else if (!strcmp(specified, "!f"))
+		as_float = 0;
+	else
+		return specified;
+
+	if (!strcmp(base, "xyza"))
+		return as_float ? "xyza f" : "xyza";
+	else
+		return specified;
+}
+
+
 int
 enread_frame(int status, struct stream *stream, void *buf, size_t n)
 {

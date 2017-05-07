@@ -9,9 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-USAGE("[-r frame-rate] [-w width -h height] [-dL] input-file output-file")
+USAGE("[-F pixel-format] [-r frame-rate] [-w width -h height] [-dL] input-file output-file")
 
 static int draft = 0;
+static void (*convert_segment)(char *buf, size_t n, int fd, const char *file);
 
 static void
 read_metadata(FILE *fp, char *fname, size_t *width, size_t *height)
@@ -78,45 +79,57 @@ get_metadata(char *file, size_t *width, size_t *height)
 		exit(1);
 }
 
+#define CONVERT_SEGMENT(TYPE, SUFFIX)\
+	do {\
+		typedef TYPE pixel_t[4];\
+		size_t i, ptr;\
+		TYPE y, u, v, max = (TYPE)UINT16_MAX;\
+		TYPE r, g, b;\
+		pixel_t pixels[1024];\
+		if (draft) {\
+			for (ptr = i = 0; ptr < n; ptr += 8) {\
+				pixels[i][3] = 1;\
+				y = (long int)(le16toh(((uint16_t *)(buf + ptr))[1])) -  16L * 256L;\
+				u = (long int)(le16toh(((uint16_t *)(buf + ptr))[2])) - 128L * 256L;\
+				v = (long int)(le16toh(((uint16_t *)(buf + ptr))[3])) - 128L * 256L;\
+				scaled_yuv_to_ciexyz##SUFFIX(y, u, v, pixels[i] + 0,\
+							     pixels[i] + 1, pixels[i] + 2);\
+				if (++i == 1024) {\
+					i = 0;\
+					ewriteall(fd, pixels, sizeof(pixels), file);\
+				}\
+			}\
+		} else {\
+			for (ptr = i = 0; ptr < n; ptr += 8) {\
+				pixels[i][3] = le16toh(((uint16_t *)(buf + ptr))[0]) / max;\
+				y = ((long int)le16toh(((uint16_t *)(buf + ptr))[1]) -  16L * 256L) / max;\
+				u = ((long int)le16toh(((uint16_t *)(buf + ptr))[2]) - 128L * 256L) / max;\
+				v = ((long int)le16toh(((uint16_t *)(buf + ptr))[3]) - 128L * 256L) / max;\
+				yuv_to_srgb##SUFFIX(y, u, v, &r, &g, &b);\
+				r = srgb_decode##SUFFIX(r);\
+				g = srgb_decode##SUFFIX(g);\
+				b = srgb_decode##SUFFIX(b);\
+				srgb_to_ciexyz##SUFFIX(r, g, b, pixels[i] + 0, pixels[i] + 1, pixels[i] + 2);\
+				if (++i == 1024) {\
+					i = 0;\
+					ewriteall(fd, pixels, sizeof(pixels), file);\
+				}\
+			}\
+		}\
+		if (i)\
+			ewriteall(fd, pixels, i * sizeof(*pixels), file);\
+	} while (0)
+
 static void
-convert_segment(char *buf, size_t n, int fd, const char *file)
+convert_segment_xyza(char *buf, size_t n, int fd, const char *file)
 {
-	typedef double pixel_t[4];
-	size_t i, ptr;
-	double y, u, v, max = (double)UINT16_MAX;
-	double r, g, b;
-	pixel_t pixels[1024];
-	if (draft) {
-		for (ptr = i = 0; ptr < n; ptr += 8) {
-			pixels[i][3] = 1;
-			y = (long int)(le16toh(((uint16_t *)(buf + ptr))[1])) -  16L * 256L;
-			u = (long int)(le16toh(((uint16_t *)(buf + ptr))[2])) - 128L * 256L;
-			v = (long int)(le16toh(((uint16_t *)(buf + ptr))[3])) - 128L * 256L;
-			scaled_yuv_to_ciexyz(y, u, v, pixels[i] + 0, pixels[i] + 1, pixels[i] + 2);
-			if (++i == 1024) {
-				i = 0;
-				ewriteall(fd, pixels, sizeof(pixels), file);
-			}
-		}
-	} else {
-		for (ptr = i = 0; ptr < n; ptr += 8) {
-			pixels[i][3] = le16toh(((uint16_t *)(buf + ptr))[0]) / max;
-			y = ((long int)le16toh(((uint16_t *)(buf + ptr))[1]) -  16L * 256L) / max;
-			u = ((long int)le16toh(((uint16_t *)(buf + ptr))[2]) - 128L * 256L) / max;
-			v = ((long int)le16toh(((uint16_t *)(buf + ptr))[3]) - 128L * 256L) / max;
-			yuv_to_srgb(y, u, v, &r, &g, &b);
-			r = srgb_decode(r);
-			g = srgb_decode(g);
-			b = srgb_decode(b);
-			srgb_to_ciexyz(r, g, b, pixels[i] + 0, pixels[i] + 1, pixels[i] + 2);
-			if (++i == 1024) {
-				i = 0;
-				ewriteall(fd, pixels, sizeof(pixels), file);
-			}
-		}
-	}
-	if (i)
-		ewriteall(fd, pixels, i * sizeof(*pixels), file);
+	CONVERT_SEGMENT(double,);
+}
+
+static void
+convert_segment_xyzaf(char *buf, size_t n, int fd, const char *file)
+{
+	CONVERT_SEGMENT(float, _f);
 }
 
 static void
@@ -181,6 +194,7 @@ main(int argc, char *argv[])
 	char *infile;
 	const char *outfile;
 	char *data;
+	const char *pixfmt = "xyza";
 	ssize_t headlen;
 	size_t length, frame_size;
 	int outfd, skip_length = 0;
@@ -192,6 +206,9 @@ main(int argc, char *argv[])
 		break;
 	case 'L':
 		skip_length = 1;
+		break;
+	case 'F':
+		pixfmt = UARGF();
 		break;
 	case 'r':
 		frame_rate = UARGF();
@@ -212,6 +229,14 @@ main(int argc, char *argv[])
 	infile = argv[0];
 	outfile = argv[1];
 
+	pixfmt = get_pixel_format(pixfmt, "xyza");
+	if (!strcmp(pixfmt, "xyza"))
+		convert_segment = convert_segment_xyza;
+	else if (!strcmp(pixfmt, "xyza f"))
+		convert_segment = convert_segment_xyzaf;
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", pixfmt);
+
 	if (!width)
 		get_metadata(infile, &width, &height);
 	if (width > SIZE_MAX / height)
@@ -231,7 +256,7 @@ main(int argc, char *argv[])
 	}
 
 	if (skip_length) {
-		SPRINTF_HEAD_ZN(head, frames, width, height, "xyza", &headlen);
+		SPRINTF_HEAD_ZN(head, frames, width, height, pixfmt, &headlen);
 		ewriteall(outfd, head, (size_t)headlen, outfile);
 	}
 
@@ -246,7 +271,7 @@ main(int argc, char *argv[])
 	frames = length / frame_size;
 
 	if (!skip_length) {
-		SPRINTF_HEAD_ZN(head, frames, width, height, "xyza", &headlen);
+		SPRINTF_HEAD_ZN(head, frames, width, height, pixfmt, &headlen);
 		ewriteall(outfd, head, (size_t)headlen, outfile);
 		data = mmap(0, length + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_SHARED, outfd, 0);
 		memmove(data + headlen, data, length);

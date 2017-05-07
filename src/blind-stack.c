@@ -9,7 +9,7 @@
 
 USAGE("[-b] bottom-stream ... top-stream")
 
-#define PROCESS_LINEAR_3CH_ALPHA(TYPE, BLEND)\
+#define PROCESS(TYPE, BLEND)\
 	do {\
 		TYPE x1, y1, z1, a1;\
 		TYPE x2, y2, z2, a2;\
@@ -38,8 +38,10 @@ USAGE("[-b] bottom-stream ... top-stream")
 		}\
 	} while (0)
 
-static void process_xyza  (struct stream *streams, size_t n_streams, size_t n) { PROCESS_LINEAR_3CH_ALPHA(double, 0); }
-static void process_xyza_b(struct stream *streams, size_t n_streams, size_t n) { PROCESS_LINEAR_3CH_ALPHA(double, 1); }
+static void process_xyza   (struct stream *streams, size_t n_streams, size_t n) { PROCESS(double, 0); }
+static void process_xyza_b (struct stream *streams, size_t n_streams, size_t n) { PROCESS(double, 1); }
+static void process_xyzaf  (struct stream *streams, size_t n_streams, size_t n) { PROCESS(float, 0); }
+static void process_xyzaf_b(struct stream *streams, size_t n_streams, size_t n) { PROCESS(float, 1); }
 
 int
 main(int argc, char *argv[])
@@ -71,6 +73,8 @@ main(int argc, char *argv[])
 
 	if (!strcmp(streams->pixfmt, "xyza"))
 		process = blend ? process_xyza_b : process_xyza;
+	else if (!strcmp(streams->pixfmt, "xyza f"))
+		process = blend ? process_xyzaf_b : process_xyzaf;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", streams->pixfmt);
 

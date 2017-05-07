@@ -17,70 +17,74 @@ static int alpha_warning_triggered = 0;
 static unsigned long long int max;
 static int bytes;
 
-static void
-write_pixel(double R, double G, double B, double A)
-{
-	unsigned long long int colours[4];
-	unsigned char buf[4 * 8];
-	int i, j, k, bm = bytes - 1;
+#define WRITE_PIXEL(TYPE, SUFFIX)\
+	do {\
+		unsigned long long int colours[4];\
+		unsigned char buf[4 * 8];\
+		int i, j, k, bm = bytes - 1;\
+		\
+		if (R < 0 || G < 0 || B < 0 || R > 1 || G > 1 || B > 1) {\
+			if (gamut_warning_triggered) {\
+				gamut_warning_triggered = 1;\
+				weprintf("warning: out-of-gamut colour detected\n");\
+			}\
+			; /* TODO gamut */\
+			R = CLIP(0, R, 1);\
+			G = CLIP(0, G, 1);\
+			B = CLIP(0, B, 1);\
+		}\
+		\
+		if (A < 0 || A > 1) {\
+			if (alpha_warning_triggered) {\
+				alpha_warning_triggered = 1;\
+				weprintf("warning: alpha values truncated\n");\
+			}\
+			A = A < 0 ? 0 : 1;\
+		}\
+		\
+		colours[0] = srgb_encode##SUFFIX(R) * max + (TYPE)0.5;\
+		colours[1] = srgb_encode##SUFFIX(G) * max + (TYPE)0.5;\
+		colours[2] = srgb_encode##SUFFIX(B) * max + (TYPE)0.5;\
+		colours[3] = A * max + (TYPE)0.5;\
+		\
+		for (i = k = 0; i < 4; i++, k += bytes) {\
+			for (j = 0; j < bytes; j++) {\
+				buf[k + bm - j] = (unsigned char)(colours[i]);\
+				colours[i] >>= 8;\
+			}\
+		}\
+		\
+		ewriteall(STDOUT_FILENO, buf, k, "<stdout>");\
+	} while (0)
 
-	if (R < 0 || G < 0 || B < 0 || R > 1 || G > 1 || B > 1) {
-		if (gamut_warning_triggered) {
-			gamut_warning_triggered = 1;
-			weprintf("warning: out-of-gamut colour detected\n");
-		}
-		; /* TODO gamut */
-		R = CLIP(0, R, 1);
-		G = CLIP(0, G, 1);
-		B = CLIP(0, B, 1);
-	}
+#define PROCESS(TYPE, SUFFIX)\
+	do {\
+		size_t i;\
+		TYPE X, Y, Z, A, R, G, B;\
+		for (i = 0; i < n; i += stream->pixel_size) {\
+			X = ((TYPE *)(stream->buf + i))[0];\
+			Y = ((TYPE *)(stream->buf + i))[1];\
+			Z = ((TYPE *)(stream->buf + i))[2];\
+			A = ((TYPE *)(stream->buf + i))[3];\
+			\
+			if (Y < 0 || Y > 1) {\
+				if (luma_warning_triggered) {\
+					luma_warning_triggered = 1;\
+					weprintf("warning: %s colour detected\n",\
+						 Y < 0 ? "subblack" : "superwhite");\
+				}\
+			}\
+			\
+			ciexyz_to_srgb##SUFFIX(X, Y, Z, &R, &G, &B);\
+			write_pixel##SUFFIX(R, G, B, A);\
+		}\
+	} while (0)
 
-	if (A < 0 || A > 1) {
-		if (alpha_warning_triggered) {
-			alpha_warning_triggered = 1;
-			weprintf("warning: alpha values truncated\n");
-		}
-		A = A < 0 ? 0 : 1;
-	}
+static void write_pixel(double R, double G, double B, double A) {WRITE_PIXEL(double,);}
+static void write_pixel_f(float R, float G, float B, float A) {WRITE_PIXEL(float, _f);}
 
-	colours[0] = srgb_encode(R) * max + 0.5;
-	colours[1] = srgb_encode(G) * max + 0.5;
-	colours[2] = srgb_encode(B) * max + 0.5;
-	colours[3] = A * max + 0.5;
-
-	for (i = k = 0; i < 4; i++, k += bytes) {
-		for (j = 0; j < bytes; j++) {
-			buf[k + bm - j] = (unsigned char)(colours[i]);
-			colours[i] >>= 8;
-		}
-	}
-
-	ewriteall(STDOUT_FILENO, buf, k, "<stdout>");
-}
-
-static void
-process_xyza(struct stream *stream, size_t n)
-{
-	size_t i;
-	double X, Y, Z, A, R, G, B;
-	for (i = 0; i < n; i += stream->pixel_size) {
-		X = ((double *)(stream->buf + i))[0];
-		Y = ((double *)(stream->buf + i))[1];
-		Z = ((double *)(stream->buf + i))[2];
-		A = ((double *)(stream->buf + i))[3];
-
-		if (Y < 0 || Y > 1) {
-			if (luma_warning_triggered) {
-				luma_warning_triggered = 1;
-				weprintf("warning: %s colour detected\n",
-					 Y < 0 ? "subblack" : "superwhite");
-			}
-		}
-
-		ciexyz_to_srgb(X, Y, Z, &R, &G, &B);
-		write_pixel(R, G, B, A);
-	}
-}
+static void process_xyza (struct stream *stream, size_t n) {PROCESS(double,);}
+static void process_xyzaf(struct stream *stream, size_t n) {PROCESS(float, _f);}
 
 int
 main(int argc, char *argv[])
@@ -111,6 +115,8 @@ main(int argc, char *argv[])
 
 	if (!strcmp(stream.pixfmt, "xyza"))
 		process = process_xyza;
+	else if (!strcmp(stream.pixfmt, "xyza f"))
+		process = process_xyzaf;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 

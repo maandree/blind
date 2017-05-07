@@ -9,24 +9,25 @@
 
 USAGE("")
 
-static void
-process_xyza(void)
-{
-	double buf[BUFSIZ / sizeof(double)];
-	size_t i;
-	int r, done = 0;
+#define PROCESS(TYPE, FMT)\
+	do {\
+		TYPE buf[BUFSIZ / sizeof(TYPE)];\
+		size_t i;\
+		int r, done = 0;\
+		while (!done) {\
+			for (i = 0; i < ELEMENTSOF(buf); i += (size_t)r) {\
+				r = scanf("%"FMT, buf + i);\
+				if (r == EOF) {\
+					done = 1;\
+					break;\
+				}\
+			}\
+			ewriteall(STDOUT_FILENO, buf, i * sizeof(*buf), "<stdout>");\
+		}\
+	} while (0)
 
-	while (!done) {
-		for (i = 0; i < ELEMENTSOF(buf); i += (size_t)r) {
-			r = scanf("%lf", buf + i);
-			if (r == EOF) {
-				done = 1;
-				break;
-			}
-		}
-		ewriteall(STDOUT_FILENO, buf, i * sizeof(*buf), "<stdout>");
-	}
-}
+static void process_xyza (void) {PROCESS(double, "lf");}
+static void process_xyzaf(void) {PROCESS(float, "f");}
 
 int
 main(int argc, char *argv[])
@@ -61,6 +62,8 @@ main(int argc, char *argv[])
 
 	if (!strcmp(stream.pixfmt, "xyza"))
 		process = process_xyza;
+	else if (!strcmp(stream.pixfmt, "xyza f"))
+		process = process_xyzaf;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 

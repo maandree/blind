@@ -9,79 +9,52 @@
 
 USAGE("[-iw] mask-stream")
 
-static void
-process_xyza(struct stream *colour, struct stream *mask, size_t n)
-{
-	size_t i;
-	double w, y, yo;
-	for (i = 0; i < n; i += colour->pixel_size) {
-		w = ((double *)(mask->buf + i))[1];
-		w *= ((double *)(mask->buf + i))[3];
-		yo = ((double *)(colour->buf + i))[1];
-		y = (1 - yo) * w + yo * (1 - w);
-		((double *)(colour->buf + i))[0] += (y - yo) * D65_XYZ_X;
-		((double *)(colour->buf + i))[1] = y;
-		((double *)(colour->buf + i))[2] += (y - yo) * D65_XYZ_Z;
-		/*
-		 * Explaination:
-		 *   Y is the luma and ((X / Xn - Y / Yn), (Z / Zn - Y / Yn))
-		 *   is the chroma (according to CIELAB), where (Xn, Yn, Zn)
-		 *   is the white point.
-		 */
-	}
-}
+#define PROCESS(TYPE, INV)\
+	do {\
+		size_t i;\
+		TYPE w, y, yo;\
+		for (i = 0; i < n; i += colour->pixel_size) {\
+			w = INV ((TYPE *)(mask->buf + i))[1];\
+			w *= ((TYPE *)(mask->buf + i))[3];\
+			yo = ((TYPE *)(colour->buf + i))[1];\
+			y = (1 - yo) * w + yo * (1 - w);\
+			((TYPE *)(colour->buf + i))[0] += (y - yo) * (TYPE)D65_XYZ_X;\
+			((TYPE *)(colour->buf + i))[1] = y;\
+			((TYPE *)(colour->buf + i))[2] += (y - yo) * (TYPE)D65_XYZ_Z;\
+			/*
+			 * Explaination:
+			 *   Y is the luma and ((X / Xn - Y / Yn), (Z / Zn - Y / Yn))
+			 *   is the chroma (according to CIELAB), where (Xn, Yn, Zn)
+			 *   is the white point.
+			 */\
+		}\
+	} while (0)
 
-static void
-process_xyza_i(struct stream *colour, struct stream *mask, size_t n)
-{
-	size_t i;
-	double w, y, yo;
-	for (i = 0; i < n; i += colour->pixel_size) {
-		w = 1 - ((double *)(mask->buf + i))[1];
-		w *= ((double *)(mask->buf + i))[3];
-		yo = ((double *)(colour->buf + i))[1];
-		y = (1 - yo) * w + yo * (1 - w);
-		((double *)(colour->buf + i))[0] += (y - yo) * D65_XYZ_X;
-		((double *)(colour->buf + i))[1] = y;
-		((double *)(colour->buf + i))[2] += (y - yo) * D65_XYZ_Z;
-	}
-}
+#define PROCESS_W(TYPE, INV)\
+	do {\
+		size_t i;\
+		TYPE w, y, yo, X, Z;\
+		for (i = 0; i < n; i += colour->pixel_size) {\
+			X = ((TYPE *)(mask->buf + i))[0];\
+			Z = ((TYPE *)(mask->buf + i))[2];\
+			w = INV ((TYPE *)(mask->buf + i))[1];\
+			w *= ((TYPE *)(mask->buf + i))[3];\
+			yo = ((TYPE *)(colour->buf + i))[1];\
+			y = (1 - yo) * w + yo * (1 - w);\
+			((TYPE *)(colour->buf + i))[0] += (y - yo) * X;\
+			((TYPE *)(colour->buf + i))[1] = y;\
+			((TYPE *)(colour->buf + i))[2] += (y - yo) * Z;\
+		}\
+	} while (0)
 
-static void
-process_xyza_w(struct stream *colour, struct stream *mask, size_t n)
-{
-	size_t i;
-	double w, y, yo, X, Z;
-	for (i = 0; i < n; i += colour->pixel_size) {
-		X = ((double *)(mask->buf + i))[0];
-		Z = ((double *)(mask->buf + i))[2];
-		w = ((double *)(mask->buf + i))[1];
-		w *= ((double *)(mask->buf + i))[3];
-		yo = ((double *)(colour->buf + i))[1];
-		y = (1 - yo) * w + yo * (1 - w);
-		((double *)(colour->buf + i))[0] += (y - yo) * X;
-		((double *)(colour->buf + i))[1] = y;
-		((double *)(colour->buf + i))[2] += (y - yo) * Z;
-	}
-}
-
-static void
-process_xyza_iw(struct stream *colour, struct stream *mask, size_t n)
-{
-	size_t i;
-	double w, y, yo, X, Z;
-	for (i = 0; i < n; i += colour->pixel_size) {
-		X = ((double *)(mask->buf + i))[0];
-		Z = ((double *)(mask->buf + i))[2];
-		w = 1 - ((double *)(mask->buf + i))[1];
-		w *= ((double *)(mask->buf + i))[3];
-		yo = ((double *)(colour->buf + i))[1];
-		y = (1 - yo) * w + yo * (1 - w);
-		((double *)(colour->buf + i))[0] += (y - yo) * X;
-		((double *)(colour->buf + i))[1] = y;
-		((double *)(colour->buf + i))[2] += (y - yo) * Z;
-	}
-}
+static void process_xyza    (struct stream *colour, struct stream *mask, size_t n) {PROCESS(double,);}
+static void process_xyza_i  (struct stream *colour, struct stream *mask, size_t n) {PROCESS(double, 1 -);}
+static void process_xyza_w  (struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(double,);}
+static void process_xyza_iw (struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(double, 1 -);}
+static void process_xyzaf   (struct stream *colour, struct stream *mask, size_t n) {PROCESS(float,);}
+static void process_xyzaf_i (struct stream *colour, struct stream *mask, size_t n) {PROCESS(float, 1 -);}
+static void process_xyzaf_w (struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(float,);}
+static void process_xyzaf_iw(struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(float, 1 -);}
 
 int
 main(int argc, char *argv[])
@@ -110,6 +83,9 @@ main(int argc, char *argv[])
 	if (!strcmp(colour.pixfmt, "xyza"))
 		process = invert ? whitepoint ? process_xyza_iw : process_xyza_i
 				 : whitepoint ? process_xyza_w  : process_xyza;
+	else if (!strcmp(colour.pixfmt, "xyza f"))
+		process = invert ? whitepoint ? process_xyzaf_iw : process_xyzaf_i
+				 : whitepoint ? process_xyzaf_w  : process_xyzaf;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 

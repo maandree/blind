@@ -8,31 +8,24 @@
 USAGE("[-r]")
 
 static size_t fm;
-static double fmd;
+static double fm_double;
+static float fm_float;
 
-static void
-process_xyza(struct stream *stream, size_t n, size_t f)
-{
-	size_t i;
-	double a;
-	for (i = 0; i < n; i += stream->pixel_size) {
-		a = ((double *)(stream->buf + i))[3];
-		a = a * (double)(fm - f) / fmd;
-		((double *)(stream->buf + i))[3] = a;
-	}
-}
+#define PROCESS(TYPE, NREV)\
+	do {\
+		size_t i;\
+		TYPE a;\
+		for (i = 0; i < n; i += stream->pixel_size) {\
+			a = ((TYPE *)(stream->buf + i))[3];\
+			a = a * (TYPE)(NREV f) / fm_##TYPE;\
+			((TYPE *)(stream->buf + i))[3] = a;\
+		}\
+	} while (0)
 
-static void
-process_xyza_r(struct stream *stream, size_t n, size_t f)
-{
-	size_t i;
-	double a;
-	for (i = 0; i < n; i += stream->pixel_size) {
-		a = ((double *)(stream->buf + i))[3];
-		a = a * (double)f / fmd;
-		((double *)(stream->buf + i))[3] = a;
-	}
-}
+static void process_xyza   (struct stream *stream, size_t n, size_t f) {PROCESS(double, fm -);}
+static void process_xyza_r (struct stream *stream, size_t n, size_t f) {PROCESS(double,);}
+static void process_xyzaf  (struct stream *stream, size_t n, size_t f) {PROCESS(float, fm -);}
+static void process_xyzaf_r(struct stream *stream, size_t n, size_t f) {PROCESS(float,);}
 
 int
 main(int argc, char *argv[])
@@ -56,12 +49,15 @@ main(int argc, char *argv[])
 
 	if (!strcmp(stream.pixfmt, "xyza"))
 		process = reverse ? process_xyza_r : process_xyza;
+	else if (!strcmp(stream.pixfmt, "xyza f"))
+		process = reverse ? process_xyzaf_r : process_xyzaf;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
-	fmd = fm = stream.frames - 1;
+	fm_double = fm = stream.frames - 1;
+	fm_float = (float)fm_double;
 	process_each_frame_segmented(&stream, STDOUT_FILENO, "<stdout>", process);
 	return 0;
 }

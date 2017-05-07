@@ -7,6 +7,8 @@ blind-single-colour - Generate a single-colour video
 .I frames
 | -f
 .RB ' inf ']
+[-F
+.IR pixel-format ]
 -w
 .I width
 -h
@@ -49,6 +51,11 @@ head (works fine with most
 .B blind
 tools) but the video will be printed to stdout until there are
 no processes with an open read end to this process's stdout.
+.TP
+.BR -F " "\fIpixel-format\fP
+Select pixel format, see
+.BR blind-convert (1)
+for more information.
 .TP
 .BR -w " "\fIwidth\fP
 The width of the video, in pixels.
