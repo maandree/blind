@@ -56,9 +56,8 @@ main(int argc, char *argv[])
 	w = stream.width * stream.pixel_size;
 	for (; stream.frames; stream.frames--) {
 		for (h = stream.height; h; h--) {
-			for (n = w; n; n -= stream.ptr) {
-				stream.ptr = 0;
-				if (!enread_stream(2, &stream, n))
+			for (n = w; n; n -= stream.ptr, stream.ptr = 0) {
+				if (!stream.ptr && !enread_stream(2, &stream, n))
 					goto done;
 				anything = 1;
 				enwriteall(2, STDOUT_FILENO, stream.buf, stream.ptr, "<stdout>");

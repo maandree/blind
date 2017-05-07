@@ -7,6 +7,7 @@ BIN =\
 	blind-colour-srgb\
 	blind-compress\
 	blind-concat\
+	blind-convert\
 	blind-crop\
 	blind-cut\
 	blind-decompress\

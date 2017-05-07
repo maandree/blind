@@ -106,6 +106,8 @@ set_pixel_size(struct stream *stream)
 {
 	if (!strcmp(stream->pixfmt, "xyza"))
 		stream->pixel_size = 4 * sizeof(double);
+	else if (!strcmp(stream->pixfmt, "xyza f"))
+		stream->pixel_size = 4 * sizeof(float);
 	else
 		return -1;
 	return 0;
