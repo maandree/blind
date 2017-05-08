@@ -13,31 +13,36 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	char *buf, *image;
-	size_t n, imgw, srcw, srch, ps, x, y, i, b, dx;
+	char *buf, *row, *pix, *image, *imag, *img;
+	size_t n, srcw, srch, srcwps, srchps, ps, x, y, i;
 
 	UNOFLAGS(argc);
 
 	eopen_stream(&stream, NULL);
-	imgw = srch = stream.height;
+	srch = stream.height;
 	stream.height = srcw = stream.width;
-	stream.width = imgw;
+	stream.width = srch;
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
 	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
-	n = stream.width * stream.height * (ps = stream.pixel_size);
+	n = stream.height * stream.width * (ps = stream.pixel_size);
 	buf   = emalloc(n);
-	image = emalloc(n); /* TODO optimise to a frame row */
+	image = emalloc(n);
 
-	srch *= ps;
-	srcw *= dx = imgw * ps;
-	imgw *= ps;
+	srchps = srch * ps;
+	srcwps = srcw * ps;
 	while (eread_frame(&stream, buf, n)) {
-		for (b = y = 0; y < srch; y += ps)
-			for (x = 0; x < srcw; x += dx)
-				for (i = 0; i < ps; i++, b++)
-					image[y + x + i] = buf[b];
+		for (y = 0; y < srchps; y += ps) {
+			imag = image + y;
+			row  = buf + y * srcw;
+			for (x = 0; x < srcwps; x += ps) {
+				img = imag + x * srch;
+				pix = row + x;
+				for (i = 0; i < ps; i++)
+					img[i] = pix[i];
+			}
+		}
 		ewriteall(STDOUT_FILENO, image, n, "<stdout>");
 	}
 
