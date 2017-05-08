@@ -2,26 +2,31 @@
 #include "stream.h"
 #include "util.h"
 
+#include <alloca.h>
 #include <string.h>
 
 USAGE("pixel-format ...")
 
-static void (*outconv)(double x, double y, double z, double a);
+static void (*outconv)(double *xyzas, size_t n);
 
 #define INCONV(TYPE)\
 	do {\
-		TYPE *pixel, x, y, z, a;\
-		size_t n;\
+		double buf[sizeof(stream->buf) / (4 * sizeof(TYPE)) * 4];\
+		double *interm;\
+		TYPE *in;\
+		size_t n, m;\
 		do {\
-			pixel = (TYPE *)stream->buf;\
-			for (n = stream->ptr / stream->pixel_size; n--; pixel += 4) {\
-				x = (TYPE)(pixel[0]);\
-				y = (TYPE)(pixel[1]);\
-				z = (TYPE)(pixel[2]);\
-				a = (TYPE)(pixel[3]);\
-				outconv(x, y, z, a);\
+			in = (TYPE *)stream->buf;\
+			interm = buf;\
+			n = stream->ptr / stream->pixel_size;\
+			for (m = n; m--; in += 4, interm += 4) { \
+				interm[0] = (TYPE)(in[0]);\
+				interm[1] = (TYPE)(in[1]);\
+				interm[2] = (TYPE)(in[2]);\
+				interm[3] = (TYPE)(in[3]);\
 			}\
-			n = stream->ptr - (stream->ptr % stream->pixel_size);\
+			outconv(buf, n);\
+			n *= stream->pixel_size;\
 			memmove(stream->buf, stream->buf + n, stream->ptr -= n);\
 		} while (eread_stream(stream, SIZE_MAX));\
 		if (stream->ptr)\
@@ -30,19 +35,18 @@ static void (*outconv)(double x, double y, double z, double a);
 
 #define OUTCONV(TYPE)\
 	do {\
-		TYPE pixel[4];\
-		pixel[0] = (TYPE)x;\
-		pixel[1] = (TYPE)y;\
-		pixel[2] = (TYPE)z;\
-		pixel[3] = (TYPE)a;\
-		ewriteall(STDOUT_FILENO, pixel, sizeof(pixel), "<stdout>");\
+		TYPE *out = alloca(n * 4 * sizeof(TYPE));\
+		size_t i, m = n * 4;\
+		for (i = 0; i < m; i++)\
+			out[i] = (TYPE)(xyzas[i]);\
+		ewriteall(STDOUT_FILENO, out, n * 4 * sizeof(TYPE), "<stdout>");\
 	} while (0)
 
 static void inconv_xyza (struct stream *stream) {INCONV(double);}
 static void inconv_xyzaf(struct stream *stream) {INCONV(float);}
 
-static void outconv_xyza (double x, double y, double z, double a) {OUTCONV(double);}
-static void outconv_xyzaf(double x, double y, double z, double a) {OUTCONV(float);}
+static void outconv_xyza (double *xyzas, size_t n) {OUTCONV(double);}
+static void outconv_xyzaf(double *xyzas, size_t n) {OUTCONV(float);}
 
 int
 main(int argc, char *argv[])
