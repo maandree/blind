@@ -33,7 +33,7 @@ main(int argc, char *argv[])
 	struct stream stream;
 	char *buf, *image;
 	size_t n, y;
-	void (*process)(char *col, char *row);
+	void (*process)(char *row, char *col);
 
 	UNOFLAGS(argc);
 

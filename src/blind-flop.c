@@ -8,12 +8,28 @@
 
 USAGE("")
 
+static struct stream stream;
+static char *buf, *image;
+static size_t n, m, ps;
+
+#define PROCESS(TYPE)\
+	do {\
+		size_t i, j, pst = ps / sizeof(TYPE);\
+		size_t nt = n / sizeof(TYPE);\
+		size_t mt = m / sizeof(TYPE);\
+		for (i = 0; i < pst; i++)\
+			for (j = 0; j < nt; j += pst)\
+				((TYPE *)image)[mt - j + i] = ((TYPE *)buf)[i + j];\
+	} while (0)
+
+static void process_double(void) {PROCESS(double);}
+static void process_float (void) {PROCESS(float);}
+static void process_char  (void) {PROCESS(char);}
+
 int
 main(int argc, char *argv[])
 {
-	struct stream stream;
-	char *buf, *image;
-	size_t i, j, n, m;
+	void (*process)(void);
 
 	UNOFLAGS(argc);
 
@@ -22,15 +38,16 @@ main(int argc, char *argv[])
 	efflush(stdout, "<stdout>");
 
 	echeck_frame_size(stream.width, 1, stream.pixel_size, 0, stream.file);
-	n = stream.width * stream.pixel_size;
+	n = stream.width * (ps = stream.pixel_size);
 	buf   = emalloc(n);
 	image = emalloc(n);
 
-	m = n - stream.pixel_size;
+	process = !(ps % sizeof(double)) ? process_double :
+		  !(ps % sizeof(float))  ? process_float  : process_char;
+
+	m = n - ps;
 	while (eread_row(&stream, buf, n)) {
-		for (i = 0; i < stream.pixel_size; i++)
-			for (j = 0; j < n; j += stream.pixel_size)
-				image[m - j + i] = buf[i + j];
+		process();
 		ewriteall(STDOUT_FILENO, image, n, "<stdout>");
 	}
 
