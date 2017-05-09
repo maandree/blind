@@ -67,7 +67,7 @@ main(int argc, char *argv[])
 done:
 
 	if (anything && stream.frames)
-		enprintf(2, "%s: is shorted than expected\n", stream.file);
+		enprintf(2, "%s: is shorter than expected\n", stream.file);
 
 	return !anything;
 }

@@ -27,7 +27,7 @@ process_frame(struct stream *stream, int include, size_t rown)
 done:
 
 	if (anything && h)
-		eprintf("%s: is shorted than expected\n", stream->file);
+		eprintf("%s: is shorter than expected\n", stream->file);
 
 	return anything;
 }
