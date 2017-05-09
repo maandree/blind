@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -45,6 +46,9 @@ struct stream {
 	size_t pixel_size;
 	char pixfmt[32];
 	int fd;
+#if INT_MAX != LONG_MAX
+	int padding__;
+#endif
 	size_t ptr;
 	size_t xptr;
 	char buf[BUFSIZ];
