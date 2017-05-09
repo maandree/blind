@@ -133,7 +133,7 @@ readall(int fd, void *buf, size_t n)
 			return -1;
 		if (r == 0)
 			break;
-		r += (size_t)r;
+		ptr += (size_t)r;
 	}
 	return r;
 }
