@@ -48,7 +48,7 @@ concat_to_file(int argc, char *argv[], char *output_file)
 	int fd = eopen(output_file, O_RDWR | O_CREAT | O_TRUNC, 0666);
 	char head[STREAM_HEAD_MAX];
 	ssize_t headlen;
-	size_t size = 0;
+	size_t size;
 	off_t pos;
 	char *data;
 
@@ -72,9 +72,9 @@ concat_to_file(int argc, char *argv[], char *output_file)
 	SPRINTF_HEAD_ZN(head, stream.frames, stream.width, stream.height, stream.pixfmt, &headlen);
 	ewriteall(fd, head, (size_t)headlen, output_file);
 
-	if ((pos = elseek(fd, 0, SEEK_CUR, output_file)) > SIZE_MAX)
+	size = (size_t)(pos = elseek(fd, 0, SEEK_CUR, output_file));
+	if ((uintmax_t)pos > SIZE_MAX)
 		eprintf("%s\n", strerror(EFBIG));
-	size = pos;
 
 	data = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (data == MAP_FAILED)
