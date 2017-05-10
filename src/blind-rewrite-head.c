@@ -4,11 +4,7 @@
 
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <inttypes.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-h] file [(frames | 'auto') [(width | 'same') (height | 'same') [format | 'same']]]")
 
@@ -17,20 +13,19 @@ rewrite(struct stream *stream, int frames_auto)
 {
 	char head[STREAM_HEAD_MAX];
 	ssize_t headlen;
-	size_t frame_size, frame_count, length;
+	size_t frame_count, length;
 	struct stat st;
 	char *data;
 
-	echeck_frame_size(stream->width, stream->height, stream->pixel_size, 0, stream->file);
-	frame_size = stream->width * stream->height * stream->pixel_size;
+	echeck_dimensions(stream, WIDTH | HEIGHT, NULL);
 
 	if (fstat(stream->fd, &st))
 		eprintf("fstat %s:", stream->file);
 	if (!S_ISREG(st.st_mode))
 		eprintf("%s: not a regular file\n", stream->file);
 
-	frame_count = (size_t)(st.st_size) / frame_size;
-	if (frame_count * frame_size != (size_t)(st.st_size) - stream->headlen)
+	frame_count = (size_t)(st.st_size) / stream->frame_size;
+	if (frame_count * stream->frame_size != (size_t)(st.st_size) - stream->headlen)
 		eprintf("%s: given the select width and height, "
 			"the file has an incomplete frame\n", stream->file);
 	if (frames_auto)
@@ -40,7 +35,7 @@ rewrite(struct stream *stream, int frames_auto)
 
 	SPRINTF_HEAD_ZN(head, stream->frames, stream->width, stream->height, stream->pixfmt, &headlen);
 
-	length = stream->frames * frame_size;
+	length = stream->frames * stream->frame_size;
 	if (length > (size_t)SSIZE_MAX || (size_t)headlen > (size_t)SSIZE_MAX - length)
 		eprintf("%s: video is too long\n", stream->file);
 

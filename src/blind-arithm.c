@@ -2,11 +2,8 @@
 #include "stream.h"
 #include "util.h"
 
-#include <fcntl.h>
 #include <math.h>
-#include <stdint.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-axyz] operation right-hand-stream")
 

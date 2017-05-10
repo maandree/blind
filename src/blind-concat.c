@@ -6,11 +6,7 @@
 # include <sys/epoll.h>
 #endif
 #include <sys/mman.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-o output-file [-j jobs]] first-stream ... last-stream")
 
@@ -104,7 +100,7 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 	struct stream *streams;
 	size_t *ptrs;
 	char head[STREAM_HEAD_MAX];
-	size_t ptr, frame_size, frames = 0, next = 0, j;
+	size_t ptr, frames = 0, next = 0, j;
 	ssize_t headlen;
 	int fd, i, n, pollfd;
 
@@ -127,12 +123,11 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 
 	SPRINTF_HEAD_ZN(head, frames, streams->width, streams->height, streams->pixfmt, &headlen);
 
-	echeck_frame_size(streams->width, streams->height, streams->pixel_size, 0, output_file);
-	frame_size = streams->width * streams->height * streams->pixel_size;
+	echeck_dimensions(streams, WIDTH | HEIGHT, NULL);
 	ptr = (size_t)headlen;
 	for (i = 0; i < argc; i++) {
 		ptrs[i] = ptr;
-		ptr += streams->frames * frame_size;
+		ptr += streams->frames * streams->frame_size;
 	}
 	if (ftruncate(fd, (off_t)ptr))
 		eprintf("ftruncate %s:", output_file);

@@ -15,11 +15,11 @@ static int first = 1;
 		pixel_t *restrict clr = (pixel_t *)cbuf;\
 		pixel_t *restrict alf = (pixel_t *)abuf;\
 		pixel_t *img = (pixel_t *)output;\
-		size_t i, n = cn / sizeof(pixel_t);\
+		size_t i, n = colour->frame_size / sizeof(pixel_t);\
 		TYPE a1, a2;\
 		\
 		if (first) {\
-			memcpy(output, cbuf, cn);\
+			memcpy(output, cbuf, colour->frame_size);\
 			first = 0;\
 			return;\
 		}\
@@ -36,19 +36,18 @@ static int first = 1;
 		\
 		(void) colour;\
 		(void) alpha;\
-		(void) an;\
 	} while (0)
 
 static void
 process_xyza(char *output, char *restrict cbuf, char *restrict abuf,
-	     struct stream *colour, struct stream *alpha, size_t cn, size_t an)
+	     struct stream *colour, struct stream *alpha)
 {
 	PROCESS(double);
 }
 
 static void
 process_xyzaf(char *output, char *restrict cbuf, char *restrict abuf,
-	      struct stream *colour, struct stream *alpha, size_t cn, size_t an)
+	      struct stream *colour, struct stream *alpha)
 {
 	PROCESS(float);
 }
@@ -58,7 +57,7 @@ main(int argc, char *argv[])
 {
 	struct stream colour, alpha;
 	void (*process)(char *restrict output, char *restrict cbuf, char *restrict abuf,
-			struct stream *colour, struct stream *alpha, size_t cn, size_t an);
+			struct stream *colour, struct stream *alpha);
 
 	ARGBEGIN {
 	default:
@@ -79,7 +78,6 @@ main(int argc, char *argv[])
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 
 	echeck_compat(&colour, &alpha);
-
 	fprint_stream_head(stdout, &colour);
 	efflush(stdout, "<stdout>");
 	process_each_frame_two_streams(&colour, &alpha, STDOUT_FILENO, "<stdout>", process);

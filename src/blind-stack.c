@@ -2,10 +2,7 @@
 #include "stream.h"
 #include "util.h"
 
-#include <fcntl.h>
-#include <inttypes.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-b] bottom-stream ... top-stream")
 

@@ -234,8 +234,8 @@ int
 xenopen(int status, const char *path, int flags, int mode, ...)
 {
 	int fd;
-	if (!strncmp(path, "/dev/fd/", sizeof("/dev/fd/") - 1)) {
-		if (!toi(path + sizeof("/dev/fd/") - 1, 0, INT_MAX, &fd))
+	if (!strncmp(path, "/dev/fd/", STRLEN("/dev/fd/"))) {
+		if (!toi(path + STRLEN("/dev/fd/"), 0, INT_MAX, &fd))
 			return fd;
 	} else if (!strcmp(path, "/dev/stdin")) {
 		return STDIN_FILENO;

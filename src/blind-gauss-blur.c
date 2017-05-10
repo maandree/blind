@@ -2,12 +2,8 @@
 #include "stream.h"
 #include "util.h"
 
-#include <fcntl.h>
-#include <limits.h>
 #include <math.h>
-#include <stdint.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-j jobs] [-s spread | -s 'auto'] [-achvy] sd-stream")
 
@@ -29,15 +25,15 @@ static size_t spread = 0;
  * and smears it out to the other pixels.
  */
 
-#define BLUR_PIXEL_PROLOGUE(DIR)\
+#define BLUR_PIXEL_PROLOGUE(TYPE, DIR)\
 	if (sig[i1][3] == 0)\
 		goto no_blur_##DIR;\
 	if (chroma || measure_y_only) {\
 		k[0] = sig[i1][1] * sig[i1][3];\
 		if (auto_spread)\
-			spread = k[0] > 0 ? (size_t)(k[0] * 3 + 0.5) : 0;\
+			spread = k[0] > 0 ? (size_t)(k[0] * 3 + (TYPE)0.5) : 0;\
 		blur[2] = blur[0] = k[0] > 0;\
-		c[0] = k[0] *= k[0] * 2, c[0] = sqrt(c[0] * M_PI);\
+		c[0] = k[0] *= k[0] * 2, c[0] = sqrt(c[0] * (TYPE)M_PI);\
 		k[0] = 1 / -k[0], c[0] = 1 / c[0];\
 		if (chroma) {\
 			k[2] = k[0];\
@@ -54,10 +50,10 @@ static size_t spread = 0;
 			spread = 0;\
 		for (i = 0; i < 3; i++) {\
 			k[i] = sig[i1][i] * sig[i1][3];\
-			if (auto_spread && k[i] > 0 && spread < (size_t)(k[i] * 3 + 0.5))\
-				spread = (size_t)(k[i] * 3 + 0.5);\
+			if (auto_spread && k[i] > 0 && spread < (size_t)(k[i] * 3 + (TYPE)0.5))\
+				spread = (size_t)(k[i] * 3 + (TYPE)0.5);\
 			blur[i] = k[i] > 0;\
-			c[i] = k[i] *= k[i] * 2, c[i] = sqrt(c[i] * M_PI);\
+			c[i] = k[i] *= k[i] * 2, c[i] = sqrt(c[i] * (TYPE)M_PI);\
 			k[i] = 1 / -k[i], c[i] = 1 / c[i];\
 		}\
 	}\
@@ -93,7 +89,7 @@ static size_t spread = 0;
 			for (LOOP) {\
 				d = (DISTANCE);\
 				d *= d;\
-				m = c[i] * exp(d * k[i]);\
+				m = c[i] * exp##SUFFIX(d * k[i]);\
 				img[i2][i] += clr[i1][i] * m;\
 				img[i2][3] += clr[i1][3] * m / blurred;\
 			}\
@@ -108,15 +104,15 @@ static size_t spread = 0;
 	img[i1][2] = clr[i1][2];\
 	img[i1][3] = clr[i1][3];
 
-#define BLUR(DIR, SETSTART, SETEND, START, LOOP, DISTANCE, SUFFIX)\
+#define BLUR(TYPE, DIR, SETSTART, SETEND, START, LOOP, DISTANCE, SUFFIX)\
 	do {\
-		memset(img, 0, cn);\
+		memset(img, 0, colour->frame_size);\
 		start = 0, end = colour->height;\
 		is_master = efork_jobs(&start, &end, jobs, &children);\
 		i1 = start * colour->width;\
 		for (y1 = start; y1 < end; y1++) {\
 			for (x1 = 0; x1 < colour->width; x1++, i1++) {\
-				BLUR_PIXEL_PROLOGUE(DIR);\
+				BLUR_PIXEL_PROLOGUE(TYPE, DIR);\
 				if (spread) {\
 					SETSTART;\
 					SETEND;\
@@ -168,8 +164,8 @@ static size_t spread = 0;
 				i1 = start * colour->width;\
 				for (y1 = start; y1 < end; y1++) {\
 					for (x1 = 0; x1 < colour->width; x1++, i1++) {\
-						clr[i1][0] = clr[i1][0] / D65_XYZ_X - clr[i1][1];\
-						clr[i1][2] = clr[i1][2] / D65_XYZ_Z - clr[i1][1];\
+						clr[i1][0] = clr[i1][0] / (TYPE)D65_XYZ_X - clr[i1][1];\
+						clr[i1][2] = clr[i1][2] / (TYPE)D65_XYZ_Z - clr[i1][1];\
 						/*
 						 * Explaination:
 						 *   Y is the luma and ((X / Xn - Y / Yn), (Z / Zn - Y / Yn))
@@ -225,7 +221,7 @@ static size_t spread = 0;
 		\
 		/* blur */\
 		if (horizontal)\
-			BLUR(horizontal,\
+			BLUR(TYPE, horizontal,\
 			     x2start = spread > x1 ? 0 : x1 - spread,\
 			     x2end = spread + 1 > colour->width - x1 ? colour->width : x1 + spread + 1,\
 			     i2 = y1 * colour->width + x2start,\
@@ -233,9 +229,9 @@ static size_t spread = 0;
 			     (ssize_t)x1 - (ssize_t)x2,\
 			     SUFFIX);\
 		if (horizontal && vertical)\
-			memcpy(clr, img, cn);\
+			memcpy(clr, img, colour->frame_size);\
 		if (vertical)\
-			BLUR(vertical,\
+			BLUR(TYPE, vertical,\
 			     y2start = spread > y1 ? 0 : y1 - spread,\
 			     y2end = spread + 1 > colour->height - y1 ? colour->height : y1 + spread + 1,\
 			     i2 = y2start * colour->width + x1,\
@@ -251,8 +247,8 @@ static size_t spread = 0;
 			i1 = start * colour->width;\
 			for (y1 = start; y1 < end; y1++) {\
 				for (x1 = 0; x1 < colour->width; x1++, i1++) {\
-					img[i1][0] = (img[i1][0] + img[i1][1]) * D65_XYZ_X;\
-					img[i1][2] = (img[i1][2] + img[i1][1]) * D65_XYZ_Z;\
+					img[i1][0] = (img[i1][0] + img[i1][1]) * (TYPE)D65_XYZ_X;\
+					img[i1][2] = (img[i1][2] + img[i1][1]) * (TYPE)D65_XYZ_Z;\
 				}\
 			}\
 		}\
@@ -280,19 +276,18 @@ static size_t spread = 0;
 		ejoin_jobs(is_master, children);\
 		\
 		(void) sigma;\
-		(void) sn;\
 	} while (0)
 
 static void
 process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
-	     struct stream *colour, struct stream *sigma, size_t cn, size_t sn)
+	     struct stream *colour, struct stream *sigma)
 {
 	PROCESS(double,);
 }
 
 static void
 process_xyzaf(char *restrict output, char *restrict cbuf, char *restrict sbuf,
-	     struct stream *colour, struct stream *sigma, size_t cn, size_t sn)
+	     struct stream *colour, struct stream *sigma)
 {
 	PROCESS(float, f);
 }
@@ -303,7 +298,7 @@ main(int argc, char *argv[])
 	struct stream colour, sigma;
 	char *arg;
 	void (*process)(char *restrict output, char *restrict cbuf, char *restrict sbuf,
-			struct stream *colour, struct stream *sigma, size_t cn, size_t sn);
+			struct stream *colour, struct stream *sigma);
 
 	ARGBEGIN {
 	case 'a':

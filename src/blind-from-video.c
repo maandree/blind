@@ -4,9 +4,6 @@
 
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 USAGE("[-F pixel-format] [-r frame-rate] [-w width -h height] [-dL] input-file output-file")
@@ -135,7 +132,7 @@ convert_segment_xyzaf(char *buf, size_t n, int fd, const char *file)
 static void
 convert(const char *infile, int outfd, const char *outfile, size_t width, size_t height, const char *frame_rate)
 {
-	char geometry[2 * 3 * sizeof(size_t) + 2], buf[BUFSIZ];
+	char geometry[2 * INTSTRLEN(size_t) + 2], buf[BUFSIZ];
 	const char *cmd[13];
 	int status, pipe_rw[2];
 	size_t i = 0, n, ptr;

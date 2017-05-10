@@ -3,7 +3,6 @@
 #include "util.h"
 
 #include <string.h>
-#include <unistd.h>
 
 USAGE("")
 
@@ -12,35 +11,34 @@ main(int argc, char *argv[])
 {
 	struct stream stream;
 	char *buf;
-	size_t n, m, fptr, sptr, same = 0, diff = 0;
+	size_t m, fptr, sptr, same = 0, diff = 0;
 
 	UNOFLAGS(argc);
 
 	eopen_stream(&stream, NULL);
+	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
-	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, "<stdin>");
-	n = stream.width * stream.height * stream.pixel_size;
-	buf = ecalloc(1, n);
+	buf = ecalloc(1, stream.frame_size);
 
 	fptr = 0;
 	do {
 		sptr = 0;
 	again:
 		while (same) {
-			m = MIN(same, n - fptr);
+			m = MIN(same, stream.frame_size - fptr);
 			ewriteall(STDOUT_FILENO, buf + fptr, m, "<stdout>");
-			fptr = (fptr + m) % n;
+			fptr = (fptr + m) % stream.frame_size;
 			same -= m;
 		}
 
 		while (diff && sptr < stream.ptr) {
-			m = MIN(diff, n - fptr);
+			m = MIN(diff, stream.frame_size - fptr);
 			m = MIN(m, stream.ptr - sptr);
 			memcpy(buf + fptr, stream.buf + sptr, m);
 			ewriteall(STDOUT_FILENO, buf + fptr, m, "<stdout>");
-			fptr = (fptr + m) % n;
+			fptr = (fptr + m) % stream.frame_size;
 			diff -= m;
 			sptr += m;
 		}

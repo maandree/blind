@@ -3,16 +3,14 @@
 #include "util.h"
 
 #include <arpa/inet.h>
-#include <sys/wait.h>
 #include <inttypes.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-h] [-f | -p]")
 
 static char buf[BUFSIZ];
-static char width[3 * sizeof(size_t) + 1] = {0};
-static char height[3 * sizeof(size_t) + 1] = {0};
+static char width[INTSTRLEN(size_t) + 1] = {0};
+static char height[INTSTRLEN(size_t) + 1] = {0};
 static const char *conv_fail_msg = "convertion failed, if converting a farbfeld file, try -f";
 static size_t pixel_size;
 static double value_max;
@@ -143,7 +141,7 @@ pam_head(int fd, const char *fname)
 				else if (!strcmp(buf, "TUPLTYPE RGB_ALPHA"))
 					with_colour = 1, with_alpha = 1;
 				else
-					eprintf("image uses an unsupported tuple type: %s\n", buf + sizeof("TUPLTYPE"));
+					eprintf("image uses an unsupported tuple type: %s\n", buf + STRLEN("TUPLTYPE "));
 			} else if (!strcmp(buf, "ENDHDR")) {
 				memmove(buf, p, ptr -= (size_t)(p - buf));
 				goto header_done;

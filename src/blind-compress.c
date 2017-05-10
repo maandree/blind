@@ -2,9 +2,6 @@
 #include "stream.h"
 #include "util.h"
 
-#include <string.h>
-#include <unistd.h>
-
 USAGE("")
 
 static size_t
@@ -33,7 +30,7 @@ main(int argc, char *argv[])
 {
 	struct stream stream;
 	char *buf[2];
-	size_t n, parts, part, off;
+	size_t parts, part, off;
 	int i;
 	size_t *cmp = NULL;
 	size_t cmpsize = 0;
@@ -41,16 +38,15 @@ main(int argc, char *argv[])
 	UNOFLAGS(argc);
 
 	eopen_stream(&stream, NULL);
+	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
-	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, "<stdin>");
-	n = stream.width * stream.height * stream.pixel_size;
-	buf[0] = emalloc(n);
-	buf[1] = ecalloc(1, n);
+	buf[0] = emalloc(stream.frame_size);
+	buf[1] = ecalloc(1, stream.frame_size);
 
-	for (i = 0; eread_frame(&stream, buf[i], n); i ^= 1) {
-		parts = compare(buf[i], buf[i ^ 1], n, &cmp, &cmpsize);
+	for (i = 0; eread_frame(&stream, buf[i]); i ^= 1) {
+		parts = compare(buf[i], buf[i ^ 1], stream.frame_size, &cmp, &cmpsize);
 		for (off = part = 0; part < parts; part += 2) {
 			off += cmp[part];
 			ewriteall(STDOUT_FILENO, cmp + part, 2 * sizeof(size_t), "<stdout>");

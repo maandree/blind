@@ -66,7 +66,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	char geometry[2 * 3 * sizeof(size_t) + 2];
+	char geometry[2 * INTSTRLEN(size_t) + 2];
 	char *frame_rate;
 	const char **cmd;
 	size_t n = 0;

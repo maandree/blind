@@ -2,10 +2,7 @@
 #include "stream.h"
 #include "util.h"
 
-#include <fcntl.h>
-#include <inttypes.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-s | -S | -t] width height left top")
 
@@ -16,7 +13,7 @@ main(int argc, char *argv[])
 	char *buf, *image, *p;
 	size_t width = 0, height = 0, left = 0, top = 0;
 	size_t right, right_start, bottom, bottom_start;
-	size_t off, yoff = 0, x, y, irown, orown, ptr, n, m;
+	size_t off, yoff = 0, x, y, irown, orown, ptr, m;
 	int tile = 0, keepsize = 0, keepsize_inv = 0;
 
 	ARGBEGIN {
@@ -56,11 +53,11 @@ main(int argc, char *argv[])
 	}
 	efflush(stdout, "<stdout>");
 
-	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
-	n = stream.height * (irown = stream.width * stream.pixel_size);
-	buf = emalloc(n);
+	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);
+	irown = stream.row_size;
+	buf = emalloc(stream.frame_size);
 	orown = width * stream.pixel_size;
-	m = (tile || keepsize || keepsize_inv) ? n : height * orown;
+	m = (tile || keepsize || keepsize_inv) ? stream.frame_size : height * orown;
 	image = (keepsize || keepsize_inv) ? buf : emalloc(m);
 
 	left *= stream.pixel_size;
@@ -73,7 +70,7 @@ main(int argc, char *argv[])
 	bottom = stream.height - (bottom_start = top  + height);
 	right  = irown         - (right_start  = left + orown);
 
-	while (eread_frame(&stream, buf, n)) {
+	while (eread_frame(&stream, buf)) {
 		if (tile) {
 			for (ptr = y = 0; y < stream.height; y++) {
 				p = buf + ((y + yoff) % height + top) * irown;

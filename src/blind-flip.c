@@ -2,31 +2,27 @@
 #include "stream.h"
 #include "util.h"
 
-#include <string.h>
-#include <unistd.h>
-
 USAGE("")
 
 int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t n, rown, ptr;
+	size_t ptr;
 	char *buf;
 
 	UNOFLAGS(argc);
 
 	eopen_stream(&stream, NULL);
+	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
+	buf = emalloc(stream.frame_size);
 
-	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
-	n = stream.height * (rown = stream.width * stream.pixel_size);
-	buf = emalloc(n);
-
-	while (eread_frame(&stream, buf, n))
-		for (ptr = n; ptr;)
-			ewriteall(STDOUT_FILENO, buf + (ptr -= rown), rown, "<stdout>");
+	while (eread_frame(&stream, buf))
+		for (ptr = stream.frame_size; ptr;)
+			ewriteall(STDOUT_FILENO, buf + (ptr -= stream.row_size),
+				  stream.row_size, "<stdout>");
 	/* ewriteall is faster than writev(3) and vmsplice(3) */
 
 	free(buf);

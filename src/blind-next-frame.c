@@ -2,9 +2,7 @@
 #include "stream.h"
 #include "util.h"
 
-#include <inttypes.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-f frames] width height pixel-format ...")
 

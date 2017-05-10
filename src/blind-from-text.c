@@ -2,10 +2,7 @@
 #include "stream.h"
 #include "util.h"
 
-#include <stdio.h>
-#include <stdint.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("")
 

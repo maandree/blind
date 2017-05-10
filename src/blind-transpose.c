@@ -2,11 +2,6 @@
 #include "stream.h"
 #include "util.h"
 
-#include <fcntl.h>
-#include <inttypes.h>
-#include <string.h>
-#include <unistd.h>
-
 USAGE("")
 
 static size_t srcw, srch, srcwps, srchps, ps;
@@ -23,38 +18,33 @@ static size_t srcw, srch, srcwps, srchps, ps;
 		}\
 	} while (0)
 
-static void process_double(char *row, char *col) {PROCESS(double);}
-static void process_float (char *row, char *col) {PROCESS(float);}
-static void process_char  (char *row, char *col) {PROCESS(char);}
+static void process_long(char *row, char *col) {PROCESS(long);}
+static void process_char(char *row, char *col) {PROCESS(char);}
 
 int
 main(int argc, char *argv[])
 {
 	struct stream stream;
 	char *buf, *image;
-	size_t n, y;
+	size_t y;
 	void (*process)(char *row, char *col);
 
 	UNOFLAGS(argc);
 
 	eopen_stream(&stream, NULL);
-	srch = stream.height;
-	stream.height = srcw = stream.width;
-	stream.width = srch;
+	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);
+	srch = stream.height, srchps = stream.col_size;
+	srcw = stream.width,  srcwps = stream.row_size;
+	stream.height = srcw;
+	stream.width  = srch;
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
-	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
-	n = stream.height * stream.width * (ps = stream.pixel_size);
-	srchps = srch * ps;
-	srcwps = srcw * ps;
-	buf   = emalloc(n);
+	buf   = emalloc(stream.frame_size);
 	image = emalloc(srchps);
 
-	process = !(ps % sizeof(double)) ? process_double :
-		  !(ps % sizeof(float))  ? process_float  : process_char;
-
-	while (eread_frame(&stream, buf, n)) {
+	process = ps % sizeof(long) ? process_char : process_long;
+	while (eread_frame(&stream, buf)) {
 		for (y = 0; y < srcwps; y += ps) {
 			process(image, buf + y);
 			ewriteall(STDOUT_FILENO, image, srchps, "<stdout>");

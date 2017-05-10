@@ -2,10 +2,7 @@
 #include "stream.h"
 #include "util.h"
 
-#include <fcntl.h>
-#include <inttypes.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-l left] [-r right] [-a above] [-b below] [-t]")
 
@@ -14,7 +11,7 @@ main(int argc, char *argv[])
 {
 	struct stream stream;
 	char *buf, *image;
-	size_t n, m, imgw, imgh, rown;
+	size_t m, imgw, imgh, rown;
 	size_t xoff, yoff, h, x, y;
 	size_t left = 0, right = 0, top = 0, bottom = 0;
 	int tile = 0;
@@ -44,9 +41,8 @@ main(int argc, char *argv[])
 
 	eopen_stream(&stream, NULL);
 
-	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
-	n = stream.height * stream.width * stream.pixel_size;
-	buf = emalloc(n);
+	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);
+	buf = emalloc(stream.frame_size);
 
 	if (stream.width > SIZE_MAX - left)
 		eprintf("<stdout>: output video is too wide\n");
@@ -60,7 +56,7 @@ main(int argc, char *argv[])
 	if (imgh > SIZE_MAX - bottom)
 		eprintf("<stdout>: output video is too tall\n");
 	imgh += bottom;
-	echeck_frame_size(imgw, imgh, stream.pixel_size, "output", "<stdout>");
+	echeck_dimensions_custom(imgw, imgh, 0, stream.pixel_size, "output", "<stdout>");
 	m = imgh * (imgw *= stream.pixel_size);
 	image = tile ? emalloc(m) : ecalloc(1, m);
 
@@ -78,7 +74,7 @@ main(int argc, char *argv[])
 	xoff = (rown          - left % rown)          % rown;
 	yoff = (stream.height - top  % stream.height) % stream.height;
 
-	while (eread_frame(&stream, buf, n)) {
+	while (eread_frame(&stream, buf)) {
 		if (!tile) {
 			for (y = 0; y < stream.height; y++)
 				memcpy(image + left + (y + top) * imgw, buf + y * rown, rown);

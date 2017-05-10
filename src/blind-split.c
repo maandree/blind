@@ -3,11 +3,7 @@
 #include "util.h"
 
 #include <alloca.h>
-#include <fcntl.h>
-#include <inttypes.h>
-#include <limits.h>
 #include <string.h>
-#include <unistd.h>
 
 USAGE("[-L] (file (end-point | 'end')) ...")
 
@@ -15,7 +11,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t *ends, i, parts, ptr, end, frame_size, n;
+	size_t *ends, i, parts, ptr, end, n;
 	char *to_end;
 	FILE *fp;
 	int fd, unknown_length = 0;
@@ -32,10 +28,7 @@ main(int argc, char *argv[])
 		usage();
 
 	eopen_stream(&stream, NULL);
-	echeck_frame_size(stream.width, stream.height, stream.pixel_size, 0, stream.file);
-	frame_size = stream.width * stream.height * stream.pixel_size;
-	if (stream.frames > (size_t)SSIZE_MAX / frame_size)
-		eprintf("%s: video is too large\n", stream.file);
+	echeck_dimensions(&stream, WIDTH | HEIGHT | LENGTH, NULL);
 
 	parts = (size_t)argc / 2;
 	ends = alloca(parts * sizeof(*ends));
@@ -66,7 +59,7 @@ main(int argc, char *argv[])
 		fprint_stream_head(fp, &stream);
 		efflush(fp, argv[i * 2]);
 
-		for (end = to_end[i] ? SIZE_MAX : ends[i] * frame_size; ptr < end; ptr += n) {
+		for (end = to_end[i] ? SIZE_MAX : ends[i] * stream.frame_size; ptr < end; ptr += n) {
 			n = end - ptr;
 			if (stream.ptr) {
 				n = MIN(stream.ptr, n);
@@ -75,7 +68,7 @@ main(int argc, char *argv[])
 			} else if ((n = eread_stream(&stream, n))) {
 				ewriteall(fd, stream.buf, n, argv[i * 2]);
 				stream.ptr = 0;
-			} else if (ptr % frame_size) {
+			} else if (ptr % stream.frame_size) {
 				eprintf("%s: incomplete frame\n", stream.file);
 			} else if (!unknown_length || !to_end[i]) {
 				eprintf("%s: file is shorter than expected\n", stream.file);

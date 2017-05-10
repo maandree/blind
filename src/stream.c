@@ -110,6 +110,9 @@ set_pixel_size(struct stream *stream)
 		stream->pixel_size = 4 * sizeof(float);
 	else
 		return -1;
+	stream->row_size   = stream->pixel_size * stream->width;
+	stream->col_size   = stream->pixel_size * stream->height;
+	stream->frame_size = stream->pixel_size * stream->height * stream->width;
 	return 0;
 }
 
@@ -152,27 +155,49 @@ eninf_check_fd(int status, int fd, const char *file)
 }
 
 
-int
-check_frame_size(size_t width, size_t height, size_t pixel_size)
-{
-	if (!height)
-		return !width || !pixel_size || !(width > SIZE_MAX / pixel_size);
-	if (!width)
-		return !height || !pixel_size || !(height > SIZE_MAX / pixel_size);
-	if (!pixel_size)
-		return 1;
-	if (width > SIZE_MAX / height)
-		return 0;
-	return !(width * height > SIZE_MAX / pixel_size);
-}
-
 void
-encheck_frame_size(int status, size_t width, size_t height, size_t pixel_size, const char *prefix, const char *fname)
+encheck_dimensions(int status, const struct stream *stream, enum dimension dimensions, const char *prefix)
 {
-	if (!check_frame_size(width, height, pixel_size))
-		enprintf(status, "%s: %s%svideo frame is too %s\n",
-			 fname, prefix ? prefix : "", (prefix && *prefix) ? " " : "",
-			 width <= 1 ? "tall" : height <= 1 ? "wide" : "large");
+	size_t n;
+
+	if (!stream->pixel_size)
+		enprintf(status, "%s: %s%svideo frame doesn't have a pixel size\n",
+			 stream->file, prefix ? prefix : "",
+			 (prefix && *prefix) ? " " : "");
+
+	n = SIZE_MAX / stream->pixel_size;
+
+	if ((dimensions & WIDTH) && stream->width > n)
+		enprintf(status, "%s: %s%svideo frame is too wide\n",
+			 stream->file, prefix ? prefix : "",
+			 (prefix && *prefix) ? " " : "");
+
+	if ((dimensions & HEIGHT) && stream->height > n)
+		enprintf(status, "%s: %s%svideo frame is too wide\n",
+			 stream->file, prefix ? prefix : "",
+			 (prefix && *prefix) ? " " : "");
+
+	if (!stream->width || !stream->height)
+		return;
+
+	if ((dimensions & (WIDTH | HEIGHT)) == (WIDTH | HEIGHT)) {
+		if (stream->width > n / stream->height)
+			enprintf(status, "%s: %s%svideo frame is too large\n",
+				 stream->file, prefix ? prefix : "",
+				 (prefix && *prefix) ? " " : "");
+	}
+
+	if (!(dimensions & LENGTH))
+		return;
+	if (dimensions & WIDTH)
+		n /= stream->width;
+	if (dimensions & HEIGHT)
+		n /= stream->height;
+
+	if (stream->frames > n)
+		enprintf(status, "%s: %s%svideo is too large\n",
+			 stream->file, prefix ? prefix : "",
+			 (prefix && *prefix) ? " " : "");
 }
 
 
@@ -220,7 +245,7 @@ get_pixel_format(const char *specified, const char *current)
 
 
 int
-enread_frame(int status, struct stream *stream, void *buf, size_t n)
+enread_segment(int status, struct stream *stream, void *buf, size_t n)
 {
 	char *buffer = buf;
 	ssize_t r;
@@ -267,13 +292,10 @@ void
 nprocess_each_frame_segmented(int status, struct stream *stream, int output_fd, const char* output_fname,
 			      void (*process)(struct stream *stream, size_t n, size_t frame))
 {
-	size_t frame_size, frame, r, n;
-
-	encheck_frame_size(status, stream->width, stream->height, stream->pixel_size, 0, stream->file);
-	frame_size = stream->height * stream->width * stream->pixel_size;
-
+	size_t frame, r, n;
+	encheck_dimensions(status, stream, WIDTH | HEIGHT, NULL);
 	for (frame = 0; frame < stream->frames; frame++) {
-		for (n = frame_size; n; n -= r) {
+		for (n = stream->frame_size; n; n -= r) {
 			if (stream->ptr < n && !enread_stream(status, stream, SIZE_MAX))
 				enprintf(status, "%s: file is shorter than expected\n", stream->file);
 			r = stream->ptr - (stream->ptr % stream->pixel_size);
@@ -386,39 +408,38 @@ nprocess_multiple_streams(int status, struct stream *streams, size_t n_streams, 
 void
 nprocess_each_frame_two_streams(int status, struct stream *left, struct stream *right, int output_fd, const char* output_fname,
 				void (*process)(char *restrict output, char *restrict lbuf, char *restrict rbuf,
-						struct stream *left, struct stream *right, size_t ln, size_t rn))
+						struct stream *left, struct stream *right))
 {
-	size_t lframe_size, rframe_size;
 	char *lbuf, *rbuf, *image;
 
-	encheck_frame_size(status, left->width,  left->height,  left->pixel_size,  0, left->file);
-	encheck_frame_size(status, right->width, right->height, right->pixel_size, 0, right->file);
-	lframe_size = left->height  * left->width  * left->pixel_size;
-	rframe_size = right->height * right->width * right->pixel_size;
+	encheck_dimensions(status, left,  WIDTH | HEIGHT, NULL);
+	encheck_dimensions(status, right, WIDTH | HEIGHT, NULL);
 
-	if (lframe_size > SIZE_MAX - lframe_size || 2 * lframe_size > SIZE_MAX - rframe_size)
+	if (left->frame_size > SIZE_MAX - left->frame_size ||
+	    2 * left->frame_size > SIZE_MAX - right->frame_size)
 		enprintf(status, "video frame is too large\n");
 
-	image = mmap(0, 2 * lframe_size + lframe_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+	image = mmap(0, 2 * left->frame_size + right->frame_size,
+		     PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
 	if (image == MAP_FAILED)
 		enprintf(status, "mmap:");
-	lbuf = image + 1 * lframe_size;
-	rbuf = image + 2 * lframe_size;
+	lbuf = image + 1 * left->frame_size;
+	rbuf = image + 2 * left->frame_size;
 
 	for (;;) {
-		if (!enread_frame(status, left, lbuf, lframe_size)) {
+		if (!enread_frame(status, left, lbuf)) {
 			close(left->fd);
 			left->fd = -1;
 			break;
 		}
-		if (!enread_frame(status, right, rbuf, rframe_size)) {
+		if (!enread_frame(status, right, rbuf)) {
 			close(right->fd);
 			right->fd = -1;
 			break;
 		}
 
-		process(image, lbuf, rbuf, left, right, lframe_size, rframe_size);
-		enwriteall(status, output_fd, image, lframe_size, output_fname);
+		process(image, lbuf, rbuf, left, right);
+		enwriteall(status, output_fd, image, left->frame_size, output_fname);
 	}
 
 	if (right->fd >= 0)
@@ -426,9 +447,9 @@ nprocess_each_frame_two_streams(int status, struct stream *left, struct stream *
 
 	if (left->fd >= 0) {
 		memcpy(image, lbuf, left->ptr);
-		while (enread_frame(status, left, lbuf, lframe_size))
-			enwriteall(status, output_fd, image, lframe_size, output_fname);
+		while (enread_frame(status, left, lbuf))
+			enwriteall(status, output_fd, image, left->frame_size, output_fname);
 	}
 
-	munmap(image, 2 * lframe_size + rframe_size);
+	munmap(image, 2 * left->frame_size + right->frame_size);
 }

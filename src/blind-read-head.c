@@ -3,7 +3,6 @@
 #include "util.h"
 
 #include <ctype.h>
-#include <unistd.h>
 
 USAGE("")
 
@@ -27,7 +26,7 @@ main(int argc, char *argv[])
 		goto bad_format;
 
 	p = buf;
-	for (i = 0; i < 5; i++)
+	for (i = 0; i < ELEMENTSOF(magic); i++)
 		if (!eread(STDIN_FILENO, &b, 1, "<stdin>") || b != magic[i])
 			goto bad_format;
 
