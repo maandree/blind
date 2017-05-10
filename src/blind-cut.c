@@ -39,7 +39,7 @@ main(int argc, char *argv[])
 	efflush(stdout, "<stdout>");
 
 	esend_frames(&stream, -1, start, NULL);
-	esend_frames(&stream, STDOUT_FILENO, start - end, "<stdout>");
+	esend_frames(&stream, STDOUT_FILENO, stream.frames, "<stdout>");
 
 	close(stream.fd);
 	return 0;

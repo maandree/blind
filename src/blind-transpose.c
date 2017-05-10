@@ -4,11 +4,11 @@
 
 USAGE("")
 
-static size_t srcw, srch, srcwps, srchps, ps;
+static size_t srcw, srch, srcwps, srchps, ps, n;
 
 #define PROCESS(TYPE)\
 	do {\
-		size_t x, i, n = ps / sizeof(TYPE);\
+		size_t x, i;\
 		char *src, *img;\
 		for (x = 0; x < srchps; x += ps) {\
 			img = row + x;\
@@ -43,9 +43,11 @@ main(int argc, char *argv[])
 	buf   = emalloc(stream.frame_size);
 	image = emalloc(srchps);
 
+	ps = stream.pixel_size;
 	process = ps % sizeof(long) ? process_char : process_long;
+	n = ps / (ps % sizeof(long) ? sizeof(char) : sizeof(long));
 	while (eread_frame(&stream, buf)) {
-		for (y = 0; y < srcwps; y += ps) {
+		for (y = 0; y < srcwps; y += stream.pixel_size) {
 			process(image, buf + y);
 			ewriteall(STDOUT_FILENO, image, srchps, "<stdout>");
 		}

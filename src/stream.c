@@ -279,17 +279,18 @@ enread_segment(int status, struct stream *stream, void *buf, size_t n)
 size_t
 ensend_frames(int status, struct stream *stream, int outfd, size_t frames, const char *outfname)
 {
-	size_t h, w, p;
+	size_t h, w, p, n;
 	size_t ret = 0;
 
 	for (ret = 0; ret < frames; ret++) {
 		for (p = stream->pixel_size; p; p--) {
 			for (h = stream->height; h; h--) {
-				for (w = stream->width; w; w -= stream->ptr, stream->ptr = 0) {
+				for (w = stream->width; w; w -= n, stream->ptr -= n) {
 					if (!stream->ptr && !enread_stream(status, stream, w))
 						goto done;
+					n = MIN(stream->ptr, w);
 					if (outfd >= 0)
-						enwriteall(status, outfd, stream->buf, stream->ptr, outfname);
+						enwriteall(status, outfd, stream->buf, n, outfname);
 				}
 			}
 		}
