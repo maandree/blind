@@ -6,35 +6,11 @@
 
 USAGE("(skipped-frames | +included-frames) ...")
 
-static int
-process_frame(struct stream *stream, int include)
-{
-	size_t h, n, m;
-	int anything = 0;
-
-	for (h = stream->height; h; h--) {
-		for (n = stream->row_size; n; n -= m, anything = 1) {
-			if (!stream->ptr && !eread_stream(stream, n))
-				goto done;
-			m = MIN(stream->ptr, n);
-			if (include)
-				ewriteall(STDOUT_FILENO, stream->buf, m, "<stdout>");
-			memmove(stream->buf, stream->buf + m, stream->ptr -= m);
-		}
-	}
-done:
-
-	if (anything && h)
-		eprintf("%s: is shorter than expected\n", stream->file);
-
-	return anything;
-}
-
 int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	int i, include;
+	int i, include, outfd;
 	size_t f, n, total = 0;
 	char *includes;
 	size_t *ns;
@@ -68,13 +44,11 @@ main(int argc, char *argv[])
 	efflush(stdout, "<stdout>");
 
 	for (i = 0;; i = (i + 1) % argc) {
-		include = (int)includes[i];
-		for (n = ns[i]; n--;)
-			if (!process_frame(&stream, include))
-				goto done;
+		outfd = includes[i] ? STDOUT_FILENO : -1;
+		if (!esend_frames(&stream, outfd, ns[i], "<stdout>"))
+			break;
 	}
 
-done:
 	free(includes);
 	free(ns);
 	return 0;

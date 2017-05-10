@@ -33,7 +33,7 @@ main(int argc, char *argv[])
 	size_t size = 0;
 	char *line = NULL;
 	ssize_t len;
-	void (*process)(void) = NULL;
+	void (*process)(void);
 
 	UNOFLAGS(argc);
 

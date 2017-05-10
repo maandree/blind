@@ -10,9 +10,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t start = 0, end = 0, ptr, max;
-	ssize_t r;
-	char buf[BUFSIZ];
+	size_t start = 0, end = 0;
 	int to_end = 0;
 
 	UNOFLAGS(argc != 3);
@@ -32,26 +30,16 @@ main(int argc, char *argv[])
 		end = stream.frames;
 	else if (end > stream.frames)
 		eprintf("end point is after end of video\n");
-	stream.frames = end - start;
-	echeck_dimensions(&stream, WIDTH | HEIGHT | LENGTH, NULL);
-	fprint_stream_head(stdout, &stream);
-	efflush(stdout, "<stdout>");
-
 	if (start >= end)
 		eprintf("%s\n", start > end ?
 			"start point is after end point" :
 			"refusing to create video with zero frames");
-	end   = end   * stream.frame_size + stream.headlen;
-	start = start * stream.frame_size + stream.headlen;
+	stream.frames = end - start;
+	fprint_stream_head(stdout, &stream);
+	efflush(stdout, "<stdout>");
 
-	fadvise_sequential(stream.fd, start, end - start);
-	for (ptr = start; ptr < end; ptr += (size_t)r) {
-		max = end - ptr;
-		max = MIN(max, sizeof(buf));
-		if (!(r = epread(stream.fd, buf, max, ptr, stream.file)))
-			eprintf("%s: file is shorter than expected\n", stream.file);
-		ewriteall(STDOUT_FILENO, buf, (size_t)r, "<stdout>");
-	}
+	esend_frames(&stream, -1, start, NULL);
+	esend_frames(&stream, STDOUT_FILENO, start - end, "<stdout>");
 
 	close(stream.fd);
 	return 0;

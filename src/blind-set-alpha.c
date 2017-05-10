@@ -27,7 +27,7 @@ main(int argc, char *argv[])
 {
 	int invert = 0;
 	struct stream colour, alpha;
-	void (*process)(struct stream *colour, struct stream *alpha, size_t n) = NULL;
+	void (*process)(struct stream *colour, struct stream *alpha, size_t n);
 
 	ARGBEGIN {
 	case 'i':

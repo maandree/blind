@@ -17,7 +17,7 @@ concat_to_stdout(int argc, char *argv[], const char *fname)
 	size_t frames = 0;
 	int i;
 
-	streams = emalloc((size_t)argc * sizeof(*streams));
+	streams = emalloc2((size_t)argc, sizeof(*streams));
 
 	for (i = 0; i < argc; i++) {
 		eopen_stream(streams + i, argv[i]);
@@ -33,10 +33,7 @@ concat_to_stdout(int argc, char *argv[], const char *fname)
 	efflush(stdout, fname);
 
 	for (i = 0; i < argc; i++) {
-		do {
-			ewriteall(STDOUT_FILENO, streams[i].buf, streams[i].ptr, fname);
-			streams[i].ptr = 0;
-		} while (eread_stream(streams + i, SIZE_MAX));
+		esend_stream(streams + i, STDOUT_FILENO, fname);
 		close(streams[i].fd);
 	}
 
@@ -50,7 +47,9 @@ concat_to_file(int argc, char *argv[], char *output_file)
 	int first = 1;
 	int fd = eopen(output_file, O_RDWR | O_CREAT | O_TRUNC, 0666);
 	char head[STREAM_HEAD_MAX];
-	ssize_t headlen, size = 0;
+	ssize_t headlen;
+	size_t size = 0;
+	off_t pos;
 	char *data;
 
 	for (; argc--; argv++) {
@@ -66,23 +65,23 @@ concat_to_file(int argc, char *argv[], char *output_file)
 			echeck_compat(&stream, &refstream);
 		}
 
-		do {
-			ewriteall(fd, stream.buf, stream.ptr, output_file);
-			size += stream.ptr;
-			stream.ptr = 0;
-		} while (eread_stream(&stream, SIZE_MAX));
+		esend_stream(&stream, fd, output_file);
 		close(stream.fd);
 	}
 
 	SPRINTF_HEAD_ZN(head, stream.frames, stream.width, stream.height, stream.pixfmt, &headlen);
 	ewriteall(fd, head, (size_t)headlen, output_file);
 
-	data = mmap(0, size + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if ((pos = elseek(fd, 0, SEEK_CUR, output_file)) > SIZE_MAX)
+		eprintf("%s\n", strerror(EFBIG));
+	size = pos;
+
+	data = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (data == MAP_FAILED)
 		eprintf("mmap %s:", output_file);
-	memmove(data + headlen, data, size);
+	memmove(data + headlen, data, size - (size_t)headlen);
 	memcpy(data, head, (size_t)headlen);
-	munmap(data, size + (size_t)headlen);
+	munmap(data, size);
 
 	close(fd);
 }
@@ -108,9 +107,9 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 		jobs = (size_t)argc;
 
 	fd = eopen(output_file, O_RDWR | O_CREAT | O_TRUNC, 0666);
-	events  = emalloc(jobs * sizeof(*events));
-	streams = emalloc((size_t)argc * sizeof(*streams));
-	ptrs    = emalloc((size_t)argc * sizeof(*ptrs));
+	events  = emalloc2(jobs, sizeof(*events));
+	streams = emalloc2((size_t)argc, sizeof(*streams));
+	ptrs    = emalloc2((size_t)argc, sizeof(*ptrs));
 
 	for (i = 0; i < argc; i++) {
 		eopen_stream(streams + i, argv[i]);

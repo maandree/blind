@@ -54,7 +54,7 @@ main(int argc, char *argv[])
 {
 	struct stream colour, satur;
 	int whitepoint = 0;
-	void (*process)(struct stream *colour, struct stream *satur, size_t n) = NULL;
+	void (*process)(struct stream *colour, struct stream *satur, size_t n);
 
 	ARGBEGIN {
 	case 'w':

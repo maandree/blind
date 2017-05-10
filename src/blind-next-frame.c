@@ -10,15 +10,15 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t n, w, h = 0;
-	int i, anything = 0;
+	size_t n;
+	int i;
 	char *p;
 
 	stream.frames = 1;
 
 	ARGBEGIN {
 	case 'f':
-		stream.frames = etozu_flag('f', UARGF(), 1, SIZE_MAX);
+		stream.frames = entozu_flag(2, 'f', UARGF(), 1, SIZE_MAX);
 		break;
 	default:
 		usage();
@@ -51,21 +51,10 @@ main(int argc, char *argv[])
 	fprint_stream_head(stdout, &stream);
 	enfflush(2, stdout, "<stdout>");
 
-	w = stream.width * stream.pixel_size;
-	for (; stream.frames; stream.frames--) {
-		for (h = stream.height; h; h--) {
-			for (n = w; n; n -= stream.ptr, stream.ptr = 0) {
-				if (!stream.ptr && !enread_stream(2, &stream, n))
-					goto done;
-				anything = 1;
-				enwriteall(2, STDOUT_FILENO, stream.buf, stream.ptr, "<stdout>");
-			}
-		}
-	}
-done:
-
-	if (anything && stream.frames)
+	n = ensend_frames(2, &stream, STDOUT_FILENO, stream.frames, "<stdout>");
+	if (!n)
+		return 1;
+	else if (n < stream.frames)
 		enprintf(2, "%s: is shorter than expected\n", stream.file);
-
-	return !anything;
+	return 0;
 }

@@ -72,7 +72,7 @@ main(int argc, char *argv[])
 	size_t n = 0;
 	int status, pipe_rw[2];
 	pid_t pid;
-	void (*process)(struct stream *stream, size_t n) = NULL;
+	void (*process)(struct stream *stream, size_t n);
 
 	ARGBEGIN {
 	case 'd':

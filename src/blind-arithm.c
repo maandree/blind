@@ -74,7 +74,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream left, right;
-	process_func process = NULL;
+	process_func process;
 
 	ARGBEGIN {
 	case 'a':

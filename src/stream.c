@@ -276,6 +276,48 @@ enread_segment(int status, struct stream *stream, void *buf, size_t n)
 }
 
 
+size_t
+ensend_frames(int status, struct stream *stream, int outfd, size_t frames, const char *outfname)
+{
+	size_t h, w, p;
+	size_t ret = 0;
+
+	for (ret = 0; ret < frames; ret++) {
+		for (p = stream->pixel_size; p; p--) {
+			for (h = stream->height; h; h--) {
+				for (w = stream->width; w; w -= stream->ptr, stream->ptr = 0) {
+					if (!stream->ptr && !enread_stream(status, stream, w))
+						goto done;
+					if (outfd >= 0)
+						enwriteall(status, outfd, stream->buf, stream->ptr, outfname);
+				}
+			}
+		}
+	}
+
+	return ret;
+done:
+	if (p != stream->pixel_size || h != stream->height || w != stream->width)
+		enprintf(status, "%s: incomplete frame", stream->file);
+	return ret;
+}
+
+
+int
+ensend_stream(int status, struct stream *stream, int outfd, const char *outfname)
+{
+	do {
+		if (writeall(outfd, stream->buf, stream->ptr)) {
+			if (outfname)
+				eprintf("write %s:", outfname);
+			return -1;
+		}
+		stream->ptr = 0;
+	} while (enread_stream(status, stream, SIZE_MAX));
+	return 0;
+}
+
+
 void
 nprocess_stream(int status, struct stream *stream, void (*process)(struct stream *stream, size_t n))
 {

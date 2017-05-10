@@ -166,6 +166,34 @@ writezeroes(int fd, void *buf, size_t bufsize, size_t n)
 	return 0;
 }
 
+int
+getfile(int fd, void *buffer, size_t *restrict ptr, size_t *restrict size)
+{
+	char *restrict *restrict buf = buffer;
+	void *new;
+	size_t r;
+
+	for (;;) {
+		if (*ptr == *size) {
+			if (!(new = realloc(*buf, *size << 1))) {
+				errno = ENOMEM;
+				return -1;
+			}
+			*buf = new;
+			*size <<= 1;
+		}
+		r = read(fd, *buf + *ptr, *size - *ptr);
+		if (r <= 0) {
+			if (r)
+				return -1;
+			break;
+		}
+		*ptr += (size_t)r;
+	}
+
+	return 0;
+}
+
 
 static inline pid_t
 enfork(int status)
@@ -193,7 +221,7 @@ enfork_jobs(int status, size_t *start, size_t *end, size_t jobs, pid_t **pids)
 		return 1;
 	}
 	*end = n / jobs + s;
-	*pids = enmalloc(status, jobs * sizeof(**pids));
+	*pids = enmalloc2(status, jobs, sizeof(**pids));
 	for (j = 1; j < jobs; j++) {
 		pid = enfork(status);
 		if (!pid) {

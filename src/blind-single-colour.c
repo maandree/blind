@@ -39,7 +39,7 @@ main(int argc, char *argv[])
 {
 	char *arg;
 	const char *pixfmt = "xyza";
-	void (*process)(void) = NULL;
+	void (*process)(void);
 
 	ARGBEGIN {
 	case 'f':

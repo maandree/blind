@@ -6,96 +6,56 @@
 
 USAGE("(count | 'inf') file")
 
-static void
-repeat_regular_file(char *file, size_t count, int inf)
+static size_t count = 0;
+static int inf;
+static struct stream stream;
+
+static int
+repeat_regular_file(void)
 {
-	struct stream stream;
-	char buf[BUFSIZ];
-	size_t ptr;
-	ssize_t r;
-
-	eopen_stream(&stream, file);
-	if (count > SIZE_MAX / stream.frames)
-		eprintf("%s: video is too long\n", stream.file);
-	stream.frames *= count;
-	fprint_stream_head(stdout, &stream);
-	efflush(stdout, "<stdout>");
-
 	while (inf || count--) {
 		fadvise_sequential(stream.fd, stream.headlen, 0);
-		for (ptr = stream.headlen;; ptr += (size_t)r) {
-			if (!(r = epread(stream.fd, buf, sizeof(buf), ptr, stream.file)))
-				break;
-			if (writeall(STDOUT_FILENO, buf, (size_t)r)) {
-				if (!inf || errno != EPIPE)
-					eprintf("write <stdout>:");
-				return;
-			}
-		}
+		elseek(stream.fd, stream.headlen, SEEK_SET, stream.file);
+		if (esend_stream(&stream, STDOUT_FILENO, NULL))
+			return -1;
 	}
-
-	close(stream.fd);
+	return 0;
 }
 
-static void
-repeat_stdin(size_t count, int inf)
+static int
+repeat_stdin(void)
 {
-	struct stream stream;
-	char *buf;
-	size_t ptr, size;
-	ssize_t r;
-
-	eopen_stream(&stream, NULL);
-	if (count > SIZE_MAX / stream.frames)
-		eprintf("%s: video is too long\n", stream.file);
-	stream.frames *= count;
-	fprint_stream_head(stdout, &stream);
-	efflush(stdout, "<stdout>");
-
-	ptr = stream.ptr;
-	size = MAX(ptr, BUFSIZ);
-	buf = emalloc(size);
-	memcpy(buf, stream.buf, ptr);
-
-	for (;;) {
-		if (ptr == size)
-			buf = erealloc(buf, size <<= 1);
-		if (!(r = eread(STDIN_FILENO, buf + ptr, size - ptr, "<stdout>")))
-			break;
-		ptr += (size_t)r;
-	}
-
-	while (inf || count--) {
-		if (writeall(STDOUT_FILENO, buf, ptr)) {
-			if (!inf || errno != EPIPE)
-				eprintf("write <stdout>:");
-			return;
-		}
-	}
-
-	free(buf);
+	size_t ptr = stream.ptr;
+	size_t size = MAX(ptr, BUFSIZ);
+	char *buf = memcpy(emalloc(size), stream.buf, ptr);
+	egetfile(STDIN_FILENO, &buf, &ptr, &size, "<stdout>");
+	while (inf || count--)
+		if (writeall(STDOUT_FILENO, buf, ptr))
+			return free(buf), -1;
+	return free(buf), 0;
 }
 
 int
 main(int argc, char *argv[])
 {
-	size_t count = 0;
-	int inf = 0;
-
 	UNOFLAGS(argc != 2);
 
-	if (!strcmp(argv[0], "inf"))
-		inf = 1;
+	if ((inf = !strcmp(argv[0], "inf")))
+		einf_check_fd(STDOUT_FILENO, "<stdout>");
 	else
 		count = etozu_arg("the count", argv[0], 0, SIZE_MAX);
 
-	if (inf)
-		einf_check_fd(STDOUT_FILENO, "<stdout>");
+	eopen_stream(&stream, !strcmp(argv[1], "-") ? NULL : argv[1]);
+	if (count > SIZE_MAX / stream.frames)
+		eprintf("%s: video is too long\n", stream.file);
+	stream.frames *= count;
+	fprint_stream_head(stdout, &stream);
+	efflush(stdout, "<stdout>");
 
-	if (!strcmp(argv[1], "-"))
-		repeat_stdin(count, inf);
-	else
-		repeat_regular_file(argv[1], count, inf);
+	if (!strcmp(argv[1], "-") ? repeat_stdin() : repeat_regular_file())
+		if (!inf || errno != EPIPE)
+			eprintf("write <stdout>:");
 
+	close(stream.fd);
 	return 0;
 }

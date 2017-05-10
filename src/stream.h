@@ -32,6 +32,8 @@
 #define eread_segment(...)            enread_segment(1, __VA_ARGS__)
 #define eread_frame(...)              enread_frame(1, __VA_ARGS__)
 #define eread_row(...)                enread_row(1, __VA_ARGS__)
+#define esend_frames(...)             ensend_frames(1, __VA_ARGS__)
+#define esend_stream(...)             ensend_stream(1, __VA_ARGS__)
 
 #define process_stream(...)                 nprocess_stream(1, __VA_ARGS__)
 #define process_each_frame_segmented(...)   nprocess_each_frame_segmented(1, __VA_ARGS__)
@@ -76,6 +78,8 @@ void encheck_dimensions(int status, const struct stream *stream, enum dimension 
 void encheck_compat(int status, const struct stream *a, const struct stream *b);
 const char *get_pixel_format(const char *specified, const char *current);
 int enread_segment(int status, struct stream *stream, void *buf, size_t n);
+size_t ensend_frames(int status, struct stream *stream, int outfd, size_t frames, const char *outfname);
+int ensend_stream(int status, struct stream *stream, int outfd, const char *outfname);
 
 void nprocess_stream(int status, struct stream *stream, void (*process)(struct stream *stream, size_t n));
 

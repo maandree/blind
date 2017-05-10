@@ -6,7 +6,7 @@
 #define MAX(A, B)         ((A) > (B) ? (A) : (B))
 #define CLIP(A, B, C)     ((B) < (A) ? (A) : (B) > (C) ? (C) : (B))
 #define STRLEN(STR)       (sizeof(STR) - 1)
-#define INTSTRLEN(TYPE)   ((sizeof(TYPE) == 1 ? 3 : (5 * sizeof(TYPE) / 2)) + (TYPE)-1 < 0)
+#define INTSTRLEN(TYPE)   ((sizeof(TYPE) == 1 ? 3 : (5 * sizeof(TYPE) / 2)) + ((TYPE)-1 < 0))
 
 #define USAGE(SYNOPSIS)\
 	static void usage(void)\

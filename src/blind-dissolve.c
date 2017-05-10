@@ -31,7 +31,7 @@ main(int argc, char *argv[])
 {
 	struct stream stream;
 	int reverse = 0;
-	void (*process)(struct stream *stream, size_t n, size_t f) = NULL;
+	void (*process)(struct stream *stream, size_t n, size_t f);
 
 	ARGBEGIN {
 	case 'r':

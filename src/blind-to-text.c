@@ -24,7 +24,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	void (*process)(struct stream *stream, size_t n) = NULL;
+	void (*process)(struct stream *stream, size_t n);
 
 	UNOFLAGS(argc);
 

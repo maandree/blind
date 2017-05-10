@@ -46,7 +46,7 @@ main(int argc, char *argv[])
 	struct stream *streams;
 	size_t n_streams, i, frames = 0, tmp;
 	int blend = 0;
-	void (*process)(struct stream *streams, size_t n_streams, size_t n) = NULL;
+	void (*process)(struct stream *streams, size_t n_streams, size_t n);
 
 	ARGBEGIN {
 	case 'b':

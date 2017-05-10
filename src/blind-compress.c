@@ -17,7 +17,7 @@ compare(const char *restrict new, const char *restrict old, size_t n, size_t **c
 			(*cmp)[ptr - 1] += same + diff;
 		} else {
 			if (ptr + 2 > *cmpsize)
-				*cmp = erealloc(*cmp, (*cmpsize += 128) * sizeof(size_t));
+				*cmp = erealloc2(*cmp, *cmpsize += 128, sizeof(size_t));
 			(*cmp)[ptr++] = same;
 			(*cmp)[ptr++] = diff;
 		}

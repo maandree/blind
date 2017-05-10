@@ -58,7 +58,7 @@ main(int argc, char *argv[])
 {
 	int invert = 0, whitepoint = 0;
 	struct stream colour, mask;
-	void (*process)(struct stream *colour, struct stream *mask, size_t n) = NULL;
+	void (*process)(struct stream *colour, struct stream *mask, size_t n);
 
 	ARGBEGIN {
 	case 'i':
