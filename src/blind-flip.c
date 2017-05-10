@@ -27,6 +27,7 @@ main(int argc, char *argv[])
 	while (eread_frame(&stream, buf, n))
 		for (ptr = n; ptr;)
 			ewriteall(STDOUT_FILENO, buf + (ptr -= rown), rown, "<stdout>");
+	/* ewriteall is faster than writev(3) and vmsplice(3) */
 
 	free(buf);
 	return 0;
