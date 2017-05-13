@@ -16,6 +16,8 @@ blind-affine-colour	apply an affine transformation to the colour of each pixel,
 blind-invert-chroma	invert the chroma
 blind-from-sent		convert a sent presentation to a one-frame-per-slide blind video.
 
+blind-kirsch		https://en.wikipedia.org/wiki/Kirsch_operator
+
 blind-from-video: add options to:
 	* just run ffmpeg just print the output
 	* convert output from the option above to blind's format,
