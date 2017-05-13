@@ -99,12 +99,12 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	int strict = 0;
+	int strict = 1;
 	void (*process)(struct stream *stream, int strict);
 
 	ARGBEGIN {
 	case 's':
-		strict = 1;
+		strict = 0;
 		break;
 	default:
 		usage();
