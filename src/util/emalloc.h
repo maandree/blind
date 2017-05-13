@@ -7,9 +7,11 @@
 #define ecalloc(...)   encalloc(1, __VA_ARGS__)
 #define erealloc(...)  enrealloc(1, __VA_ARGS__)
 #define erealloc2(...) enrealloc2(1, __VA_ARGS__)
+#define erealloc3(...) enrealloc3(1, __VA_ARGS__)
 
-#define malloc2(n, m)     malloc(n * m);
-#define realloc3(p, n, m) realloc(p, n * m);
+#define malloc2(n, m)           malloc(n * m);
+#define realloc2(p, n, m)       realloc(p, n * m);
+#define realloc3(p, n1, n2, n3) realloc(p, n1 * n2 * n3);
 
 static inline void *
 enmalloc(int status, size_t n)
@@ -51,6 +53,17 @@ static inline void *
 enrealloc2(int status, void *ptr, size_t n, size_t m)
 {
 	if (n > SIZE_MAX / m || !(ptr = realloc(ptr, n * m)))
+		enprintf(status, "realloc: out of memory\n");
+	return ptr;
+}
+
+static inline void *
+enrealloc3(int status, void *ptr, size_t n1, size_t n2, size_t n3)
+{
+	size_t n = n1;
+	if (n2 > SIZE_MAX / n ||
+	    n3 > SIZE_MAX / (n *= n2) ||
+	    !(ptr = realloc(ptr, n * n3)))
 		enprintf(status, "realloc: out of memory\n");
 	return ptr;
 }

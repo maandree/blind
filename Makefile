@@ -21,6 +21,7 @@ BIN =\
 	blind-from-video\
 	blind-gauss-blur\
 	blind-invert-luma\
+	blind-make-kernel\
 	blind-next-frame\
 	blind-read-head\
 	blind-repeat\
