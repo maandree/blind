@@ -2,18 +2,20 @@
 #include "stream.h"
 #include "util.h"
 
+#include <math.h>
 #include <string.h>
 
 USAGE("[-xyza] kernel [parameter] ...")
 
-#define SUBUSAGE(FORMAT) "Usage: %s [-xyza] " FORMAT, argv0
-#define MATRIX(...) ((const double[]){__VA_ARGS__});
+#define SUBUSAGE(FORMAT)      "Usage: %s [-xyza] " FORMAT, argv0
+#define MATRIX(...)           ((const double[]){__VA_ARGS__});
 #define STREQ3(A, B1, B2, B3) (!strcmp(A, B1) || !strcmp(A, B2) || !strcmp(A, B3))
 
 #define LIST_KERNELS\
-	X(kernel_kirsch, "kirsch")\
+	X(kernel_kirsch,   "kirsch")\
 	X(kernel_box_blur, "box blur")\
-	X(kernel_sharpen, "sharpen")
+	X(kernel_sharpen,  "sharpen")\
+	X(kernel_gaussian, "gaussian")
 
 static const double *
 kernel_kirsch(int argc, char *argv[], size_t *rows, size_t *cols, double **free_this)
@@ -55,7 +57,7 @@ kernel_box_blur(int argc, char *argv[], size_t *rows, size_t *cols, double **fre
 	}
 	*rows = 2 * sy + 1;
 	*cols = 2 * sx + 1;
-	*free_this = cells = emalloc2(*rows, *cols);
+	*free_this = cells = emalloc3(*rows, *cols, sizeof(double));
 	n = (2 * sy + 1) * (2 * sx + 1);
 	value = 1 / (double)n;
 	for (i = 0; i < n; i++)
@@ -72,6 +74,75 @@ kernel_sharpen(int argc, char *argv[], size_t *rows, size_t *cols, double **free
 		eprintf(SUBUSAGE("'sharpen'"));
 	return MATRIX(0, -1, 0,  -1, 5, -1,  0, -1, -0);
 	(void) argv;
+}
+
+static const double *
+kernel_gaussian(int argc, char *argv[], size_t *rows, size_t *cols, double **free_this)
+{
+	size_t spread = 0, y, x;
+	int unsharpen = 0;
+	double sigma, value, c, k;
+	char *arg;
+
+#define argv0 arg
+	argc++, argv--;
+	ARGBEGIN {
+	case 's':
+		if (!(arg = ARGF()))
+			goto usage;
+		spread = etozu_flag('s', arg, 1, SIZE_MAX / 2);
+		break;
+	case 'u':
+		unsharpen = 1;
+		break;
+	} ARGEND;
+#undef argv0
+
+	if (argc != 1)
+		goto usage;
+
+	sigma = etof_arg("standard-deviation", argv[0]);
+
+	if (!spread)
+		spread = (size_t)(sigma * 3.0 + 0.5);
+	*rows = *cols = spread * 2 + 1;
+
+	*free_this = emalloc3(*rows, *cols, sizeof(double));
+
+	k = sigma * sigma * 2;
+	c = M_PI * k;
+	c = sqrt(c);
+	c = 1.0 / c;
+	k = 1.0 / -k;
+
+	for (x = 0; x <= spread; x++) {
+		value = spread - x;
+		value *= value * k;
+		value = exp(value) * c;
+		for (y = 0; y < *rows; y++) {
+			(*free_this)[y * *cols + x] = value;
+			(*free_this)[y + 1 * *cols + *cols - 1 - x] = value;
+		}
+	}
+
+	for (y = 0; y <= spread; y++) {
+		value = spread - y;
+		value *= value * k;
+		value = exp(value) * c;
+		for (x = 0; x < *cols; x++) {
+			(*free_this)[y * *cols + x] *= value;
+			(*free_this)[y + 1 * *cols + *cols - 1 - x] *= value;
+		}
+	}
+
+	if (unsharpen)
+		(*free_this)[spread * *cols + spread] -= 2.0;
+
+	return *free_this;
+
+usage:
+	eprintf(SUBUSAGE("'gaussian' [-s spread] [-u] standard-deviation"));
+	return NULL;
 }
 
 int
