@@ -16,6 +16,7 @@ BIN =\
 	blind-flip\
 	blind-flop\
 	blind-from-image\
+	blind-from-portable\
 	blind-from-text\
 	blind-from-video\
 	blind-gauss-blur\
@@ -34,6 +35,7 @@ BIN =\
 	blind-stack\
 	blind-time-blur\
 	blind-to-image\
+	blind-to-portable\
 	blind-to-text\
 	blind-to-video\
 	blind-translate\

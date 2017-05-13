@@ -14,7 +14,7 @@ blind-affine-colour	apply an affine transformation to the colour of each pixel,
 				-l for linear transformation,
 				-p for transforming each pixel with their own transformation.
 blind-invert-chroma	invert the chroma
-blind-from-sent		convert a sent presentation to a one-frame-per-slide blind video
+blind-from-sent		convert a sent presentation to a one-frame-per-slide blind video.
 
 blind-from-video: add options to:
 	* just run ffmpeg just print the output
@@ -25,6 +25,11 @@ blind-from-video: add options to:
 	  for discarding)
 
 Add [-j jobs] to blind-from-video and blind-to-video.
+
+Generate a header file with the appropriate values for USING_BINARY32, USING_BINARY64.
+long double is slightly faster than long.
+long double (xyza q) could be added as another format.
+unsigned char (xyza 8) could be added as another format, it's probably good for previewing
 
 
 HELP REQUIRED:
