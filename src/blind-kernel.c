@@ -7,9 +7,9 @@
 
 USAGE("[-xyza] kernel [parameter] ...")
 
-#define SUBUSAGE(FORMAT)      "Usage: %s [-xyza] " FORMAT, argv0
-#define MATRIX(...)           ((const double[]){__VA_ARGS__});
-#define STREQ3(A, B1, B2, B3) (!strcmp(A, B1) || !strcmp(A, B2) || !strcmp(A, B3))
+#define SUBUSAGE(FORMAT)          "Usage: %s [-xyza] " FORMAT, argv0
+#define MATRIX(...)               ((const double[]){__VA_ARGS__});
+#define STRCASEEQ3(A, B1, B2, B3) (!strcasecmp(A, B1) || !strcasecmp(A, B2) || !strcasecmp(A, B3))
 
 #define LIST_KERNELS\
 	X(kernel_kirsch,   "kirsch")\
@@ -24,14 +24,14 @@ kernel_kirsch(int argc, char *argv[], size_t *rows, size_t *cols, double **free_
 	*rows = *cols = 3;
 	if (argc != 1)
 		eprintf(SUBUSAGE("'kirsch' direction"));
-	if (STREQ3(argv[0], "1", "N",  "N"))  return MATRIX( 5,  5,  5,   -3, 0, -3,   -3, -3, -3);
-	if (STREQ3(argv[0], "2", "NW", "WN")) return MATRIX( 5,  5, -3,    5, 0, -3,   -3, -3, -3);
-	if (STREQ3(argv[0], "3", "W",  "W"))  return MATRIX( 5, -3, -3,    5, 0, -3,    5, -3, -3);
-	if (STREQ3(argv[0], "4", "SW", "WS")) return MATRIX(-3, -3, -3,    5, 0, -3,    5,  5, -3);
-	if (STREQ3(argv[0], "5", "S",  "S"))  return MATRIX(-3, -3, -3,   -3, 0, -3,    5,  5,  5);
-	if (STREQ3(argv[0], "6", "SE", "ES")) return MATRIX(-3, -3, -3,   -3, 0,  5,   -3,  5,  5);
-	if (STREQ3(argv[0], "7", "E",  "E"))  return MATRIX(-3, -3,  5,   -3, 0,  5,   -3, -3,  5);
-	if (STREQ3(argv[0], "8", "NE", "EN")) return MATRIX(-3,  5,  5,   -3, 0,  5,   -3, -3, -3);
+	if (STRCASEEQ3(argv[0], "1", "N",  "N"))  return MATRIX( 5,  5,  5,   -3, 0, -3,   -3, -3, -3);
+	if (STRCASEEQ3(argv[0], "2", "NW", "WN")) return MATRIX( 5,  5, -3,    5, 0, -3,   -3, -3, -3);
+	if (STRCASEEQ3(argv[0], "3", "W",  "W"))  return MATRIX( 5, -3, -3,    5, 0, -3,    5, -3, -3);
+	if (STRCASEEQ3(argv[0], "4", "SW", "WS")) return MATRIX(-3, -3, -3,    5, 0, -3,    5,  5, -3);
+	if (STRCASEEQ3(argv[0], "5", "S",  "S"))  return MATRIX(-3, -3, -3,   -3, 0, -3,    5,  5,  5);
+	if (STRCASEEQ3(argv[0], "6", "SE", "ES")) return MATRIX(-3, -3, -3,   -3, 0,  5,   -3,  5,  5);
+	if (STRCASEEQ3(argv[0], "7", "E",  "E"))  return MATRIX(-3, -3,  5,   -3, 0,  5,   -3, -3,  5);
+	if (STRCASEEQ3(argv[0], "8", "NE", "EN")) return MATRIX(-3,  5,  5,   -3, 0,  5,   -3, -3, -3);
 	eprintf("Unrecognised direction: %s\n", argv[0]);
 	return NULL;
 }
@@ -95,6 +95,8 @@ kernel_gaussian(int argc, char *argv[], size_t *rows, size_t *cols, double **fre
 	case 'u':
 		unsharpen = 1;
 		break;
+	default:
+		goto usage;
 	} ARGEND;
 #undef argv0
 
