@@ -17,6 +17,21 @@ blind-invert-chroma	invert the chroma
 blind-from-sent		convert a sent presentation to a one-frame-per-slide blind video.
 
 blind-kirsch		https://en.wikipedia.org/wiki/Kirsch_operator
+blind-gaussian-noise	https://en.wikipedia.org/wiki/Gaussian_noise
+blind-threshold		https://en.wikipedia.org/wiki/Thresholding_(image_processing)
+...			https://en.wikipedia.org/wiki/Balanced_histogram_thresholding
+blind-otsu		https://en.wikipedia.org/wiki/Otsu%27s_method
+blind-sobel		https://en.wikipedia.org/wiki/Sobel_operator
+blind-scharr		https://en.wikipedia.org/wiki/Sobel_operator#Alternative_operators
+blind-prewitt		https://en.wikipedia.org/wiki/Prewitt_operator
+blind-roberts-cross	https://en.wikipedia.org/wiki/Roberts_cross
+---			https://en.wikipedia.org/wiki/Foreground_detection
+---			https://en.wikipedia.org/wiki/Noise_reduction#In_images
+---			https://en.wikipedia.org/wiki/Dark-frame_subtraction
+---			https://en.wikipedia.org/wiki/Video_denoising
+---			https://en.wikipedia.org/wiki/Canny_edge_detector
+---			https://en.wikipedia.org/wiki/Deriche_edge_detector
+---			https://en.wikipedia.org/wiki/Edge_detection
 
 blind-from-video: add options to:
 	* just run ffmpeg just print the output
@@ -27,6 +42,8 @@ blind-from-video: add options to:
 	  for discarding)
 
 Add [-j jobs] to blind-from-video and blind-to-video.
+
+Add -f (framewise) to blind-repeat
 
 Generate a header file with the appropriate values for USING_BINARY32, USING_BINARY64.
 long double is slightly faster than long.
