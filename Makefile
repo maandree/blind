@@ -21,7 +21,6 @@ BIN =\
 	blind-from-video\
 	blind-gauss-blur\
 	blind-invert-luma\
-	blind-kernel\
 	blind-make-kernel\
 	blind-next-frame\
 	blind-read-head\
@@ -43,6 +42,10 @@ BIN =\
 	blind-translate\
 	blind-transpose\
 	blind-write-head
+
+# TODO Not tested yet (and doesn't have any manpages):
+#    blind-kernel
+#    blind-temporal-mean
 
 SCRIPTS =\
 	blind-rotate-90\
