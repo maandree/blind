@@ -1,14 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include "common.h"
 
 static inline int
 get_dimension(int status, size_t *out, const char *s, const char *fname, const char *dim)

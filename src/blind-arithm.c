@@ -1,9 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <math.h>
-#include <string.h>
+#include "common.h"
 
 USAGE("[-axyz] operation right-hand-stream")
 
@@ -15,16 +11,16 @@ static int skip_z = 0;
 /* Because the syntax for a function returning a function pointer is disgusting. */
 typedef void (*process_func)(struct stream *left, struct stream *right, size_t n);
 
-#define LIST_OPERATORS(PIXFMT, TYPE, SUFFIX)\
-	X(add, *lh += rh,                                 PIXFMT, TYPE)\
-	X(sub, *lh -= rh,                                 PIXFMT, TYPE)\
-	X(mul, *lh *= rh,                                 PIXFMT, TYPE)\
-	X(div, *lh /= rh,                                 PIXFMT, TYPE)\
-	X(exp, *lh = pow##SUFFIX(*lh, rh),                PIXFMT, TYPE)\
-	X(log, *lh = log##SUFFIX(*lh) / log##SUFFIX(rh),  PIXFMT, TYPE)\
-	X(min, *lh = MIN(*lh, rh),                        PIXFMT, TYPE)\
-	X(max, *lh = MAX(*lh, rh),                        PIXFMT, TYPE)\
-	X(abs, *lh = fabs##SUFFIX(*lh - rh) + rh,         PIXFMT, TYPE)
+#define LIST_OPERATORS(PIXFMT, TYPE)\
+	X(add, *lh += rh,                  PIXFMT, TYPE)\
+	X(sub, *lh -= rh,                  PIXFMT, TYPE)\
+	X(mul, *lh *= rh,                  PIXFMT, TYPE)\
+	X(div, *lh /= rh,                  PIXFMT, TYPE)\
+	X(exp, *lh = pow(*lh, rh),         PIXFMT, TYPE)\
+	X(log, *lh = log2(*lh) / log2(rh), PIXFMT, TYPE)\
+	X(min, *lh = MIN(*lh, rh),         PIXFMT, TYPE)\
+	X(max, *lh = MAX(*lh, rh),         PIXFMT, TYPE)\
+	X(abs, *lh = abs(*lh - rh) + rh,   PIXFMT, TYPE)
 
 #define C(CH, CHI, ALGO, TYPE)\
 	(!skip_##CH ? ((lh = ((TYPE *)(left->buf + i)) + (CHI),\
@@ -49,8 +45,8 @@ typedef void (*process_func)(struct stream *left, struct stream *right, size_t n
 			C(a, 3, ALGO, TYPE);\
 		}\
 	}
-LIST_OPERATORS(xyza, double,)
-LIST_OPERATORS(xyzaf, float, f)
+LIST_OPERATORS(xyza, double)
+LIST_OPERATORS(xyzaf, float)
 #undef X
 
 #if defined(__GNUC__) && !defined(__clang__)
@@ -62,7 +58,7 @@ get_process_xyza(const char *operation)
 {
 #define X(NAME, ALGO, PIXFMT, TYPE)\
 	if (!strcmp(operation, #NAME)) return process_##PIXFMT##_##NAME;
-	LIST_OPERATORS(xyza, double,)
+	LIST_OPERATORS(xyza, double)
 #undef X
 	eprintf("algorithm not recognised: %s\n", operation);
 	return NULL;
@@ -73,7 +69,7 @@ get_process_xyzaf(const char *operation)
 {
 #define X(NAME, ALGO, PIXFMT, TYPE)\
 	if (!strcmp(operation, #NAME)) return process_##PIXFMT##_##NAME;
-	LIST_OPERATORS(xyzaf, float, f)
+	LIST_OPERATORS(xyzaf, float)
 #undef X
 	eprintf("algorithm not recognised: %s\n", operation);
 	return NULL;

@@ -1,5 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "util.h"
+#include "common.h"
 
 USAGE("parameters ...")
 

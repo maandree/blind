@@ -1,6 +1,12 @@
 /* See LICENSE file for copyright and license details. */
 #include "arg.h"
 
+#if defined(__GNUC__) || defined(__clang__)
+# define ATTRIBUTE_NORETURN __attribute__((noreturn))
+#else
+# define ATTRIBUTE_NORETURN
+#endif
+
 #define ELEMENTSOF(ARRAY) (sizeof(ARRAY) / sizeof(*(ARRAY)))
 #define MIN(A, B)         ((A) < (B) ? (A) : (B))
 #define MAX(A, B)         ((A) > (B) ? (A) : (B))
@@ -9,8 +15,9 @@
 #define INTSTRLEN(TYPE)   ((sizeof(TYPE) == 1 ? 3 : (5 * sizeof(TYPE) / 2)) + ((TYPE)-1 < 1))
 
 #define USAGE(SYNOPSIS)\
+	ATTRIBUTE_NORETURN\
 	static void usage(void)\
-	{ eprintf("usage: %s%s%s\n", argv0, SYNOPSIS ? " " : "", SYNOPSIS); }
+	{ eprintf("usage: %s%s%s\n", argv0, *SYNOPSIS ? " " : "", SYNOPSIS); }
 
 #include "util/eprintf.h"
 #include "util/efflush.h"

@@ -1,5 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "util.h"
+#include "common.h"
 
 USAGE("[-d depth] [-l] red green blue")
 
@@ -26,9 +26,9 @@ main(int argc, char *argv[])
 
 	max   = 1ULL << (depth - 1);
 	max  |= max - 1;
-	red   = etolf_arg("the red value",   argv[0]) / max;
-	green = etolf_arg("the green value", argv[1]) / max;
-	blue  = etolf_arg("the blue value",  argv[2]) / max;
+	red   = etolf_arg("the red value",   argv[0]) / (double)max;
+	green = etolf_arg("the green value", argv[1]) / (double)max;
+	blue  = etolf_arg("the blue value",  argv[2]) / (double)max;
 	if (!linear) {
 		red   = srgb_decode(red);
 		green = srgb_decode(green);

@@ -41,7 +41,9 @@ BIN =\
 	blind-to-video\
 	blind-translate\
 	blind-transpose\
-	blind-write-head
+	blind-write-head\
+	blind-kernel\
+	blind-temporal-mean
 
 # TODO Not tested yet (and doesn't have any manpages):
 #    blind-kernel
@@ -59,6 +61,7 @@ SRC = $(BIN:=.c) util.c stream.c
 
 HDR =\
 	arg.h\
+	common.h\
 	stream.h\
 	util.h\
 	util/to.h\
@@ -71,7 +74,8 @@ HDR =\
 	util/efflush.h\
 	util/efunc.h\
 	util/eprintf.h\
-	util/fshut.h
+	util/fshut.h\
+	video-math.h
 
 MISCFILES = Makefile config.mk LICENSE README TODO
 

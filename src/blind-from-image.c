@@ -1,10 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <arpa/inet.h>
-#include <inttypes.h>
-#include <string.h>
+#include "common.h"
 
 USAGE("[-h] [-f | -p]")
 
@@ -24,7 +19,7 @@ get_value_u8(char** bufp)
 {
 	uint8_t value = *(uint8_t *)(*bufp);
 	*bufp += 1;
-	return value / value_max;
+	return (double)value / (double)value_max;
 }
 
 static double
@@ -32,7 +27,7 @@ get_value_u16(char** bufp)
 {
 	uint16_t value = ntohs(*(uint16_t *)(*bufp));
 	*bufp += 2;
-	return value / value_max;
+	return (double)value / (double)value_max;
 }
 
 static double
@@ -40,7 +35,7 @@ get_value_u32(char** bufp)
 {
 	uint32_t value = ntohl(*(uint32_t *)(*bufp));
 	*bufp += 4;
-	return value / value_max;
+	return (double)value / (double)value_max;
 }
 
 static double
@@ -56,7 +51,7 @@ get_value_u64(char** bufp)
 	value |= (uint64_t)(buf[6]) <<  8;
 	value |= (uint64_t)(buf[7]);
 	*bufp += 8;
-	return value / value_max;
+	return (double)value / (double)value_max;
 }
 
 static void
@@ -96,13 +91,13 @@ static size_t
 pam_head(int fd, const char *fname)
 {
 	size_t ptr;
-	ssize_t r;
+	size_t r;
 	char *p;
 	unsigned long long int maxval = UINT8_MAX;
 	for (ptr = 0;;) {
 		if (!(r = eread(fd, buf + ptr, sizeof(buf) - 1, fname)))
 			eprintf("%s\n", conv_fail_msg);
-		ptr += (size_t)r;
+		ptr += r;
 		for (;;) {
 			p = memchr(buf, '\n', ptr);
 			if (!p) {
@@ -163,8 +158,8 @@ header_done:
 		pixel_size = sizeof(uint64_t);
 		get_value = get_value_u64;
 	}
-	value_max = maxval;
-	pixel_size *= (with_colour ? 3 : 1) + with_alpha;
+	value_max = (double)maxval;
+	pixel_size *= (size_t)((with_colour ? 3 : 1) + with_alpha);
 	convert = from_srgb;
 	return ptr;
 }

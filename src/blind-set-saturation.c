@@ -1,8 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <string.h>
+#include "common.h"
 
 USAGE("[-w] saturation-stream")
 

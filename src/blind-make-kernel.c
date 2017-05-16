@@ -1,9 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <ctype.h>
-#include <string.h>
+#include "common.h"
 
 USAGE("[-d denominator] ... [-nxyza] [-- value ...] ...")
 
@@ -58,7 +54,7 @@ static double *
 read_matrix_stdin(size_t *rows, size_t *cols)
 {
 	char *line = NULL, *p, *q;
-	size_t size = 0, col;
+	size_t size = 0, col = 0;
 	double *kernel = NULL;
 	ssize_t len;
 	*rows = *cols = 0;

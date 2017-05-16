@@ -1,13 +1,14 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
+#include "common.h"
 
-#include <math.h>
-#include <string.h>
+#if defined(__GNUC__) && !defined(__clang__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunsafe-loop-optimizations"
+#endif
 
 USAGE("[-xyza] kernel [parameter] ...")
 
-#define SUBUSAGE(FORMAT)          "Usage: %s [-xyza] " FORMAT, argv0
+#define SUBUSAGE(FORMAT)          "usage: %s [-xyza] " FORMAT, argv0
 #define STRCASEEQ3(A, B1, B2, B3) (!strcasecmp(A, B1) || !strcasecmp(A, B2) || !strcasecmp(A, B3))
 
 #define LIST_KERNELS\
@@ -110,6 +111,7 @@ kernel_sharpen(int argc, char *argv[], size_t *rows, size_t *cols, double **free
 	*rows = *cols = 3;
 
 #define argv0 arg
+	(void) arg;
 	argc++, argv--;
 	ARGBEGIN {
 	case 'i':
@@ -126,7 +128,6 @@ kernel_sharpen(int argc, char *argv[], size_t *rows, size_t *cols, double **free
 usage:
 	eprintf(SUBUSAGE("'sharpen' [-i]"));
 	return NULL;
-	(void) arg;
 }
 
 static const double *
@@ -156,7 +157,7 @@ kernel_gaussian(int argc, char *argv[], size_t *rows, size_t *cols, double **fre
 	if (argc != 1)
 		goto usage;
 
-	sigma = etof_arg("standard-deviation", argv[0]);
+	sigma = etolf_arg("standard-deviation", argv[0]);
 
 	if (!spread)
 		spread = (size_t)(sigma * 3.0 + 0.5);
@@ -171,7 +172,7 @@ kernel_gaussian(int argc, char *argv[], size_t *rows, size_t *cols, double **fre
 	k = 1.0 / -k;
 
 	for (x = 0; x <= spread; x++) {
-		value = spread - x;
+		value = (double)(spread - x);
 		value *= value * k;
 		value = exp(value) * c;
 		for (y = 0; y < *rows; y++) {
@@ -181,7 +182,7 @@ kernel_gaussian(int argc, char *argv[], size_t *rows, size_t *cols, double **fre
 	}
 
 	for (y = 0; y <= spread; y++) {
-		value = spread - y;
+		value = (double)(spread - y);
 		value *= value * k;
 		value = exp(value) * c;
 		for (x = 0; x < *cols; x++) {

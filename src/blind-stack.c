@@ -1,8 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <string.h>
+#include "common.h"
 
 USAGE("[-b] bottom-stream ... top-stream")
 
@@ -22,7 +19,7 @@ USAGE("[-b] bottom-stream ... top-stream")
 				z2 = ((TYPE *)(streams[j].buf + i))[2];\
 				a2 = ((TYPE *)(streams[j].buf + i))[3];\
 				if (BLEND)\
-					a2 /= j + 1;\
+					a2 /= (TYPE)(j + 1);\
 				x1 = x1 * a1 * (1 - a2) + x2 * a2;\
 				y1 = y1 * a1 * (1 - a2) + y2 * a2;\
 				z1 = z1 * a1 * (1 - a2) + z2 * a2;\

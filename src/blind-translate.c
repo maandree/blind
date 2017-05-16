@@ -1,8 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <string.h>
+#include "common.h"
 
 USAGE("[-wp] translation-stream")
 
@@ -59,7 +56,6 @@ process_frame(struct stream *stream, char *buf, size_t above, size_t below, size
 	return 1;
 eof:
 	eprintf("%s: file is shorter than expected\n", stream->file);
-	return 0;
 }
 
 static void

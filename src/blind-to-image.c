@@ -1,9 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <arpa/inet.h>
-#include <string.h>
+#include "common.h"
 
 USAGE("[-d depth | -f]")
 
@@ -13,7 +9,7 @@ static int alpha_warning_triggered = 0;
 static unsigned long long int max;
 static int bytes;
 
-#define WRITE_PIXEL(TYPE, SUFFIX)\
+#define WRITE_PIXEL(TYPE)\
 	do {\
 		unsigned long long int colours[4];\
 		unsigned char buf[4 * 8];\
@@ -38,10 +34,10 @@ static int bytes;
 			A = A < 0 ? 0 : 1;\
 		}\
 		\
-		colours[0] = srgb_encode##SUFFIX(R) * max + (TYPE)0.5;\
-		colours[1] = srgb_encode##SUFFIX(G) * max + (TYPE)0.5;\
-		colours[2] = srgb_encode##SUFFIX(B) * max + (TYPE)0.5;\
-		colours[3] = A * max + (TYPE)0.5;\
+		colours[0] = (unsigned long long int)(srgb_encode(R) * (TYPE)max + (TYPE)0.5);\
+		colours[1] = (unsigned long long int)(srgb_encode(G) * (TYPE)max + (TYPE)0.5);\
+		colours[2] = (unsigned long long int)(srgb_encode(B) * (TYPE)max + (TYPE)0.5);\
+		colours[3] = (unsigned long long int)(A * (TYPE)max + (TYPE)0.5);\
 		\
 		for (i = k = 0; i < 4; i++, k += bytes) {\
 			for (j = 0; j < bytes; j++) {\
@@ -50,7 +46,7 @@ static int bytes;
 			}\
 		}\
 		\
-		ewriteall(STDOUT_FILENO, buf, k, "<stdout>");\
+		ewriteall(STDOUT_FILENO, buf, (size_t)k, "<stdout>");\
 	} while (0)
 
 #define PROCESS(TYPE, SUFFIX)\
@@ -71,15 +67,15 @@ static int bytes;
 				}\
 			}\
 			\
-			ciexyz_to_srgb##SUFFIX(X, Y, Z, &R, &G, &B);\
+			ciexyz_to_srgb(X, Y, Z, &R, &G, &B);\
 			write_pixel##SUFFIX(R, G, B, A);\
 		}\
 	} while (0)
 
-static void write_pixel(double R, double G, double B, double A) {WRITE_PIXEL(double,);}
-static void write_pixel_f(float R, float G, float B, float A) {WRITE_PIXEL(float, _f);}
+static void write_pixel_d(double R, double G, double B, double A) {WRITE_PIXEL(double);}
+static void write_pixel_f(float  R, float  G, float  B, float  A) {WRITE_PIXEL(float);}
 
-static void process_xyza (struct stream *stream, size_t n) {PROCESS(double,);}
+static void process_xyza (struct stream *stream, size_t n) {PROCESS(double, _d);}
 static void process_xyzaf(struct stream *stream, size_t n) {PROCESS(float, _f);}
 
 int
@@ -117,7 +113,8 @@ main(int argc, char *argv[])
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
 	if (farbfeld) {
-		uint32_t width = stream.width, height = stream.height;
+		uint32_t width  = (uint32_t)(stream.width);
+		uint32_t height = (uint32_t)(stream.height);
 		if (stream.width > UINT32_MAX)
 			eprintf("%s: frame is too wide\n", stream.file);
 		if (stream.height > UINT32_MAX)

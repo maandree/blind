@@ -1,9 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <math.h>
-#include <string.h>
+#include "common.h"
 
 USAGE("[-g | -h | -l power | -p power]")
 /* TODO add -w weight-stream */
@@ -21,23 +17,23 @@ typedef void (*process_func)(struct stream *stream, void *buffer, void *image, s
  * X-parameter 7: pre-finalise assignments
  * X-parameter 8: subcell finalisation
  */
-#define LIST_MEANS(TYPE, SUFFIX)\
+#define LIST_MEANS(TYPE)\
 	/* [default] arithmetic mean */\
 	X(ARITHMETIC, arithmetic, 1, COPY_FRAME,, *img1 += *buf,\
 	  a = (TYPE)1.0 / (TYPE)frame, *img1 *= a)\
 	/* geometric mean */\
 	X(GEOMETRIC, geometric, 1, COPY_FRAME,, *img1 *= *buf,\
-	  a = (TYPE)1.0 / (TYPE)frame, *img1 = nnpow##SUFFIX(*img1, a))\
+	  a = (TYPE)1.0 / (TYPE)frame, *img1 = nnpow(*img1, a))\
 	/* harmonic mean */\
 	X(HARMONIC, harmonic, 1, ZERO_AND_PROCESS_FRAME,, *img1 += (TYPE)1 / *buf,\
 	  a = (TYPE)frame, *img1 = a / *img1)\
 	/* lehmer mean */\
 	X(LEHMER, lehmer, 2, ZERO_AND_PROCESS_FRAME, (a = (TYPE)power, b = a - (TYPE)1),\
-	  (*img1 += nnpow##SUFFIX(*buf, a), *img2 += nnpow##SUFFIX(*buf, b)),, *img1 /= *img2)\
+	  (*img1 += nnpow(*buf, a), *img2 += nnpow(*buf, b)),, *img1 /= *img2)\
 	/* power mean (Hölder mean) (m = 2 for root square mean; m = 3 for cubic mean) */\
 	X(POWER, power, 1, ZERO_AND_PROCESS_FRAME, a = (TYPE)power,\
-	  *img1 += nnpow##SUFFIX(*buf, a), (a = (TYPE)1 / (TYPE)frame, b = (TYPE)(1.0 / power)),\
-	  *img1 = a * nnpow##SUFFIX(*img1, b))
+	  *img1 += nnpow(*buf, a), (a = (TYPE)1 / (TYPE)frame, b = (TYPE)(1.0 / power)),\
+	  *img1 = a * nnpow(*img1, b))
 
 enum first_frame_action {
 	COPY_FRAME,
@@ -46,28 +42,12 @@ enum first_frame_action {
 };
 
 #define X(V, ...) V,
-enum method { LIST_MEANS(,) };
+enum method { LIST_MEANS() };
 #undef X
 
 static double power;
 
-static inline double
-nnpow(double a, double b)
-{
-	int neg = a < 0;
-	a = pow(neg ? -a : a, b);
-	return neg ? -a : a;
-}
-
-static inline float
-nnpowf(float a, float b)
-{
-	int neg = a < 0;
-	a = powf(neg ? -a : a, b);
-	return neg ? -a : a;
-}
-
-#define MAKE_PROCESS(PIXFMT, TYPE, SUFFIX,\
+#define MAKE_PROCESS(PIXFMT, TYPE,\
 		     _1, NAME, _3, _4, PRE_PROCESS, PROCESS_SUBCELL, PRE_FINALISE, FINALISE_SUBCELL)\
 	static void\
 	process_##PIXFMT##_##NAME(struct stream *stream, void *buffer, void *image, size_t frame)\
@@ -86,22 +66,22 @@ nnpowf(float a, float b)
 				for (x = 0; x < stream->width; x++, img1++, img2++, buf++)\
 					PROCESS_SUBCELL;\
 		}\
-		(void) img2, (void) a, (void) b;\
+		(void) img2, (void) a, (void) b, (void) frame;\
 	}
-#define X(...) MAKE_PROCESS(xyza, double,, __VA_ARGS__)
-LIST_MEANS(double,)
+#define X(...) MAKE_PROCESS(xyza, double, __VA_ARGS__)
+LIST_MEANS(double)
 #undef X
-#define X(...) MAKE_PROCESS(xyzaf, float, f, __VA_ARGS__)
-LIST_MEANS(float, f)
+#define X(...) MAKE_PROCESS(xyzaf, float, __VA_ARGS__)
+LIST_MEANS(float)
 #undef X
 #undef MAKE_PROCESS
 
 #define X(ID, NAME, ...) [ID] = process_xyza_##NAME,
-static const process_func process_functions_xyza[] = { LIST_MEANS(,) };
+static const process_func process_functions_xyza[] = { LIST_MEANS() };
 #undef X
 
 #define X(ID, NAME, ...) [ID] = process_xyzaf_##NAME,
-static const process_func process_functions_xyzaf[] = { LIST_MEANS(,) };
+static const process_func process_functions_xyzaf[] = { LIST_MEANS() };
 #undef X
 
 int
@@ -142,7 +122,7 @@ main(int argc, char *argv[])
 		first_frame_action = FIRST_FRAME_ACTION;\
 		break;
 	switch (method) {
-	LIST_MEANS(,)
+	LIST_MEANS()
 	default:
 		abort();
 	}

@@ -1,8 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <string.h>
+#include "common.h"
 
 USAGE("(count | 'inf') file")
 
@@ -14,8 +11,8 @@ static int
 repeat_regular_file(void)
 {
 	while (inf || count--) {
-		fadvise_sequential(stream.fd, stream.headlen, 0);
-		elseek(stream.fd, stream.headlen, SEEK_SET, stream.file);
+		fadvise_sequential(stream.fd, (off_t)(stream.headlen), 0);
+		elseek(stream.fd, (off_t)(stream.headlen), SEEK_SET, stream.file);
 		if (esend_stream(&stream, STDOUT_FILENO, NULL))
 			return -1;
 	}

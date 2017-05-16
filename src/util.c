@@ -1,18 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "util.h"
-
-#include <sys/wait.h>
-#include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <unistd.h>
+#include "common.h"
 
 char *argv0;
 
@@ -139,17 +126,17 @@ readall(int fd, void *buf, size_t n)
 }
 
 int
-pwriteall(int fd, void *buf, size_t n, size_t ptr)
+pwriteall(int fd, void *buf, size_t n, off_t ptr)
 {
 	char *buffer = buf;
 	ssize_t r;
 	while (n) {
-		r = pwrite(fd, buffer, n, ptr);
+		r = pwrite(fd, buffer, n, (off_t)ptr);
 		if (r < 0)
 			return -1;
 		buffer += (size_t)r;
 		n -= (size_t)r;
-		ptr += (size_t)r;
+		ptr += (off_t)r;
 	}
 	return 0;
 }
@@ -171,7 +158,7 @@ getfile(int fd, void *buffer, size_t *restrict ptr, size_t *restrict size)
 {
 	char *restrict *restrict buf = buffer;
 	void *new;
-	size_t r;
+	ssize_t r;
 
 	for (;;) {
 		if (*ptr == *size) {

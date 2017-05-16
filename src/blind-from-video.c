@@ -1,10 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <string.h>
+#include "common.h"
 
 USAGE("[-F pixel-format] [-r frame-rate] [-w width -h height] [-dL] input-file output-file")
 
@@ -76,21 +71,23 @@ get_metadata(char *file, size_t *width, size_t *height)
 		exit(1);
 }
 
-#define CONVERT_SEGMENT(TYPE, SUFFIX)\
+#define CONVERT_SEGMENT(TYPE)\
 	do {\
 		typedef TYPE pixel_t[4];\
 		size_t i, ptr;\
 		TYPE y, u, v, max = (TYPE)UINT16_MAX;\
 		TYPE r, g, b;\
 		pixel_t pixels[1024];\
+		uint16_t *pix;\
 		if (draft) {\
 			for (ptr = i = 0; ptr < n; ptr += 8) {\
+				pix = (uint16_t *)(buf + ptr);\
 				pixels[i][3] = 1;\
-				y = (long int)(le16toh(((uint16_t *)(buf + ptr))[1])) -  16L * 256L;\
-				u = (long int)(le16toh(((uint16_t *)(buf + ptr))[2])) - 128L * 256L;\
-				v = (long int)(le16toh(((uint16_t *)(buf + ptr))[3])) - 128L * 256L;\
-				scaled_yuv_to_ciexyz##SUFFIX(y, u, v, pixels[i] + 0,\
-							     pixels[i] + 1, pixels[i] + 2);\
+				y = (TYPE)((long int)(le16toh(pix[1])) -  16L * 256L);\
+				u = (TYPE)((long int)(le16toh(pix[2])) - 128L * 256L);\
+				v = (TYPE)((long int)(le16toh(pix[3])) - 128L * 256L);\
+				scaled_yuv_to_ciexyz(y, u, v, pixels[i] + 0,\
+						     pixels[i] + 1, pixels[i] + 2);\
 				if (++i == 1024) {\
 					i = 0;\
 					ewriteall(fd, pixels, sizeof(pixels), file);\
@@ -98,15 +95,16 @@ get_metadata(char *file, size_t *width, size_t *height)
 			}\
 		} else {\
 			for (ptr = i = 0; ptr < n; ptr += 8) {\
-				pixels[i][3] = le16toh(((uint16_t *)(buf + ptr))[0]) / max;\
-				y = ((long int)le16toh(((uint16_t *)(buf + ptr))[1]) -  16L * 256L) / max;\
-				u = ((long int)le16toh(((uint16_t *)(buf + ptr))[2]) - 128L * 256L) / max;\
-				v = ((long int)le16toh(((uint16_t *)(buf + ptr))[3]) - 128L * 256L) / max;\
-				yuv_to_srgb##SUFFIX(y, u, v, &r, &g, &b);\
-				r = srgb_decode##SUFFIX(r);\
-				g = srgb_decode##SUFFIX(g);\
-				b = srgb_decode##SUFFIX(b);\
-				srgb_to_ciexyz##SUFFIX(r, g, b, pixels[i] + 0, pixels[i] + 1, pixels[i] + 2);\
+				pix = (uint16_t *)(buf + ptr);\
+				pixels[i][3] = le16toh(pix[0]) / max;\
+				y = (TYPE)((long int)le16toh(pix[1]) -  16L * 256L) / max;\
+				u = (TYPE)((long int)le16toh(pix[2]) - 128L * 256L) / max;\
+				v = (TYPE)((long int)le16toh(pix[3]) - 128L * 256L) / max;\
+				yuv_to_srgb(y, u, v, &r, &g, &b);\
+				r = srgb_decode(r);\
+				g = srgb_decode(g);\
+				b = srgb_decode(b);\
+				srgb_to_ciexyz(r, g, b, pixels[i] + 0, pixels[i] + 1, pixels[i] + 2);\
 				if (++i == 1024) {\
 					i = 0;\
 					ewriteall(fd, pixels, sizeof(pixels), file);\
@@ -117,17 +115,8 @@ get_metadata(char *file, size_t *width, size_t *height)
 			ewriteall(fd, pixels, i * sizeof(*pixels), file);\
 	} while (0)
 
-static void
-convert_segment_xyza(char *buf, size_t n, int fd, const char *file)
-{
-	CONVERT_SEGMENT(double,);
-}
-
-static void
-convert_segment_xyzaf(char *buf, size_t n, int fd, const char *file)
-{
-	CONVERT_SEGMENT(float, _f);
-}
+static void convert_segment_xyza (char *buf, size_t n, int fd, const char *file) {CONVERT_SEGMENT(double);}
+static void convert_segment_xyzaf(char *buf, size_t n, int fd, const char *file) {CONVERT_SEGMENT(float);}
 
 static void
 convert(const char *infile, int outfd, const char *outfile, size_t width, size_t height, const char *frame_rate)
@@ -136,7 +125,6 @@ convert(const char *infile, int outfd, const char *outfile, size_t width, size_t
 	const char *cmd[13];
 	int status, pipe_rw[2];
 	size_t i = 0, n, ptr;
-	ssize_t r;
 	pid_t pid;
 
 	cmd[i++] = "ffmpeg";
@@ -166,9 +154,9 @@ convert(const char *infile, int outfd, const char *outfile, size_t width, size_t
 	close(pipe_rw[1]);
 
 	for (ptr = 0;;) {
-		if (!(r = eread(pipe_rw[0], buf + ptr, sizeof(buf) - ptr, "<subprocess>")))
+		if (!(n = eread(pipe_rw[0], buf + ptr, sizeof(buf) - ptr, "<subprocess>")))
 			break;
-		ptr += (size_t)r;
+		ptr += n;
 		n = ptr - (ptr % 8);
 		convert_segment(buf, n, outfd, outfile);
 		memmove(buf, buf + n, ptr -= n);
@@ -253,7 +241,7 @@ main(int argc, char *argv[])
 	}
 
 	if (skip_length) {
-		SPRINTF_HEAD_ZN(head, frames, width, height, pixfmt, &headlen);
+		SPRINTF_HEAD_ZN(head, 0, width, height, pixfmt, &headlen);
 		ewriteall(outfd, head, (size_t)headlen, outfile);
 	}
 

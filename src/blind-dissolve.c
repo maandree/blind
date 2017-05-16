@@ -1,8 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <string.h>
+#include "common.h"
 
 USAGE("[-r]")
 
@@ -55,7 +52,7 @@ main(int argc, char *argv[])
 
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
-	fm_double = fm = stream.frames - 1;
+	fm_double = (double)(fm = stream.frames - 1);
 	fm_float = (float)fm_double;
 	process_each_frame_segmented(&stream, STDOUT_FILENO, "<stdout>", process);
 	return 0;

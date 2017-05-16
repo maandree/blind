@@ -1,8 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <string.h>
+#include "common.h"
 
 USAGE("[-f frames | -f 'inf'] [-F pixel-format] -w width -h height (X Y Z | Y) [alpha]")
 

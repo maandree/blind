@@ -1,9 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <alloca.h>
-#include <string.h>
+#include "common.h"
 
 USAGE("pixel-format ...")
 
@@ -20,10 +16,10 @@ static void (*outconv)(double *xyzas, size_t n);
 			interm = buf;\
 			n = stream->ptr / stream->pixel_size;\
 			for (m = n; m--; in += 4, interm += 4) { \
-				interm[0] = (TYPE)(in[0]);\
-				interm[1] = (TYPE)(in[1]);\
-				interm[2] = (TYPE)(in[2]);\
-				interm[3] = (TYPE)(in[3]);\
+				interm[0] = (double)(in[0]);\
+				interm[1] = (double)(in[1]);\
+				interm[2] = (double)(in[2]);\
+				interm[3] = (double)(in[3]);\
 			}\
 			outconv(buf, n);\
 			n *= stream->pixel_size;\

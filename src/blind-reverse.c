@@ -1,6 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
+#include "common.h"
 
 USAGE("[-i] file")
 
@@ -9,15 +8,15 @@ to_stdout(struct stream *stream)
 {
 	size_t ptr, end, n;
 	char buf[BUFSIZ];
-	ssize_t r;
 
 	while (stream->frames--) {
 		ptr = stream->frames * stream->frame_size + stream->headlen;
 		end = ptr + stream->frame_size;
 		while (ptr < end) {
-			if (!(r = epread(stream->fd, buf, MIN(sizeof(buf), end - ptr), ptr, stream->file)))
+			if (!(n = epread(stream->fd, buf, MIN(sizeof(buf), end - ptr),
+					 (off_t)ptr, stream->file)))
 				eprintf("%s: file is shorter than expected\n", stream->file);
-			ptr += n = (size_t)r;
+			ptr += n;
 			ewriteall(STDOUT_FILENO, buf, n, "<stdout>");
 		}
 	}
@@ -57,8 +56,8 @@ in_place(struct stream *stream)
 	bufb = emalloc(stream->frame_size);
 
 	for (f = 0; f < stream->frames >> 1; f++) {
-		pa = f        * stream->frame_size + stream->headlen;
-		pb = (fm - f) * stream->frame_size + stream->headlen;
+		pa = (off_t)f        * (off_t)(stream->frame_size) + (off_t)(stream->headlen);
+		pb = (off_t)(fm - f) * (off_t)(stream->frame_size) + (off_t)(stream->headlen);
 
 		epread_frame(stream, bufa, pa);
 		epread_frame(stream, bufb, pb);

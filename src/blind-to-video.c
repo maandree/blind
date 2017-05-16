@@ -1,18 +1,12 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <signal.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
+#include "common.h"
 
 USAGE("[-d] frame-rate ffmpeg-arguments ...")
 
 static int draft = 0;
 static int fd;
 
-#define PROCESS(TYPE, SUFFIX)\
+#define PROCESS(TYPE)\
 	do {\
 		char *buf = stream->buf;\
 		TYPE *pixel, r, g, b;\
@@ -25,14 +19,14 @@ static int fd;
 		if (draft) {\
 			for (ptr = 0; ptr < n; ptr += 4 * sizeof(TYPE)) {\
 				pixel = (TYPE *)(buf + ptr);\
-				ciexyz_to_scaled_yuv##SUFFIX(pixel[0], pixel[1], pixel[2], &r, &g, &b);\
+				ciexyz_to_scaled_yuv(pixel[0], pixel[1], pixel[2], &r, &g, &b);\
 				y = (long int)r +  16L * 256L;\
 				u = (long int)g + 128L * 256L;\
 				v = (long int)b + 128L * 256L;\
 				*pixels++ = 0xFFFFU;\
-				*pixels++ = htole16((uint16_t)CLIP(0, y, 0xFFFFL));\
-				*pixels++ = htole16((uint16_t)CLIP(0, u, 0xFFFFL));\
-				*pixels++ = htole16((uint16_t)CLIP(0, v, 0xFFFFL));\
+				*pixels++ = htole((uint16_t)CLIP(0, y, 0xFFFFL));\
+				*pixels++ = htole((uint16_t)CLIP(0, u, 0xFFFFL));\
+				*pixels++ = htole((uint16_t)CLIP(0, v, 0xFFFFL));\
 				if (pixels == end)\
 					ewriteall(fd, pixels = pixbuf, sizeof(pixbuf), "<subprocess>");\
 			}\
@@ -40,18 +34,18 @@ static int fd;
 			for (ptr = 0; ptr < n; ptr += 4 * sizeof(TYPE)) {\
 				pixel = (TYPE *)(buf + ptr);\
 				a = (long int)(pixel[3] * 0xFFFFL);\
-				ciexyz_to_srgb##SUFFIX(pixel[0], pixel[1], pixel[2], &r, &g, &b);\
-				r = srgb_encode##SUFFIX(r);\
-				g = srgb_encode##SUFFIX(g);\
-				b = srgb_encode##SUFFIX(b);\
-				srgb_to_yuv##SUFFIX(r, g, b, pixel + 0, pixel + 1, pixel + 2);\
+				ciexyz_to_srgb(pixel[0], pixel[1], pixel[2], &r, &g, &b);\
+				r = srgb_encode(r);\
+				g = srgb_encode(g);\
+				b = srgb_encode(b);\
+				srgb_to_yuv(r, g, b, pixel + 0, pixel + 1, pixel + 2);\
 				y = (long int)(pixel[0] * 0xFFFFL) +  16L * 256L;\
 				u = (long int)(pixel[1] * 0xFFFFL) + 128L * 256L;\
 				v = (long int)(pixel[2] * 0xFFFFL) + 128L * 256L;\
-				*pixels++ = htole16((uint16_t)CLIP(0, a, 0xFFFFL));\
-				*pixels++ = htole16((uint16_t)CLIP(0, y, 0xFFFFL));\
-				*pixels++ = htole16((uint16_t)CLIP(0, u, 0xFFFFL));\
-				*pixels++ = htole16((uint16_t)CLIP(0, v, 0xFFFFL));\
+				*pixels++ = htole((uint16_t)CLIP(0, a, 0xFFFFL));\
+				*pixels++ = htole((uint16_t)CLIP(0, y, 0xFFFFL));\
+				*pixels++ = htole((uint16_t)CLIP(0, u, 0xFFFFL));\
+				*pixels++ = htole((uint16_t)CLIP(0, v, 0xFFFFL));\
 				if (pixels == end)\
 					ewriteall(fd, pixels = pixbuf, sizeof(pixbuf), "<subprocess>");\
 			}\
@@ -59,8 +53,8 @@ static int fd;
 		ewriteall(fd, pixbuf, (size_t)(pixels - pixbuf) * sizeof(*pixels), "<subprocess>");\
 	} while (0)
 
-static void process_xyza (struct stream *stream, size_t n) {PROCESS(double,);}
-static void process_xyzaf(struct stream *stream, size_t n) {PROCESS(float, _f);}
+static void process_xyza (struct stream *stream, size_t n) {PROCESS(double);}
+static void process_xyzaf(struct stream *stream, size_t n) {PROCESS(float);}
 
 int
 main(int argc, char *argv[])

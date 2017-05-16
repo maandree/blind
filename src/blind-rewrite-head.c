@@ -1,10 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <string.h>
+#include "common.h"
 
 USAGE("[-h] file [(frames | 'auto') [(width | 'same') (height | 'same') [format | 'same']]]")
 
@@ -40,7 +35,7 @@ rewrite(struct stream *stream, int frames_auto)
 		eprintf("%s: video is too long\n", stream->file);
 
 	if ((size_t)headlen > stream->headlen)
-		if (ftruncate(stream->fd, length + headlen))
+		if (ftruncate(stream->fd, (off_t)length + (off_t)headlen))
 			eprintf("ftruncate %s:", stream->file);
 
 	data = mmap(0, length + (size_t)headlen, PROT_READ | PROT_WRITE, MAP_SHARED, stream->fd, 0);
@@ -52,7 +47,7 @@ rewrite(struct stream *stream, int frames_auto)
 	munmap(data, length + (size_t)headlen);
 
 	if ((size_t)headlen < stream->headlen)
-		if (ftruncate(stream->fd, length + headlen))
+		if (ftruncate(stream->fd, (off_t)length + (off_t)headlen))
 			eprintf("ftruncate %s:", stream->file);
 }
 

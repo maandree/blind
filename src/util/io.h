@@ -40,10 +40,10 @@ enreadall(int status, int fd, void *buf, size_t n, const char *fname)
 	return (size_t)r;
 }
 
-int pwriteall(int fd, void *buf, size_t n, size_t ptr);
+int pwriteall(int fd, void *buf, size_t n, off_t ptr);
 
 static inline void
-enpwriteall(int status, int fd, void *buf, size_t n, size_t ptr, const char *fname)
+enpwriteall(int status, int fd, void *buf, size_t n, off_t ptr, const char *fname)
 {
 	if (pwriteall(fd, buf, n, ptr))
 		enprintf(status, "pwrite %s:", fname);

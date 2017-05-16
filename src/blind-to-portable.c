@@ -1,17 +1,18 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
+#include "common.h"
 
-#include <alloca.h>
-#include <math.h>
-#include <string.h>
+/* Disable warnings in <math.h> */
+#if defined(__clang__)
+# pragma clang diagnostic ignored "-Wdouble-promotion"
+# pragma clang diagnostic ignored "-Wconversion"
+#endif
 
 USAGE("[-s]")
 
 #define USING_BINARY32 0
 #define USING_BINARY64 0
 
-#define CONV(ITYPE, OTYPE, SOTYPE, EXPONENT, HA2EXPONENT, FRACTION, SUFFIX)\
+#define CONV(ITYPE, OTYPE, SOTYPE, EXPONENT, HA2EXPONENT, FRACTION)\
 	do {\
 		static int cache_i = 0;\
 		static ITYPE cache_in[] = {0, 0, 0, 0};\
@@ -24,22 +25,23 @@ USAGE("[-s]")
 			cache_i &= 3;\
 			return ret;\
 		}\
-		signb = signbit(host);\
+		cache_in[cache_i] = host;\
+		signb = (OTYPE)signbit(host);\
 		u = signb ? -host : host;\
-		if (isnan(host) || !isfinite(host)) {\
-			ret = ((((OTYPE)1 << EXPONENT) - 1) << FRACTION) | !isinf(host);\
+		if (g_isnan(host) || g_isinf(host)) {\
+			ret = ((((OTYPE)1 << EXPONENT) - (OTYPE)1) << FRACTION) | (OTYPE)!g_isinf(host);\
 		} else if (u == (ITYPE)0.0) {\
 			ret = 0;\
 		} else {\
-			dexponent = log2##SUFFIX(u);\
+			dexponent = log2(u);\
 			exponent = (SOTYPE)dexponent;\
-			if (u == pow##SUFFIX(2.0, (ITYPE)exponent)) {\
+			if (u == pow((ITYPE)2.0, (ITYPE)exponent)) {\
 				exponent += HA2EXPONENT;\
 				fraction = 0;\
 			} else {\
 				/* TODO subnormals are a bit rounded off */\
-				u *= pow##SUFFIX(2.0, (ITYPE)(FRACTION + 1 - exponent));\
-				fraction = u;\
+				u *= pow((ITYPE)2.0, (ITYPE)(FRACTION + 1 - exponent));\
+				fraction = (OTYPE)u;\
 				while (fraction >= (OTYPE)2 << FRACTION) {\
 					fraction >>= 1;\
 					exponent += 1;\
@@ -51,11 +53,11 @@ USAGE("[-s]")
 				/* TODO subnormal result */\
 				exponent = 0;\
 				fraction = 0;\
-			} else if (exponent >= ((SOTYPE)1 << EXPONENT) - (SOTYPE)1) { \
-				exponent = ((SOTYPE)1 << EXPONENT) - (SOTYPE)1;\
+			} else if (exponent >= ((SOTYPE)1 << EXPONENT) - 1) { \
+				exponent = ((SOTYPE)1 << EXPONENT) - 1;\
 				fraction = 0;\
 			}\
-			ret = (exponent << FRACTION) + fraction;\
+			ret = ((OTYPE)exponent << FRACTION) + fraction;\
 		}\
 		ret |= signb << (FRACTION + EXPONENT);\
 		cache_out[cache_i++] = ret;\
@@ -89,8 +91,8 @@ USAGE("[-s]")
 			eprintf("%s: incomplete frame\n", stream->file);\
 	} while (0)
 
-static uint64_t conv_double(double host) {CONV(double, uint64_t, int64_t, 11, 1023, 52,);}
-static uint32_t conv_float (float host)  {CONV(float, uint32_t, int32_t, 8, 127, 23, f);}
+static uint64_t conv_double(double host) {CONV(double, uint64_t, int64_t, 11, 1023, 52);}
+static uint32_t conv_float (float  host) {CONV(float, uint32_t, int32_t, 8, 127, 23);}
 
 static void process_xyza (struct stream *stream, int strict) {PROCESS(double, uint64_t, 64);}
 static void process_xyzaf(struct stream *stream, int strict) {PROCESS(float, uint32_t, 32);}

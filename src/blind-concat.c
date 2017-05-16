@@ -1,12 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#if defined(HAVE_EPOLL)
-# include <sys/epoll.h>
-#endif
-#include <sys/mman.h>
-#include <string.h>
+#include "common.h"
 
 USAGE("[-o output-file [-j jobs]] first-stream ... last-stream")
 
@@ -97,9 +90,9 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 #else
 	struct epoll_event *events;
 	struct stream *streams;
-	size_t *ptrs;
+	off_t *ptrs, ptr;
 	char head[STREAM_HEAD_MAX];
-	size_t ptr, frames = 0, next = 0, j;
+	size_t frames = 0, next = 0, j;
 	ssize_t headlen;
 	int fd, i, n, pollfd;
 
@@ -123,14 +116,14 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 	SPRINTF_HEAD_ZN(head, frames, streams->width, streams->height, streams->pixfmt, &headlen);
 
 	echeck_dimensions(streams, WIDTH | HEIGHT, NULL);
-	ptr = (size_t)headlen;
+	ptr = (off_t)headlen;
 	for (i = 0; i < argc; i++) {
 		ptrs[i] = ptr;
-		ptr += streams->frames * streams->frame_size;
+		ptr += (off_t)streams->frames * (off_t)streams->frame_size;
 	}
 	if (ftruncate(fd, (off_t)ptr))
 		eprintf("ftruncate %s:", output_file);
-        fadvise_random(fd, (size_t)headlen, 0);
+        fadvise_random(fd, (off_t)headlen, 0);
 
 	pollfd = epoll_create1(0);
 	if (pollfd == -1)
@@ -139,7 +132,7 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 	epwriteall(fd, head, (size_t)headlen, 0, output_file);
 	for (i = 0; i < argc; i++) {
 		epwriteall(fd, streams[i].buf, streams[i].ptr, ptrs[i], output_file);
-		ptrs[i] += streams[i].ptr;
+		ptrs[i] += (off_t)(streams[i].ptr);
 		streams[i].ptr = 0;
 	}
 
@@ -155,14 +148,14 @@ concat_to_file_parallel(int argc, char *argv[], char *output_file, size_t jobs)
 	jobs = j;
 
 	while (jobs) {
-		n = epoll_wait(pollfd, events, jobs, -1);
+		n = epoll_wait(pollfd, events, (int)jobs, -1);
 		if (n < 0)
 			eprintf("epoll_wait:");
 		for (i = 0; i < n; i++) {
 			j = events[i].data.u64;
 			if (streams[j].ptr || eread_stream(streams + j, SIZE_MAX)) {
 				epwriteall(fd, streams[j].buf, streams[j].ptr, ptrs[j], output_file);
-				ptrs[j] += streams[j].ptr;
+				ptrs[j] += (off_t)(streams[j].ptr);
 				streams[j].ptr = 0;
 				continue;
 			}

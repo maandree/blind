@@ -1,17 +1,12 @@
 /* See LICENSE file for copyright and license details. */
-#include "stream.h"
-#include "util.h"
-
-#include <alloca.h>
-#include <math.h>
-#include <string.h>
+#include "common.h"
 
 USAGE("[-s]")
 
 #define USING_BINARY32 0
 #define USING_BINARY64 0
 
-#define CONV(ITYPE, SITYPE, OTYPE, EXPONENT, HA2EXPONENT, FRACTION, SUFFIX)\
+#define CONV(ITYPE, SITYPE, OTYPE, EXPONENT, HA2EXPONENT, FRACTION)\
 	do {\
 		static int cache_i = 0;\
 		static ITYPE cache_in[] = {0, 0, 0, 0};\
@@ -24,6 +19,7 @@ USAGE("[-s]")
 			cache_i &= 3;\
 			return ret;\
 		}\
+		cache_in[cache_i] = portable;\
 		signb = portable >> (EXPONENT + FRACTION);\
 		exponent = (portable >> FRACTION) ^ (signb << EXPONENT);\
 		fraction = portable & (((ITYPE)1 << FRACTION) - 1);\
@@ -33,8 +29,8 @@ USAGE("[-s]")
 			} else {\
 				sexponent = 1 - HA2EXPONENT - FRACTION;\
 				dexponent = (OTYPE)sexponent;\
-				ret = (ITYPE)fraction;\
-				ret *= pow##SUFFIX((OTYPE)2.0, dexponent);\
+				ret = (OTYPE)fraction;\
+				ret *= pow((OTYPE)2.0, dexponent);\
 			}\
 		} else if (exponent + 1 == (ITYPE)1 << EXPONENT) {\
 			ret = (OTYPE)(fraction ? NAN : INFINITY);\
@@ -43,8 +39,8 @@ USAGE("[-s]")
 			sexponent = (SITYPE)exponent;\
 			sexponent -= HA2EXPONENT + FRACTION;\
 			dexponent = (OTYPE)sexponent;\
-			ret = (ITYPE)fraction;\
-			ret *= pow##SUFFIX((OTYPE)2.0, dexponent);\
+			ret = (OTYPE)fraction;\
+			ret *= pow((OTYPE)2.0, dexponent);\
 		}\
 		ret = signb ? -ret : ret;\
 		cache_out[cache_i++] = ret;\
@@ -78,8 +74,8 @@ USAGE("[-s]")
 			eprintf("%s: incomplete frame\n", stream->file);\
 	} while (0)
 
-static double conv_double(uint64_t portable) {CONV(uint64_t, int64_t, double, 11, 1023, 52,);}
-static float  conv_float (uint32_t portable) {CONV(uint32_t, int32_t, float, 8, 127, 23, f);}
+static double conv_double(uint64_t portable) {CONV(uint64_t, int64_t, double, 11, 1023, 52);}
+static float  conv_float (uint32_t portable) {CONV(uint32_t, int32_t, float, 8, 127, 23);}
 
 static void process_xyza (struct stream *stream, int strict) {PROCESS(uint64_t, double, 64);}
 static void process_xyzaf(struct stream *stream, int strict) {PROCESS(uint32_t, float, 32);}
