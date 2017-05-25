@@ -114,6 +114,9 @@ UTILITIES
        blind-stack(1)
               Overlay videos
 
+       blind-tee(1)
+              /dev/fd/ aware tee(1) implementation
+
        blind-time-blur(1)
               Draw new frames on top of old frames with partial alpha
 

@@ -35,6 +35,7 @@ BIN =\
 	blind-skip-pattern\
 	blind-split\
 	blind-stack\
+	blind-tee\
 	blind-time-blur\
 	blind-to-image\
 	blind-to-named\
