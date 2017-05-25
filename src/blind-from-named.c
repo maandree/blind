@@ -76,7 +76,7 @@ main(int argc, char *argv[])
 	struct sockaddr_un addr;
 	int abstract = 0;
 	int filedes = -1;
-	int tries = 10;
+	int tries = 11;
 	int sockfd, fd;
 
 	ARGBEGIN {
@@ -87,7 +87,7 @@ main(int argc, char *argv[])
 		filedes = etoi_flag('f', UARGF(), 0, INT_MAX);
 		break;
 	case 't':
-		tries = etoi_flag('t', UARGF(), 1, INT_MAX);
+		tries = etoi_flag('t', UARGF(), 0, INT_MAX - 1) + 1;
 		break;
 	default:
 		usage();
@@ -95,7 +95,7 @@ main(int argc, char *argv[])
 	if (argc < 1 || (filedes >= 0 && argc > 1))
 		usage();
 	if (argc > 0 && filedes < 0)
-		filedes = 0;
+		filedes = STDIN_FILENO;
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;

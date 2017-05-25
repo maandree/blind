@@ -48,6 +48,9 @@ UTILITIES
        blind-from-image(1)
               Convert an image to a frame
 
+       blind-from-named(1)
+              Receive a file descriptor
+
        blind-from-portable(1)
               Convert a video from a portable format to a processable format
 
@@ -116,6 +119,9 @@ UTILITIES
 
        blind-to-image(1)
               Convert a frame to an image
+
+       blind-to-named(1)
+              Send a file descriptor
 
        blind-to-portable(1)
               Convert a video to a portable format
