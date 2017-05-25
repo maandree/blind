@@ -20,7 +20,13 @@
 # include <sys/epoll.h>
 #endif
 #include <sys/mman.h>
+#if defined(HAVE_SENDFILE)
+# include <sys/sendfile.h>
+#endif
 #include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/uio.h>
+#include <sys/un.h>
 #include <sys/wait.h>
 #include <alloca.h>
 #include <ctype.h>
@@ -35,3 +41,19 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
+
+#ifndef CMSG_ALIGN
+# ifdef __sun__
+#  define CMSG_ALIGN _CMSG_DATA_ALIGN
+# else
+#  define CMSG_ALIGN(len) (((len) + sizeof(long) - 1) & ~(sizeof(long) - 1))
+# endif
+#endif
+
+#ifndef CMSG_SPACE
+# define CMSG_SPACE(len) (CMSG_ALIGN(sizeof(struct cmsghdr)) + CMSG_ALIGN(len))
+#endif
+
+#ifndef CMSG_LEN
+# define CMSG_LEN(len) (CMSG_ALIGN(sizeof(struct cmsghdr)) + (len))
+#endif
