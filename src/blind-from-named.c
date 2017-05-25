@@ -92,9 +92,9 @@ main(int argc, char *argv[])
 	default:
 		usage();
 	} ARGEND;
-	if (argc < 1 || (filedes >= 0 && argc > 1))
+	if (argc < 1 || (filedes >= 0 && argc == 1))
 		usage();
-	if (argc > 0 && filedes < 0)
+	if (filedes < 0)
 		filedes = STDIN_FILENO;
 
 	memset(&addr, 0, sizeof(addr));
