@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-b] bottom-stream ... top-stream")
+USAGE("[-bs] bottom-stream ... top-stream")
 
 #define PROCESS(TYPE, BLEND)\
 	do {\
@@ -42,12 +42,15 @@ main(int argc, char *argv[])
 {
 	struct stream *streams;
 	size_t n_streams, i, frames = 0, tmp;
-	int blend = 0;
+	int blend = 0, shortest = 0;
 	void (*process)(struct stream *streams, size_t n_streams, size_t n);
 
 	ARGBEGIN {
 	case 'b':
 		blend = 1;
+		break;
+	case 's':
+		shortest = 1;
 		break;
 	default:
 		usage();
@@ -61,7 +64,7 @@ main(int argc, char *argv[])
 
 	for (i = 0; i < n_streams; i++) {
 		eopen_stream(streams + i, argv[i]);
-		if (streams[i].frames > frames)
+		if (shortest ? (streams[i].frames && streams[i].frames) < frames : streams[i].frames > frames)
 			frames = streams[i].frames;
 	}
 
@@ -76,7 +79,7 @@ main(int argc, char *argv[])
 	fprint_stream_head(stdout, streams);
 	efflush(stdout, "<stdout>");
 	streams->frames = tmp;
-	process_multiple_streams(streams, n_streams, STDOUT_FILENO, "<stdout>", process);
+	process_multiple_streams(streams, n_streams, STDOUT_FILENO, "<stdout>", shortest, process);
 
 	free(streams);
 	return 0;

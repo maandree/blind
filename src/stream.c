@@ -398,7 +398,7 @@ nprocess_two_streams(int status, struct stream *left, struct stream *right, int 
 
 void
 nprocess_multiple_streams(int status, struct stream *streams, size_t n_streams, int output_fd, const char* output_fname,
-			  void (*process)(struct stream *streams, size_t n_streams, size_t n))
+			  int shortest, void (*process)(struct stream *streams, size_t n_streams, size_t n))
 {
 	size_t closed, i, j, n;
 
@@ -411,6 +411,8 @@ nprocess_multiple_streams(int status, struct stream *streams, size_t n_streams, 
 			if (streams[i].ptr < sizeof(streams->buf) && !enread_stream(status, streams + i, SIZE_MAX)) {
 				close(streams[i].fd);
 				streams[i].fd = -1;
+				if (shortest)
+					return;
 			}
 			if (streams[i].ptr && streams[i].ptr < n)
 				n = streams[i].ptr;

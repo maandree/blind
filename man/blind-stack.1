@@ -3,7 +3,7 @@
 blind-stack - Overlay videos
 .SH SYNOPSIS
 .B blind-stack
-[-b]
+[-bs]
 .IR bottom-stream
 .RI "... " top-stream
 .SH DESCRIPTION
@@ -30,6 +30,10 @@ Instead of drawing the videos on top of each
 other, for each pixel in each frame, print the
 average colour for each input stream's
 corresponding pixel and frame.
+.TP
+.B -s
+The output video will be as long as the shortest
+input video, rather than as the longest.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-dissolve (1),

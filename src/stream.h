@@ -90,7 +90,7 @@ void nprocess_two_streams(int status, struct stream *left, struct stream *right,
 			  void (*process)(struct stream *left, struct stream *right, size_t n));
 
 void nprocess_multiple_streams(int status, struct stream *streams, size_t n_streams, int output_fd, const char* output_fname,
-			       void (*process)(struct stream *streams, size_t n_streams, size_t n));
+			       int shortest, void (*process)(struct stream *streams, size_t n_streams, size_t n));
 
 void nprocess_each_frame_two_streams(int status, struct stream *left, struct stream *right, int output_fd, const char* output_fname,
 				     void (*process)(char *restrict output, char *restrict lbuf, char *restrict rbuf,
