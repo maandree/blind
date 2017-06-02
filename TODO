@@ -1,3 +1,9 @@
+Write manpages for:
+	blind-disperse		inverse of blind-interleave
+					Useful for processing a video on multiple computers
+	blind-split-rows	split stream into multiple streams by splitting video horizontally
+	blind-split-cols	split stream into multiple streams by splitting video vertically
+
 blind-transform		affine transformation by matrix multiplication, -t for tiling, -s for
 				improve quality on downscaling (pixels' neighbours must not change).
 blind-chroma-key	replace a chroma with transparency.
@@ -17,8 +23,6 @@ blind-affine-colour	apply an affine transformation to the colour of each pixel,
 blind-invert-chroma	invert the chroma
 blind-from-sent		convert a sent presentation to a one-frame-per-slide blind video.
 blind-interleave	framewise interleave videos
-blind-disperse		inverse of blind-interleave
-				Useful for processing a video on multiple computers
 
 blind-kirsch		https://en.wikipedia.org/wiki/Kirsch_operator
 blind-gaussian-noise	https://en.wikipedia.org/wiki/Gaussian_noise
@@ -44,8 +48,6 @@ blind-mean		mean of multiple streams
 			https://en.wikipedia.org/wiki/Logarithmic_mean
 			https://en.wikipedia.org/wiki/Stolarsky_mean
 blind-temporal-arithm	blind-arithm but over all frames in a video instead of over all streams
-blind-split-rows	split stream into multiple streams by splitting video horizontally
-blind-split-cols	split stream into multiple streams by splitting video vertically
 blind-cat-rows		merge video by vertically stacking streams (inverse of blind-split-rows)
 blind-cat-cols		merge video by putting streams beside each other (inverse of blind-split-cols)
 

@@ -5,21 +5,35 @@
 
 #define STREAM_HEAD_MAX (3 * INTSTRLEN(size_t) + sizeof(((struct stream *)0)->pixfmt) + 10)
 
+#define XPRINTF_HEAD_FMT "%zu %zu %zu %s\n%cuivf"
+#define XPRINTF_HEAD_ARGS(FRAMES, WIDTH, HEIGHT, PIXFMT)\
+	(size_t)(FRAMES), (size_t)(WIDTH), (size_t)(HEIGHT), (PIXFMT), 0
+
+#define XPRINTF_HEAD_FMT_FMT(FFRAMES, FWIDTH, FHEIGHT)\
+	FFRAMES" "FWIDTH" "FHEIGHT" %s\n%cuivf"
+#define XPRINTF_HEAD_FMT_ARGS(FRAMES, WIDTH, HEIGHT, PIXFMT)\
+	(FRAMES), (WIDTH), (HEIGHT), (PIXFMT), 0
+
 #define SPRINTF_HEAD_ZN(BUF, FRAMES, WIDTH, HEIGHT, PIXFMT, LENP)\
-	sprintf(BUF, "%zu %zu %zu %s\n%cuivf%zn",\
-		(size_t)(FRAMES), (size_t)(WIDTH), (size_t)(HEIGHT), PIXFMT, 0, LENP)
+	sprintf(BUF, XPRINTF_HEAD_FMT"%zn", XPRINTF_HEAD_ARGS(FRAMES, WIDTH, HEIGHT, PIXFMT), LENP)
 
 #define SPRINTF_HEAD(BUF, FRAMES, WIDTH, HEIGHT, PIXFMT)\
-	sprintf(BUF, "%zu %zu %zu %s\n%cuivf",\
-		(size_t)(FRAMES), (size_t)(WIDTH), (size_t)(HEIGHT), PIXFMT, 0)
+	sprintf(BUF, XPRINTF_HEAD_FMT, XPRINTF_HEAD_ARGS(FRAMES, WIDTH, HEIGHT, PIXFMT))
 
 #define FPRINTF_HEAD(FP, FRAMES, WIDTH, HEIGHT, PIXFMT)\
-	fprintf(FP, "%zu %zu %zu %s\n%cuivf",\
-		(size_t)(FRAMES), (size_t)(WIDTH), (size_t)(HEIGHT), PIXFMT, 0)
+	fprintf(FP, XPRINTF_HEAD_FMT, XPRINTF_HEAD_ARGS(FRAMES, WIDTH, HEIGHT, PIXFMT))
+
+#define DPRINTF_HEAD(FD, FRAMES, WIDTH, HEIGHT, PIXFMT)\
+	dprintf(FD, XPRINTF_HEAD_FMT, XPRINTF_HEAD_ARGS(FRAMES, WIDTH, HEIGHT, PIXFMT))
+
+#define SPRINTF_HEAD_FMT(BUF, FFRAMES, FRAMES, FWIDTH, WIDTH, FHEIGHT, HEIGHT, PIXFMT)\
+	sprintf(BUF, XPRINTF_HEAD_FMT_FMT(FFRAMES, FWIDTH, FHEIGHT), XPRINTF_HEAD_FMT_ARGS(FRAMES, WIDTH, HEIGHT, PIXFMT))
 
 #define FPRINTF_HEAD_FMT(FP, FFRAMES, FRAMES, FWIDTH, WIDTH, FHEIGHT, HEIGHT, PIXFMT)\
-	fprintf(FP, FFRAMES" "FWIDTH" "FHEIGHT" %s\n%cuivf",\
-		FRAMES, WIDTH, HEIGHT, PIXFMT, 0)
+	fprintf(FP, XPRINTF_HEAD_FMT_FMT(FFRAMES, FWIDTH, FHEIGHT), XPRINTF_HEAD_FMT_ARGS(FRAMES, WIDTH, HEIGHT, PIXFMT))
+
+#define DPRINTF_HEAD_FMT(FD, FFRAMES, FRAMES, FWIDTH, WIDTH, FHEIGHT, HEIGHT, PIXFMT)\
+	dprintf(FD, XPRINTF_HEAD_FMT_FMT(FFRAMES, FWIDTH, FHEIGHT), XPRINTF_HEAD_FMT_ARGS(FRAMES, WIDTH, HEIGHT, PIXFMT))
 
 #define einit_stream(...)             eninit_stream(1, __VA_ARGS__)
 #define eopen_stream(...)             enopen_stream(1, __VA_ARGS__)
@@ -33,6 +47,8 @@
 #define eread_frame(...)              enread_frame(1, __VA_ARGS__)
 #define eread_row(...)                enread_row(1, __VA_ARGS__)
 #define esend_frames(...)             ensend_frames(1, __VA_ARGS__)
+#define esend_rows(...)               ensend_rows(1, __VA_ARGS__)
+#define esend_pixels(...)             ensend_pixels(1, __VA_ARGS__)
 #define esend_stream(...)             ensend_stream(1, __VA_ARGS__)
 
 #define process_stream(...)                 nprocess_stream(1, __VA_ARGS__)
@@ -79,6 +95,8 @@ void encheck_compat(int status, const struct stream *a, const struct stream *b);
 const char *get_pixel_format(const char *specified, const char *current);
 int enread_segment(int status, struct stream *stream, void *buf, size_t n);
 size_t ensend_frames(int status, struct stream *stream, int outfd, size_t frames, const char *outfname);
+size_t ensend_rows(int status, struct stream *stream, int outfd, size_t rows, const char *outfname);
+size_t ensend_pixels(int status, struct stream *stream, int outfd, size_t pixels, const char *outfname);
 int ensend_stream(int status, struct stream *stream, int outfd, const char *outfname);
 
 void nprocess_stream(int status, struct stream *stream, void (*process)(struct stream *stream, size_t n));

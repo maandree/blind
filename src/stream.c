@@ -270,8 +270,7 @@ enread_segment(int status, struct stream *stream, void *buf, size_t n)
 size_t
 ensend_frames(int status, struct stream *stream, int outfd, size_t frames, const char *outfname)
 {
-	size_t h, w, p, n;
-	size_t ret = 0;
+	size_t h, w, p, n, ret;
 
 	for (ret = 0; ret < frames; ret++) {
 		for (p = stream->pixel_size; p; p--) {
@@ -291,6 +290,54 @@ ensend_frames(int status, struct stream *stream, int outfd, size_t frames, const
 done:
 	if (p != stream->pixel_size || h != stream->height || w != stream->width)
 		enprintf(status, "%s: incomplete frame", stream->file);
+	return ret;
+}
+
+
+size_t
+ensend_rows(int status, struct stream *stream, int outfd, size_t rows, const char *outfname)
+{
+	size_t w, p, n, ret;
+
+	for (ret = 0; ret < rows; ret++) {
+		for (p = stream->pixel_size; p; p--) {
+			for (w = stream->width; w; w -= n, stream->ptr -= n) {
+				if (!stream->ptr && !enread_stream(status, stream, w))
+					goto done;
+				n = MIN(stream->ptr, w);
+				if (outfd >= 0)
+					enwriteall(status, outfd, stream->buf, n, outfname);
+			}
+		}
+	}
+
+	return ret;
+done:
+	if (p != stream->pixel_size || w != stream->width)
+		enprintf(status, "%s: incomplete row", stream->file);
+	return ret;
+}
+
+
+size_t
+ensend_pixels(int status, struct stream *stream, int outfd, size_t pixels, const char *outfname)
+{
+	size_t p, n, ret;
+
+	for (ret = 0; ret < pixels; ret++) {
+		for (p = stream->pixel_size; p; p -= n, stream->ptr -= n) {
+			if (!stream->ptr && !enread_stream(status, stream, p))
+				goto done;
+			n = MIN(stream->ptr, p);
+			if (outfd >= 0)
+				enwriteall(status, outfd, stream->buf, n, outfname);
+		}
+	}
+
+	return ret;
+done:
+	if (p != stream->pixel_size)
+		enprintf(status, "%s: incomplete pixel", stream->file);
 	return ret;
 }
 

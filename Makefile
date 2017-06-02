@@ -11,6 +11,7 @@ BIN =\
 	blind-crop\
 	blind-cut\
 	blind-decompress\
+	blind-disperse\
 	blind-dissolve\
 	blind-extend\
 	blind-flip\
@@ -34,6 +35,8 @@ BIN =\
 	blind-single-colour\
 	blind-skip-pattern\
 	blind-split\
+	blind-split-cols\
+	blind-split-rows\
 	blind-stack\
 	blind-tee\
 	blind-time-blur\
