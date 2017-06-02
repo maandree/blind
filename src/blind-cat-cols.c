@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("file ...")
+USAGE("stream ...")
 
 int
 main(int argc, char *argv[])

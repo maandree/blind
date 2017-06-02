@@ -1,7 +1,3 @@
-Write manpages for:
-	blind-cat-rows		merge video by vertically stacking streams (inverse of blind-split-rows)
-	blind-cat-cols		merge video by putting streams beside each other (inverse of blind-split-cols)
-
 blind-transform		affine transformation by matrix multiplication, -t for tiling, -s for
 				improve quality on downscaling (pixels' neighbours must not change).
 blind-chroma-key	replace a chroma with transparency.
@@ -61,6 +57,8 @@ bug: blind-stack: cannot use file outside /dev/fd/
 Add [-j jobs] to blind-from-video and blind-to-video.
 
 Add -f (framewise) to blind-repeat
+
+blind-rewrite-head: add support pipes
 
 Generate a header file with the appropriate values for USING_BINARY32, USING_BINARY64.
 long double is slightly faster than long.
