@@ -3,6 +3,8 @@ include $(CONFIGFILE)
 
 BIN =\
 	blind-arithm\
+	blind-cat-cols\
+	blind-cat-rows\
 	blind-colour-ciexyz\
 	blind-colour-srgb\
 	blind-compress\
@@ -22,6 +24,7 @@ BIN =\
 	blind-from-text\
 	blind-from-video\
 	blind-gauss-blur\
+	blind-interleave\
 	blind-invert-luma\
 	blind-make-kernel\
 	blind-next-frame\
