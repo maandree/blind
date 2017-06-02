@@ -11,14 +11,14 @@ blind-split - Split a video, by frame, into multiple videos
 .SH DESCRIPTION
 .B blind-split
 reads a video from stdin and splits into multiple videos.
-Starting from the first frame in stdin, it write a video
+Starting from the first frame in stdin, it writes a video
 to the first specified
 .I file
 until the first specified
 .I end-point
 number of frames have been written.
 .B blind-split
-the proceeds to write the following frames to the next
+then proceeds to write the following frames to the next
 specified
 .B file
 until a total of
@@ -85,6 +85,9 @@ rewrite its head with
 .BR blind-to-video (1),
 .BR blind-cut (1),
 .BR blind-concat (1),
+.BR blind-disperse (1),
+.BR blind-split-cols (1),
+.BR blind-split-rows (1),
 .BR blind-rewrite-head (1)
 .SH AUTHORS
 Mattias Andrée

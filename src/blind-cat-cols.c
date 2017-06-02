@@ -1,26 +1,25 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("(file columns) ...")
+USAGE("file ...")
 
 int
 main(int argc, char *argv[])
 {
 	struct stream *streams;
-	size_t parts, width = 0, *cols, i;
+	size_t width = 0, *cols;
+	int i;
 
-	UNOFLAGS(argc % 2 || !argc);
+	UNOFLAGS(!argc);
 
-	parts   = (size_t)argc / 2;
-	streams = emalloc2(parts, sizeof(*streams));
-	cols    = alloca(parts * sizeof(*cols));
+	streams = emalloc2((size_t)argc, sizeof(*streams));
+	cols    = alloca((size_t)argc * sizeof(*cols));
 
-	for (i = 0; i < parts; i++) {
-		eopen_stream(streams + i, argv[i * 2]);
-		cols[i] = etozu_arg("columns", argv[i * 2 + 1], 1, SIZE_MAX);
+	for (i = 0; i < argc; i++) {
+		eopen_stream(streams + i, argv[i]);
 		if (streams[i].width > SIZE_MAX - width)
 			eprintf("output video is too tall\n");
-		width += streams[i].width;
+		width += cols[i] = streams[i].width;
 		if (i) {
 			streams[i].width = streams->width;
 			echeck_compat(streams, streams + i);
@@ -31,10 +30,10 @@ main(int argc, char *argv[])
 	fprint_stream_head(stdout, streams);
 	efflush(stdout, "<stdout>");
 
-	for (i = 0; i < parts; i++, i = i == parts ? 0 : i)
+	for (i = 0; i < argc; i++, i = i == argc ? 0 : i)
 		if (esend_pixels(streams + i, STDOUT_FILENO, cols[i], "<stdout>") != cols[i])
 			break;
-	for (i = 0; i < parts; i++)
+	for (i = 0; i < argc; i++)
 		close(streams[i].fd);
 
 	free(streams);

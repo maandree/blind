@@ -15,6 +15,12 @@ UTILITIES
        blind-arithm(1)
               Perform simple arithmetic on a video
 
+       blind-cat-cols(1)
+              Place videos side by side
+
+       blind-cat-rows(1)
+              Stack videos vertically
+
        blind-colour-ciexyz(1)
               Convert CIE XYZ for use with blind-single-colour(1)
 
@@ -35,6 +41,9 @@ UTILITIES
 
        blind-dissolve(1)
               Fade a video by chaning it's alpha channel
+
+       blind-disperse(1)
+              Framewise split a video into multiple videos
 
        blind-extend(1)
               Add margins to a video
@@ -62,6 +71,9 @@ UTILITIES
 
        blind-gauss-blur(1)
               Apply Gaussian blur to a video
+
+       blind-interleave(1)
+              Framewise interleave videos
 
        blind-invert-luma(1)
               Invert the luminosity of a video
@@ -110,6 +122,12 @@ UTILITIES
 
        blind-split(1)
               Split a video, by frame, into multiple videos
+
+       blind-split-cols(1)
+              Split a video vertically into multiple videos
+
+       blind-split-rows(1)
+              Split a video horizontally into multiple videos
 
        blind-stack(1)
               Overlay videos

@@ -1,9 +1,4 @@
 Write manpages for:
-	blind-interleave	framewise interleave videos
-	blind-disperse		inverse of blind-interleave
-					Useful for processing a video on multiple computers
-	blind-split-rows	split stream into multiple streams by splitting video horizontally
-	blind-split-cols	split stream into multiple streams by splitting video vertically
 	blind-cat-rows		merge video by vertically stacking streams (inverse of blind-split-rows)
 	blind-cat-cols		merge video by putting streams beside each other (inverse of blind-split-cols)
 
