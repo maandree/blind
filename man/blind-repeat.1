@@ -3,7 +3,8 @@
 blind-repeat - Repeat a video
 .SH SYNOPSIS
 .B blind-repeat
-.RI ( count
+([-f]
+.I count
 |
 .RB ' inf ')
 .I file
@@ -33,12 +34,25 @@ will read stdin into memory; you are highly discouraged
 from using this unless stdin is a single frame, or known
 to only be a very small number of frames, is it can
 potentially use all of the computer's memory.
+.SH OPTIONS
+.TP
+.B -f
+Repeat each frames
+.B count
+times before copying the next frame, rather than
+copying the entire video
+.B count
+times.
 .SH REQUIREMENTS
 .B blind-repeat
 requires enough free memory to load the entire video
 into memory if it is read from stdin. A frame requires
 32 bytes per pixel it contains. So for a 720p video at
 25 Hz, 1 GB is reached in just below 1.5 seconds.
+However, if
+.B -f
+is used, only a full video frame will be loaded into
+memory rather than an entire video, if reading from stdin.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-from-image (1)

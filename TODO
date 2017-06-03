@@ -56,8 +56,6 @@ bug: blind-stack: cannot use file outside /dev/fd/
 
 Add [-j jobs] to blind-from-video and blind-to-video.
 
-Add -f (framewise) to blind-repeat
-
 Generate a header file with the appropriate values for USING_BINARY32, USING_BINARY64.
 long double is slightly faster than long.
 long double (xyza q) could be added as another format.
