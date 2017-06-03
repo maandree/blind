@@ -58,8 +58,6 @@ Add [-j jobs] to blind-from-video and blind-to-video.
 
 Add -f (framewise) to blind-repeat
 
-blind-rewrite-head: add support pipes
-
 Generate a header file with the appropriate values for USING_BINARY32, USING_BINARY64.
 long double is slightly faster than long.
 long double (xyza q) could be added as another format.

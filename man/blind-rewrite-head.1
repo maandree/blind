@@ -57,10 +57,22 @@ This of course means that
 cannot be used as there is not way to know
 the geometry or format of the video if it does
 not have a head.
+.SH RETIONALE
+.B blind-rewrite-head
+only support regular files because combining
+.BR blind-read-head (1),
+.BR blind-write-head (1),
+and
+.BR cat (1)
+is sufficient for doing the same operation on pipes,
+but not on regular files that are too large to store
+two copies of on disc.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-from-video (1),
-.BR blind-split (1)
+.BR blind-split (1),
+.BR blind-read-head (1),
+.BR blind-write-head (1)
 .SH AUTHORS
 Mattias Andrée
 .RI < maandree@kth.se >
