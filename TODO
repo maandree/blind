@@ -41,6 +41,7 @@ blind-mean		mean of multiple streams
 			https://en.wikipedia.org/wiki/Logarithmic_mean
 			https://en.wikipedia.org/wiki/Stolarsky_mean
 blind-temporal-arithm	blind-arithm but over all frames in a video instead of over all streams
+blind-apply-icc		apply ICC profile to video
 
 blind-from-video: add options to:
 	* just run ffmpeg just print the output
