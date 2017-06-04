@@ -16,6 +16,7 @@ BIN =\
 	blind-disperse\
 	blind-dissolve\
 	blind-extend\
+	blind-find-rectangle\
 	blind-flip\
 	blind-flop\
 	blind-from-image\
