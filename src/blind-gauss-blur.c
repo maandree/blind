@@ -16,7 +16,7 @@ static size_t spread = 0;
  * This is not a regular simple gaussian blur implementation.
  * This implementation is able to apply different levels of
  * blur on different pixels. It's therefore written a bit
- * oldly. Instead of going through each pixel and calculate
+ * oddly. Instead of going through each pixel and calculate
  * the new value for each pixel, it goes through each pixel
  * and smears it out to the other pixels.
  */
