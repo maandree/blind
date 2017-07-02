@@ -8,6 +8,7 @@ static int logarithmic = 0;
 static size_t width = 0;
 static size_t height = 0;
 static int with_params;
+static int with_vector;
 
 
 #define PROCESS(TYPE, SUFFIX)\
@@ -18,6 +19,7 @@ static int with_params;
 		pixel_t buf[BUFSIZ / sizeof(pixel_t)];\
 		TYPE *params, x1, y1, x2, y2, b, r, u, v;\
 		TYPE x, y, a = 0, e = 1, p = 1, k = 1, ep = 1;\
+		TYPE x3 = 1, y3 = 0, rd = 1, P, R, Rx, Ry, Pe = 2, Re = 2, PRe = 0.5;\
 		size_t ix, iy, ptr = 0;\
 		for (;;) {\
 			while (stream->ptr < stream->frame_size) {\
@@ -31,11 +33,22 @@ static int with_params;
 			y1 = (params)[1];\
 			x2 = (params)[4];\
 			y2 = (params)[5];\
+			if (with_vector) {\
+				x3 = (params)[8];\
+				y3 = (params)[9];\
+				Pe = (params)[12];\
+				Re = (params)[13];\
+				rd = (params)[14];\
+				PRe = 1 / sqrt(Pe * Re);\
+				b = sqrt(x3 * x3 + y3 * y3);\
+				x3 /= b;\
+				y3 /= b;\
+			}\
 			if (with_params) {\
-				a = (params)[8];\
-				e = (params)[9];\
-				p = (params)[10];\
-				k = (params)[11];\
+				a = (params)[with_vector ? 16 : 8];\
+				e = (params)[with_vector ? 17 : 9];\
+				p = (params)[with_vector ? 18 : 10];\
+				k = (params)[with_vector ? 19 : 11];\
 				ep = 1 / (e * p);\
 			}\
 			memmove(stream->buf, stream->buf + stream->frame_size,\
@@ -59,7 +72,17 @@ static int with_params;
 					v -= u;\
 					v += 4 * (TYPE)M_PI;\
 					v = mod(v, 2 * (TYPE)M_PI);\
-					r = sqrt(x * x + y * y);\
+					if (!with_vector) {\
+						r = sqrt(x * x + y * y);\
+					} else {\
+						P = x * x3 + y * y3;\
+						Rx = x - P * x3;\
+						Ry = y - P * y3;\
+						R = sqrt(Rx * Rx + Ry * Ry) / rd;\
+						P = pow(abs(P), Pe);\
+						R = pow(abs(R), Re);\
+						r = pow(P + R, PRe);\
+					}\
 					r -= a;\
 					if (!logarithmic) {\
 						r = pow(r / b, ep);\
@@ -118,12 +141,13 @@ main(int argc, char *argv[])
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
-	if (stream.width > 3 || stream.height > 3 ||
+	if (stream.width > 5 || stream.height > 5 ||
 	    stream.width * stream.height < 2 ||
-	    stream.width * stream.height > 3)
-		eprintf("<stdin>: each frame must contain exactly 2 or 3 pixels\n");
+	    stream.width * stream.height > 5)
+		eprintf("<stdin>: each frame must contain exactly 2, 3, 4, or 5 pixels\n");
 
-	with_params = stream.width * stream.height == 3;
+	with_params = (stream.width * stream.height) & 2;
+	with_vector = stream.width * stream.height > 3;
 
 	stream.width = width;
 	stream.height = height;
