@@ -9,7 +9,9 @@ BIN =\
 	blind-colour-srgb\
 	blind-compress\
 	blind-concat\
+	blind-cone-gradient\
 	blind-convert\
+	blind-coordinate-field\
 	blind-crop\
 	blind-cross-product\
 	blind-cut\
@@ -17,6 +19,7 @@ BIN =\
 	blind-disperse\
 	blind-dissolve\
 	blind-dot-product\
+	blind-double-sinus-wave\
 	blind-extend\
 	blind-find-rectangle\
 	blind-flip\
@@ -29,26 +32,35 @@ BIN =\
 	blind-gauss-blur\
 	blind-interleave\
 	blind-invert-luma\
+	blind-linear-gradient\
 	blind-make-kernel\
 	blind-next-frame\
 	blind-norm\
 	blind-quaternion-product\
 	blind-premultiply\
+	blind-radial-gradient\
 	blind-read-head\
 	blind-repeat\
 	blind-reverse\
 	blind-rewrite-head\
+	blind-round-wave\
+	blind-sawtooth-wave\
 	blind-set-alpha\
 	blind-set-luma\
 	blind-set-saturation\
 	blind-single-colour\
+	blind-sinc-wave\
+	blind-sinus-wave\
 	blind-skip-pattern\
+	blind-spiral-gradient\
 	blind-split\
 	blind-split-cols\
 	blind-split-rows\
+	blind-square-gradient\
 	blind-stack\
 	blind-tee\
 	blind-time-blur\
+	blind-triangular-wave\
 	blind-to-image\
 	blind-to-named\
 	blind-to-portable\
