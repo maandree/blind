@@ -93,6 +93,9 @@ UTILITIES
        blind-next-frame(1)
               Extracts the next frame from a video
 
+       blind-norm(1)
+              Calculate the norm of colours in a video
+
        blind-premultiply(1)
               Premultiply the alpha channel of a video
 

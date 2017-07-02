@@ -31,6 +31,7 @@ BIN =\
 	blind-invert-luma\
 	blind-make-kernel\
 	blind-next-frame\
+	blind-norm\
 	blind-quaternion-product\
 	blind-premultiply\
 	blind-read-head\
