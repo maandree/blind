@@ -17,6 +17,20 @@ nnpowf(float a, float b)
 	return neg ? -a : a;
 }
 
+static inline double
+posmod(double a, double b)
+{
+	double x = fmod(a, b);
+	return x < 0 ? x + b : x;
+}
+
+static inline float
+posmodf(float a, float b)
+{
+	float x = fmodf(a, b);
+	return x < 0 ? x + b : x;
+}
+
 #define GENERIC(TYPE, FUNC, ...)\
 	TYPE:           FUNC(__VA_ARGS__),\
 	TYPE *:         FUNC(__VA_ARGS__),\
@@ -52,6 +66,8 @@ nnpowf(float a, float b)
 #define g_isinf(...)     MATH_GENERIC_1(isinf,    __VA_ARGS__)
 #define g_isfinite(...)  MATH_GENERIC_1(isfinite, __VA_ARGS__)
 #define nnpow(...)       MATH_GENERIC_N(nnpow,    __VA_ARGS__)
+#define mod(...)         MATH_GENERIC_N(fmod,     __VA_ARGS__)
+#define posmod(...)      MATH_GENERIC_N(posmod,   __VA_ARGS__)
 
 #define srgb_encode(...) BLIND_GENERIC_1(srgb_encode, __VA_ARGS__)
 #define srgb_decode(...) BLIND_GENERIC_1(srgb_decode, __VA_ARGS__)

@@ -16,6 +16,7 @@ typedef void (*process_func)(struct stream *left, struct stream *right, size_t n
 	X(sub, *lh -= rh,                  PIXFMT, TYPE)\
 	X(mul, *lh *= rh,                  PIXFMT, TYPE)\
 	X(div, *lh /= rh,                  PIXFMT, TYPE)\
+	X(mod, *lh = posmod(*lh, rh),      PIXFMT, TYPE)\
 	X(exp, *lh = pow(*lh, rh),         PIXFMT, TYPE)\
 	X(log, *lh = log2(*lh) / log2(rh), PIXFMT, TYPE)\
 	X(min, *lh = MIN(*lh, rh),         PIXFMT, TYPE)\
