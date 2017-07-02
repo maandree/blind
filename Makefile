@@ -11,10 +11,12 @@ BIN =\
 	blind-concat\
 	blind-convert\
 	blind-crop\
+	blind-cross-product\
 	blind-cut\
 	blind-decompress\
 	blind-disperse\
 	blind-dissolve\
+	blind-dot-product\
 	blind-extend\
 	blind-find-rectangle\
 	blind-flip\
@@ -29,6 +31,8 @@ BIN =\
 	blind-invert-luma\
 	blind-make-kernel\
 	blind-next-frame\
+	blind-quaternion-product\
+	blind-premultiply\
 	blind-read-head\
 	blind-repeat\
 	blind-reverse\
@@ -51,6 +55,8 @@ BIN =\
 	blind-to-video\
 	blind-translate\
 	blind-transpose\
+	blind-unpremultiply\
+	blind-vector-projection\
 	blind-write-head\
 	blind-kernel\
 	blind-temporal-mean

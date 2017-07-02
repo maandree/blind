@@ -64,6 +64,13 @@ long double (xyza q) could be added as another format.
 unsigned char (xyza 8) could be added as another format, it's probably good for previewing
 
 
+UNTESTED:
+	blind-dot-product
+	blind-cross-product
+	blind-quaternion-product
+	blind-vector-projection
+
+
 HELP REQUIRED:
 	blind-z-map		create a Z-map video from two or more videos
 	blind-track		track the movement of a point

@@ -33,11 +33,17 @@ UTILITIES
        blind-convert(1)
               Change pixel format of a video
 
+       blind-cross-product(1)
+              Calculate the cross product of colours in a video
+
        blind-crop(1)
               Extract subframes for all frames
 
        blind-cut(1)
               Retain consecutive frames
+
+       blind-dot-product(1)
+              Calculate the dot product of colours in a video
 
        blind-dissolve(1)
               Fade a video by chaning it's alpha channel
@@ -86,6 +92,12 @@ UTILITIES
 
        blind-next-frame(1)
               Extracts the next frame from a video
+
+       blind-premultiply(1)
+              Premultiply the alpha channel of a video
+
+       blind-quaternion-product(1)
+              Calculate the quaternion product of colours in a video
 
        blind-read-head(1)
               Reads the head from a video
@@ -161,6 +173,12 @@ UTILITIES
 
        blind-transpose(1)
               Transpose a video
+
+       blind-unpremultiply(1)
+              Unpremultiply the alpha channel of a video
+
+       blind-vector-projection(1)
+              Calculate the projection or rejection of colours in a video
 
        blind-write-head(1)
               Writes the head of a video
