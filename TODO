@@ -52,6 +52,8 @@ blind-from-video: add options to:
 	  print to stdout (up to user to direct to /dev/null
 	  for discarding)
 
+blind-cone-gradient: add ability to make gradient superelliptic
+
 blind-arithm: add support for multiple streams
 
 bug: blind-stack: cannot use file outside /dev/fd/
