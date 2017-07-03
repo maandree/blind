@@ -122,7 +122,7 @@ readall(int fd, void *buf, size_t n)
 			break;
 		ptr += (size_t)r;
 	}
-	return r;
+	return ptr;
 }
 
 int
