@@ -119,13 +119,11 @@ main(int argc, char *argv[])
 			eprintf("%s: frame is too wide\n", stream.file);
 		if (stream.height > UINT32_MAX)
 			eprintf("%s: frame is too tall\n", stream.file);
-		printf("farbfeld");
-		memmove(stream.buf + 8, stream.buf, stream.ptr);
-		stream.ptr += 8;
 		width = htonl(width);
 		height = htonl(height);
-		memcpy(stream.buf + 0, &width, 4);
-		memcpy(stream.buf + 4, &height, 4);
+		ewriteall(STDOUT_FILENO, "farbfeld", 8, "<stdout>");
+		ewriteall(STDOUT_FILENO, &width,     4, "<stdout>");
+		ewriteall(STDOUT_FILENO, &height,    4, "<stdout>");
 	} else {
 		printf("P7\n"
 		       "WIDTH %zu\n"
@@ -134,8 +132,8 @@ main(int argc, char *argv[])
 		       "MAXVAL %llu\n"
 		       "TUPLTYPE RGB_ALPHA\n"
 		       "ENDHDR\n", stream.width, stream.height, max);
+		efflush(stdout, "<stdout>");
 	}
-	efflush(stdout, "<stdout>");
 
 	process_stream(&stream, process);
 	return 0;
