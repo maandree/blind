@@ -44,18 +44,22 @@ static int with_multiplier = 0;
 				y = (TYPE)iy - y1;\
 				for (ix = 0; ix < width; ix++) {\
 					x = (TYPE)ix - x1;\
-					v = atan2(y, x);\
-					v -= u;\
-					v += 2 * (TYPE)M_PI;\
-					v = mod(v, 2 * (TYPE)M_PI);\
-					v /= 2 * (TYPE)M_PI;\
-					if (anticlockwise)\
-						v = 1 - v;\
-					v *= m;\
-					if (symmetric) {\
-						v = mod(2 * v, (TYPE)2);\
-						if (v > 1)\
-							v = 2 - v;\
+					if (!x && !y) {\
+						v = 0.5;\
+					} else {\
+						v = atan2(y, x);\
+						v -= u;\
+						v += 2 * (TYPE)M_PI;\
+						v = mod(v, 2 * (TYPE)M_PI);\
+						v /= 2 * (TYPE)M_PI;\
+						if (anticlockwise)\
+							v = 1 - v;\
+						v *= m;\
+						if (symmetric) {\
+							v = mod(2 * v, (TYPE)2);\
+							if (v > 1)\
+								v = 2 - v;\
+						}\
 					}\
 					buf[ptr][0] = buf[ptr][1] = buf[ptr][2] = buf[ptr][3] = v;\
 					if (++ptr == ELEMENTSOF(buf)) {\
