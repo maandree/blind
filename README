@@ -156,8 +156,6 @@ UTILITIES
        blind-sine-wave(1)
               Apply sine-wave repetition to gradient
 
-TODO blind-sinc-wave
-
        blind-sinc-wave(1)
               Apply cardinal sine-wave repetition to gradient
 
