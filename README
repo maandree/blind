@@ -30,26 +30,35 @@ UTILITIES
        blind-concat(1)
               Concatenate videos
 
+       blind-cone-gradient(1)
+              Generate a video with a cone gradient
+
        blind-convert(1)
               Change pixel format of a video
 
-       blind-cross-product(1)
-              Calculate the cross product of colours in a video
+       blind-coordinate-field(1)
+              Generate a video where each pixel indicate their position
 
        blind-crop(1)
               Extract subframes for all frames
 
+       blind-cross-product(1)
+              Calculate the cross product of colours in a video
+
        blind-cut(1)
               Retain consecutive frames
 
-       blind-dot-product(1)
-              Calculate the dot product of colours in a video
+       blind-disperse(1)
+              Framewise split a video into multiple videos
 
        blind-dissolve(1)
               Fade a video by chaning it's alpha channel
 
-       blind-disperse(1)
-              Framewise split a video into multiple videos
+       blind-dot-product(1)
+              Calculate the dot product of colours in a video
+
+       blind-double-sine-wave(1)
+              Apply double-sine-wave repetition to gradient
 
        blind-extend(1)
               Add margins to a video
@@ -90,6 +99,9 @@ UTILITIES
        blind-make-kernel(1)
               Create a custom convolution matrix
 
+       blind-linear-gradient(1)
+              Generate a video with a linear gradient
+
        blind-next-frame(1)
               Extracts the next frame from a video
 
@@ -101,6 +113,9 @@ UTILITIES
 
        blind-quaternion-product(1)
               Calculate the quaternion product of colours in a video
+
+       blind-radial-gradient(1)
+              Generate a video with a radial gradient
 
        blind-read-head(1)
               Reads the head from a video
@@ -123,6 +138,12 @@ UTILITIES
        blind-rotate-270(1)
               Rotate a video 270 degrees clockwise
 
+       blind-round-wave(1)
+              Apply round wave repetition to gradient
+
+       blind-sawtooth-wave(1)
+              Apply sawtooth-wave repetition to gradient
+
        blind-set-alpha(1)
               Multiply the alpha channel of a video
 
@@ -132,11 +153,25 @@ UTILITIES
        blind-set-saturation(1)
               Multiply the saturation of a video
 
+       blind-sine-wave(1)
+              Apply sine-wave repetition to gradient
+
+TODO blind-sinc-wave
+
+       blind-sinc-wave(1)
+              Apply cardinal sine-wave repetition to gradient
+
        blind-single-colour(1)
               Generate a single-colour video
 
+       blind-sine-wave(1)
+              Apply sine-wave repetition to gradient
+
        blind-skip-pattern(1)
               Skips frames in a video according to pattern
+
+       blind-spiral-gradient(1)
+              Generate a video with a spiral gradient
 
        blind-split(1)
               Split a video, by frame, into multiple videos
@@ -146,6 +181,9 @@ UTILITIES
 
        blind-split-rows(1)
               Split a video horizontally into multiple videos
+
+       blind-square-gradient(1)
+              Generate a video with a square gradient
 
        blind-stack(1)
               Overlay videos
@@ -176,6 +214,9 @@ UTILITIES
 
        blind-transpose(1)
               Transpose a video
+
+       blind-triangular-wave(1)
+              Apply triangular wave repetition to gradient
 
        blind-unpremultiply(1)
               Unpremultiply the alpha channel of a video

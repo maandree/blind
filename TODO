@@ -70,6 +70,7 @@ UNTESTED:
 	blind-cross-product
 	blind-quaternion-product
 	blind-vector-projection
+	blind-coordinate-field
 
 
 HELP REQUIRED:

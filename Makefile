@@ -19,7 +19,7 @@ BIN =\
 	blind-disperse\
 	blind-dissolve\
 	blind-dot-product\
-	blind-double-sinus-wave\
+	blind-double-sine-wave\
 	blind-extend\
 	blind-find-rectangle\
 	blind-flip\
@@ -50,7 +50,7 @@ BIN =\
 	blind-set-saturation\
 	blind-single-colour\
 	blind-sinc-wave\
-	blind-sinus-wave\
+	blind-sine-wave\
 	blind-skip-pattern\
 	blind-spiral-gradient\
 	blind-split\
