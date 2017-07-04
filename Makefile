@@ -21,6 +21,7 @@ BIN =\
 	blind-dot-product\
 	blind-double-sine-wave\
 	blind-extend\
+	blind-extract-alpha\
 	blind-find-rectangle\
 	blind-flip\
 	blind-flop\

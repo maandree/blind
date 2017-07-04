@@ -88,6 +88,7 @@ void enopen_stream(int status, struct stream *stream, const char *file);
 int set_pixel_size(struct stream *stream);
 void enset_pixel_size(int status, struct stream *stream);
 void fprint_stream_head(FILE *fp, struct stream *stream);
+int dprint_stream_head(int fd, struct stream *stream);
 size_t enread_stream(int status, struct stream *stream, size_t n);
 void eninf_check_fd(int status, int fd, const char *file);
 void encheck_dimensions(int status, const struct stream *stream, enum dimension dimensions, const char *prefix);

@@ -123,6 +123,13 @@ fprint_stream_head(FILE *fp, struct stream *stream)
 }
 
 
+int
+dprint_stream_head(int fd, struct stream *stream)
+{
+	return DPRINTF_HEAD(fd, stream->frames, stream->width, stream->height, stream->pixfmt);
+}
+
+
 size_t
 enread_stream(int status, struct stream *stream, size_t n)
 {

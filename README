@@ -63,6 +63,9 @@ UTILITIES
        blind-extend(1)
               Add margins to a video
 
+       blind-extract-alpha(1)
+              Split a video into an alpha mask video and a colour mask video
+
        blind-find-rectangle(1)
               Locate a coloured rectangle
 
