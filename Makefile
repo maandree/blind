@@ -20,6 +20,7 @@ BIN =\
 	blind-dissolve\
 	blind-dot-product\
 	blind-double-sine-wave\
+	blind-dual-key\
 	blind-extend\
 	blind-extract-alpha\
 	blind-find-rectangle\

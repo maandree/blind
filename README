@@ -60,6 +60,9 @@ UTILITIES
        blind-double-sine-wave(1)
               Apply double-sine-wave repetition to gradient
 
+       blind-dual-key(1)
+              Apply transparency to a video based on two videos and two key
+
        blind-extend(1)
               Add margins to a video
 
