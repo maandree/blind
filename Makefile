@@ -5,6 +5,7 @@ BIN =\
 	blind-arithm\
 	blind-cat-cols\
 	blind-cat-rows\
+	blind-chroma-key\
 	blind-colour-ciexyz\
 	blind-colour-srgb\
 	blind-compress\

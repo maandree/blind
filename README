@@ -21,6 +21,9 @@ UTILITIES
        blind-cat-rows(1)
               Stack videos vertically
 
+       blind-chroma-key(1)
+              Replace a colour range with transparency
+
        blind-colour-ciexyz(1)
               Convert CIE XYZ for use with blind-single-colour(1)
 

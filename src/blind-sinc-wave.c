@@ -16,7 +16,6 @@ static int equal = 0;
 		TYPE y, theta0y = 0;\
 		TYPE z, theta0z = 0;\
 		TYPE a, theta0a = 0;\
-		echeck_dimensions(grad, WIDTH | HEIGHT, NULL);\
 		do {\
 			if (!m) {\
 				m = grad->frame_size;\
@@ -106,6 +105,8 @@ main(int argc, char *argv[])
 
 	if (have_theta0 && strcmp(stream.pixfmt, theta0.pixfmt))
 		eprintf("videos use incompatible pixel formats\n");
+
+	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);
 
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");

@@ -9,11 +9,11 @@ blind-dual-key - Apply transparency to a video based on two videos and two key
 .I dual-X
 .I dual-Y
 .I dual-Z
-.I dual-video
+.I dual-stream
 .SH DESCRIPTION
 .B blind-dual-key
 reads a video from stdin and a video
-.IR dual-video .
+.IR dual-stream .
 These two videos should be idential, except
 with two different background colours. The
 background colour used in the video from
@@ -24,7 +24,7 @@ and
 .IR Z ,
 using the CIE XYZ colour model. The
 background colour used in the video from
-.I dual-video
+.I dual-stream
 should be specified in the arguments
 .IR dual-X ,
 .IR dual-Y ,
@@ -49,7 +49,8 @@ example black and white or green and magenta.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-colour-ciexyz (1),
-.BR blind-colour-srgb (1)
+.BR blind-colour-srgb (1),
+.BR blind-chroma-key (1)
 .SH AUTHORS
 Mattias Andrée
 .RI < maandree@kth.se >
