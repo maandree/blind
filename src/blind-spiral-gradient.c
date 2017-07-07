@@ -146,7 +146,7 @@ main(int argc, char *argv[])
 	    stream.width * stream.height > 5)
 		eprintf("<stdin>: each frame must contain exactly 2, 3, 4, or 5 pixels\n");
 
-	with_params = (stream.width * stream.height) & 2;
+	with_params = (stream.width * stream.height) & 1;
 	with_vector = stream.width * stream.height > 3;
 
 	stream.width = width;
