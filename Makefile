@@ -55,6 +55,7 @@ BIN =\
 	blind-sinc-wave\
 	blind-sine-wave\
 	blind-skip-pattern\
+	blind-spectrum\
 	blind-spiral-gradient\
 	blind-split\
 	blind-split-cols\
