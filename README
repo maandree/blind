@@ -177,6 +177,9 @@ UTILITIES
        blind-skip-pattern(1)
               Skips frames in a video according to pattern
 
+       blind-spectrum(1)
+              Transform a gradient into a spectrum
+
        blind-spiral-gradient(1)
               Generate a video with a spiral gradient
 
