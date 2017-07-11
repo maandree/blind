@@ -66,12 +66,16 @@ static int with_vector;
 				y = (TYPE)iy - y1;\
 				for (ix = 0; ix < width; ix++) {\
 					x = (TYPE)ix - x1;\
-					v = atan2(y, x);\
-					if (anticlockwise)\
-						v = 1 - v;\
-					v -= u;\
-					v += 4 * (TYPE)M_PI;\
-					v = mod(v, 2 * (TYPE)M_PI);\
+					if (!x && !y) {\
+						v = 0;\
+					} else {\
+						v = atan2(y, x);\
+						if (anticlockwise)\
+							v = 1 - v;\
+						v -= u;\
+						v += 4 * (TYPE)M_PI;\
+						v = mod(v, 2 * (TYPE)M_PI);\
+					}\
 					if (!with_vector) {\
 						r = sqrt(x * x + y * y);\
 					} else {\
