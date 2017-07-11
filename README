@@ -132,6 +132,9 @@ UTILITIES
        blind-repeat(1)
               Repeat a video
 
+       blind-repeat-tessellation(1)
+              Repeat a video horizontally and veritically to a specific size
+
        blind-reverse(1)
               Reverse a video
 

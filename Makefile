@@ -44,6 +44,7 @@ BIN =\
 	blind-radial-gradient\
 	blind-read-head\
 	blind-repeat\
+	blind-repeat-tessellation\
 	blind-reverse\
 	blind-rewrite-head\
 	blind-round-wave\
