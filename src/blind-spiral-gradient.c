@@ -1,10 +1,11 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-al] -w width -h height")
+USAGE("[-s spirals] [-al] -w width -h height")
 
 static int anticlockwise = 0;
 static int logarithmic = 0;
+static double spirals = 1;
 static size_t width = 0;
 static size_t height = 0;
 static int with_params;
@@ -58,6 +59,7 @@ static int with_vector;
 			y2 -= y1;\
 			u = atan2(y2, x2);\
 			b = sqrt(x2 * x2 + y2 * y2);\
+			b *= spirals;\
 			if (logarithmic)\
 				b = log(b);\
 			b /= pow(2 * (TYPE)M_PI, e);\
@@ -96,6 +98,7 @@ static int with_vector;
 						r = pow(r / b, ep);\
 						r = (r - v) / (2 * (TYPE)M_PI);\
 					}\
+					r = mod(r, 1 / (TYPE)spirals) * (TYPE)spirals + r - mod(r, (TYPE)1);\
 					buf[ptr][0] = buf[ptr][1] = buf[ptr][2] = buf[ptr][3] = r;\
 					if (++ptr == ELEMENTSOF(buf)) {\
 						ewriteall(STDOUT_FILENO, buf, sizeof(buf), "<stdout>");\
@@ -122,6 +125,11 @@ main(int argc, char *argv[])
 		break;
 	case 'l':
 		logarithmic = 1;
+		break;
+	case 's':
+		spirals = etolf_flag('s', UARGF());
+		if (!spirals)
+			eprintf("the value of -s must not be 0");
 		break;
 	case 'w':
 		width = etozu_flag('w', UARGF(), 1, SIZE_MAX);

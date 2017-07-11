@@ -3,6 +3,8 @@
 blind-spiral-gradient - Generate a video with a spiral gradient
 .SH SYNOPSIS
 .B blind-spiral-gradient
+[-s
+.IR spirals ]
 [-al]
 -w
 .I width
@@ -99,6 +101,16 @@ Create a spiral that gones anticlockwise.
 .TP
 .B -l
 Create a logarithmic spiral.
+.TP
+.BR -s " "\fIspirals\fP
+Draw
+.I spirals
+spirals
+going out the specified centre instead of
+just one spiral. The spirals are uniformly
+distributed.
+.I spirals
+can be any non-zero real number.
 .TP
 .BR -w " "\fIwidth\fP
 The width of the video, in pixels.
