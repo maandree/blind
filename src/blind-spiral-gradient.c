@@ -1,10 +1,11 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-s spirals] [-al] -w width -h height")
+USAGE("[-s spirals | t] [-al] -w width -h height")
 
 static int anticlockwise = 0;
 static int logarithmic = 0;
+static int angle = 0;
 static double spirals = 1;
 static size_t width = 0;
 static size_t height = 0;
@@ -98,7 +99,10 @@ static int with_vector;
 						r = pow(r / b, ep);\
 						r = (r - v) / (2 * (TYPE)M_PI);\
 					}\
-					r = mod(r, 1 / (TYPE)spirals) * (TYPE)spirals + r - mod(r, (TYPE)1);\
+					if (angle)\
+						r = (int)(r + 1) + v / (2 * (TYPE)M_PI);\
+					else\
+						r = mod(r, 1 / (TYPE)spirals) * (TYPE)spirals + r - mod(r, (TYPE)1);\
 					buf[ptr][0] = buf[ptr][1] = buf[ptr][2] = buf[ptr][3] = r;\
 					if (++ptr == ELEMENTSOF(buf)) {\
 						ewriteall(STDOUT_FILENO, buf, sizeof(buf), "<stdout>");\
@@ -131,6 +135,9 @@ main(int argc, char *argv[])
 		if (!spirals)
 			eprintf("the value of -s must not be 0");
 		break;
+	case 't':
+		angle = 1;
+		break;
 	case 'w':
 		width = etozu_flag('w', UARGF(), 1, SIZE_MAX);
 		break;
@@ -141,7 +148,7 @@ main(int argc, char *argv[])
 		usage();
 	} ARGEND;
 
-	if (!width || !height || argc)
+	if (!width || !height || argc || (spirals != 1 && angle))
 		usage();
 
 	eopen_stream(&stream, NULL);

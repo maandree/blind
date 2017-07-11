@@ -4,7 +4,8 @@ blind-spiral-gradient - Generate a video with a spiral gradient
 .SH SYNOPSIS
 .B blind-spiral-gradient
 [-s
-.IR spirals ]
+.I spirals
+| -t]
 [-al]
 -w
 .I width
@@ -112,11 +113,31 @@ distributed.
 .I spirals
 can be any non-zero real number.
 .TP
+.B -t
+Base the resulting values only on the angle
+in the spiral formula rather than then both
+the angle and radius. This is useful for
+creating transitions with spiral effects.
+.TP
 .BR -w " "\fIwidth\fP
 The width of the video, in pixels.
 .TP
 .BR -h " "\fIheight\fP
 The height of the video, in pixels.
+.SH NOTES
+Because
+.B -s
+has no affect when
+.B -t
+is applied,
+.B -s
+and
+.B -t
+cannot be combined unless
+.I spirals
+is 1. This will change in the future
+if a way to meaningfully combined the
+two flags is found.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-from-text (7),
