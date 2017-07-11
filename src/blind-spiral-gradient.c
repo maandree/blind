@@ -71,7 +71,7 @@ static int with_vector;
 					} else {\
 						v = atan2(y, x);\
 						if (anticlockwise)\
-							v = 1 - v;\
+							v = -v;\
 						v -= u;\
 						v += 4 * (TYPE)M_PI;\
 						v = mod(v, 2 * (TYPE)M_PI);\
