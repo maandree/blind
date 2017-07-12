@@ -33,6 +33,7 @@ BIN =\
 	blind-from-text\
 	blind-from-video\
 	blind-gauss-blur\
+	blind-get-colours\
 	blind-interleave\
 	blind-invert-luma\
 	blind-linear-gradient\

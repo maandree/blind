@@ -99,6 +99,9 @@ UTILITIES
        blind-gauss-blur(1)
               Apply Gaussian blur to a video
 
+       blind-get-colours(1)
+              Get a frame with all colours from a video
+
        blind-interleave(1)
               Framewise interleave videos
 
