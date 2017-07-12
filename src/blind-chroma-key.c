@@ -27,6 +27,7 @@ USAGE("key-stream")
 				z = z1 - keyxyza[6];\
 				a2 = keyxyza[7];\
 				variance2 = x * x + y * y + z * z;\
+				/* TODO add more formulae: https://en.wikipedia.org/wiki/Color_difference */\
 				if (a2 > a1) {\
 					a1 = 1 - a1;\
 					a2 = 1 - a2;\

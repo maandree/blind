@@ -2,6 +2,7 @@ CONFIGFILE = config.mk
 include $(CONFIGFILE)
 
 BIN =\
+	blind-apply-palette\
 	blind-arithm\
 	blind-cat-cols\
 	blind-cat-rows\
