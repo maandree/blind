@@ -1,6 +1,7 @@
 CONFIGFILE = config.mk
 include $(CONFIGFILE)
 
+
 BIN =\
 	blind-apply-palette\
 	blind-arithm\
@@ -90,10 +91,9 @@ SCRIPTS =\
 	blind-rotate-180\
 	blind-rotate-270
 
-MAN1 = $(BIN:=.1) $(SCRIPTS:=.1)
-MAN7 = blind.7
-
-SRC = $(BIN:=.c) util.c stream.c
+COMMON_OBJ =\
+	util.o\
+	stream.o
 
 HDR =\
 	arg.h\
@@ -113,7 +113,12 @@ HDR =\
 	util/fshut.h\
 	video-math.h
 
-MISCFILES = Makefile config.mk LICENSE README TODO
+MISCFILES =\
+	Makefile\
+	config.mk\
+	LICENSE\
+	README\
+	TODO
 
 EXAMPLEDIRS =\
 	inplace-flop\
@@ -125,10 +130,16 @@ EXAMPLEFILES =\
 	reverse/Makefile\
 	split/Makefile
 
+COMMON_SRC = $(COMMON_SRC:.o=.c)
+SRC = $(BIN:=.c) $(COMMON_SRC)
+MAN1 = $(BIN:=.1) $(SCRIPTS:=.1)
+MAN7 = blind.7
+
+
 all: $(BIN)
 
-%: %.o util.o stream.o
-	$(CC) $(LDFLAGS) -o $@ $^
+%: %.o $(COMMON_OBJ)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 %.o: src/%.c src/*.h src/*/*.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
@@ -174,5 +185,6 @@ clean:
 	-rm -f $(BIN) *.o blind-$(VERSION).tar.gz
 	-rm -rf "blind-$(VERSION)"
 
+
 .PHONY: all install uninstall dist clean
-.PRECIOUS: util.o stream.o
+.PRECIOUS: $(COMMON_OBJ)
