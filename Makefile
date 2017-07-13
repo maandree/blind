@@ -36,6 +36,7 @@ BIN =\
 	blind-from-video\
 	blind-gauss-blur\
 	blind-get-colours\
+	blind-hexagon-tessellation\
 	blind-interleave\
 	blind-invert-luma\
 	blind-linear-gradient\
@@ -46,6 +47,7 @@ BIN =\
 	blind-premultiply\
 	blind-radial-gradient\
 	blind-read-head\
+	blind-rectangle-tessellation\
 	blind-repeat\
 	blind-repeat-tessellation\
 	blind-reverse\
@@ -76,6 +78,7 @@ BIN =\
 	blind-to-video\
 	blind-translate\
 	blind-transpose\
+	blind-triangle-tessellation\
 	blind-unpremultiply\
 	blind-vector-projection\
 	blind-write-head\

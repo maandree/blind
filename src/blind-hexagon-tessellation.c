@@ -1,0 +1,108 @@
+/* See LICENSE file for copyright and license details. */
+#include "common.h"
+
+USAGE("[-F pixel-format] block-diameter")
+
+#define SET_XYZA(TYPE)\
+	(pixwidth *= sizeof(double),\
+	 colours = alloca(4 * pixwidth),\
+	 ((TYPE *)colours)[ 0] = (TYPE)(0.0000 * D65_XYZ_X),\
+	 ((TYPE *)colours)[ 1] = (TYPE)(0.0000),\
+	 ((TYPE *)colours)[ 2] = (TYPE)(0.0000 * D65_XYZ_Z),\
+	 ((TYPE *)colours)[ 3] = (TYPE)1,\
+	 ((TYPE *)colours)[ 4] = (TYPE)(0.3333 * D65_XYZ_X),\
+	 ((TYPE *)colours)[ 5] = (TYPE)(0.3333),\
+	 ((TYPE *)colours)[ 6] = (TYPE)(0.3333 * D65_XYZ_Z),\
+	 ((TYPE *)colours)[ 7] = (TYPE)1,\
+	 ((TYPE *)colours)[ 8] = (TYPE)(0.6667 * D65_XYZ_X),\
+	 ((TYPE *)colours)[ 9] = (TYPE)(0.6667),\
+	 ((TYPE *)colours)[10] = (TYPE)(0.6667 * D65_XYZ_Z),\
+	 ((TYPE *)colours)[11] = (TYPE)1,\
+	 ((TYPE *)colours)[12] = (TYPE)(1.0000 * D65_XYZ_X),\
+	 ((TYPE *)colours)[13] = (TYPE)(1.0000),\
+	 ((TYPE *)colours)[14] = (TYPE)(1.0000 * D65_XYZ_Z),\
+	 ((TYPE *)colours)[15] = (TYPE)1)
+
+static struct stream stream = { .width = 0, .height = 0, .frames = 1 };
+
+int
+main(int argc, char *argv[])
+{
+	size_t diameter;
+	const char *pixfmt = "xyza";
+	size_t pixwidth = 4;
+	char *colours;
+	size_t x, y, y2;
+	int k;
+
+	ARGBEGIN {
+	case 'F':
+		pixfmt = UARGF();
+		break;
+	default:
+		usage();
+	} ARGEND;
+
+	if (argc != 1)
+		usage();
+
+	diameter = etozu_arg("block-diameter", argv[0], 1, SIZE_MAX);
+
+	pixfmt = get_pixel_format(pixfmt, "xyza");
+	if (!strcmp(pixfmt, "xyza"))
+		SET_XYZA(double);
+	else if (!strcmp(pixfmt, "xyza f"))
+		SET_XYZA(float);
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", pixfmt);
+
+	strcpy(stream.pixfmt, pixfmt);
+	stream.width  = (size_t)(diameter * sqrt(3.));
+	stream.height = diameter * 3 / 2;
+	fprint_stream_head(stdout, &stream);
+	efflush(stdout, "<stdout>");
+
+	for (y = 0; y < stream.height; y++) {
+		for (x = 0; x < stream.width; x++) {
+			if (y * 4 < diameter) {
+				switch (x * 4 / stream.width) {
+				case 0:
+					k = 2 * (4 * x * diameter < stream.width * diameter - 4 * y * stream.width);
+					break;
+				case 1:
+					k = 3 * (4 * x * diameter - stream.width * diameter > 4 * y * stream.width);
+					break;
+				case 2:
+					k = 1 + 2 * (3 * diameter * stream.width - 4 * x * diameter > 4 * y * stream.width);
+					break;
+				default:
+					k = 1 + (4 * x * diameter - 3 * stream.width * diameter > 4 * y * stream.width);
+					break;
+				}
+			} else if (y * 4 < diameter * 3) {
+				k = (x * 2 >= stream.width);
+			} else if (y < diameter) {
+				y2 = diameter - y;
+				switch (x * 4 / stream.width) {
+				case 0:
+					k = 2 * (4 * x * diameter < stream.width * diameter - 4 * y2 * stream.width);
+					break;
+				case 1:
+					k = 3 * (4 * x * diameter - stream.width * diameter > 4 * y2 * stream.width);
+					break;
+				case 2:
+					k = 1 + 2 * (3 * diameter * stream.width - 4 * x * diameter > 4 * y2 * stream.width);
+					break;
+				default:
+					k = 1 + (4 * x * diameter - 3 * stream.width * diameter > 4 * y2 * stream.width);
+					break;
+				}
+			} else {
+				k = (stream.width <= x * 4 && x * 4 < stream.width * 3) + 2;
+			}
+			ewriteall(STDOUT_FILENO, colours + k * pixwidth, pixwidth, "<stdout>");
+		}
+	}
+
+	return 0;
+}
