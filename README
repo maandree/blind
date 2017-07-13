@@ -102,6 +102,9 @@ UTILITIES
        blind-get-colours(1)
               Get a frame with all colours from a video
 
+       blind-hexagon-tessellation(1)
+              Create a frame with tessellated hexagons
+
        blind-interleave(1)
               Framewise interleave videos
 
@@ -131,6 +134,9 @@ UTILITIES
 
        blind-read-head(1)
               Reads the head from a video
+
+       blind-rectangle-tessellation(1)
+              Create a frame with tessellated rectangles
 
        blind-repeat(1)
               Repeat a video
@@ -230,6 +236,9 @@ UTILITIES
 
        blind-transpose(1)
               Transpose a video
+
+       blind-triangle-tessellation(1)
+              Create a frame with tessellated triangles
 
        blind-triangular-wave(1)
               Apply triangular wave repetition to gradient
