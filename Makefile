@@ -41,6 +41,7 @@ BIN =\
 	blind-invert-luma\
 	blind-linear-gradient\
 	blind-make-kernel\
+	blind-mosaic\
 	blind-next-frame\
 	blind-norm\
 	blind-quaternion-product\

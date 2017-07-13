@@ -111,11 +111,14 @@ UTILITIES
        blind-invert-luma(1)
               Invert the luminosity of a video
 
+       blind-linear-gradient(1)
+              Generate a video with a linear gradient
+
        blind-make-kernel(1)
               Create a custom convolution matrix
 
-       blind-linear-gradient(1)
-              Generate a video with a linear gradient
+       blind-mosaic(1)
+              Redraw each frame in video as a mosaic
 
        blind-next-frame(1)
               Extracts the next frame from a video
