@@ -20,13 +20,11 @@ At the upper and lower edges of the video,
 wrap around to the opposite edges.
 .SH REQUIREMENTS
 .B blind-mosaic-edges
-requires enough free memory to load one full row into
-memory. A row requires 32 bytes per pixel it contains.
-If
-.B -x
-is used, two full rows all be needed, and if
-.B -y
-is used, one full frame will be needed.
+requires enough free memory to load one full frame into
+memory and 1 bit per pixel on a frame. A frame requires
+32 bytes per pixel it contains.
+.B blind-mosaic-edges
+is optimised for simplicity rather the memory usage.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-hexagon-tessellation (1),
