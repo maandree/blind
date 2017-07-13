@@ -20,10 +20,11 @@ USAGE("[-bs] bottom-stream ... top-stream")
 				a2 = ((TYPE *)(streams[j].buf + i))[3];\
 				if (BLEND)\
 					a2 /= (TYPE)(j + 1);\
-				x1 = x1 * a1 * (1 - a2) + x2 * a2;\
-				y1 = y1 * a1 * (1 - a2) + y2 * a2;\
-				z1 = z1 * a1 * (1 - a2) + z2 * a2;\
-				a1 = a1 * (1 - a2) + a2;\
+				a1 *= 1 - a2;\
+				x1 = x1 * a1 + x2 * a2;\
+				y1 = y1 * a1 + y2 * a2;\
+				z1 = z1 * a1 + z2 * a2;\
+				a1 += a2;\
 			}\
 			((TYPE *)(streams[0].buf + i))[0] = x1;\
 			((TYPE *)(streams[0].buf + i))[1] = y1;\
