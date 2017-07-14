@@ -5,11 +5,6 @@ USAGE("[-r | -s] plane-stream")
 
 static int level = 1;
 
-#if defined(__GNUC__) && !defined(__clang__)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunsafe-loop-optimizations"
-#endif
-
 #define PROCESS(TYPE, SUFFIX)\
 	static void\
 	process_##SUFFIX(struct stream *left, struct stream *right, size_t n)\
@@ -45,10 +40,6 @@ static int level = 1;
 
 PROCESS(double, lf)
 PROCESS(float, f)
-
-#if defined(__GNUC__) && !defined(__clang__)
-# pragma GCC diagnostic pop
-#endif
 
 int
 main(int argc, char *argv[])

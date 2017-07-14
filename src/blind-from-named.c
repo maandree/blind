@@ -60,7 +60,7 @@ sendfile(int outfd, int infd, off_t *offset, size_t count)
 			break;
 		ret += r;
 		for (p = 0; p < r; p += w) {
-			w = write(outfd, buf + p, r - p);
+			w = write(outfd, buf + p, (size_t)(r - p));
 			if (w < 0)
 				eprintf("write <stdout>:");
 		}
@@ -99,7 +99,7 @@ main(int argc, char *argv[])
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	if (strlen(argv[0]) + 1 + abstract > sizeof(addr.sun_path)) {
+	if (strlen(argv[0]) + (size_t)(1 + abstract) > sizeof(addr.sun_path)) {
 		errno = ENAMETOOLONG;
 		eprintf("%s:", argv[0]);
 	}

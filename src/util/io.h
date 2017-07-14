@@ -20,10 +20,10 @@
 #define ewritezeroes(...)  enwritezeroes(1, __VA_ARGS__)
 #define egetfile(...)      engetfile(1, __VA_ARGS__)
 
-int writeall(int fd, void *buf, size_t n);
+int writeall(int fd, const void *buf, size_t n);
 
 static inline void
-enwriteall(int status, int fd, void *buf, size_t n, const char *fname)
+enwriteall(int status, int fd, const void *buf, size_t n, const char *fname)
 {
 	if (writeall(fd, buf, n))
 		enprintf(status, "write %s:", fname);
@@ -40,19 +40,19 @@ enreadall(int status, int fd, void *buf, size_t n, const char *fname)
 	return (size_t)r;
 }
 
-int pwriteall(int fd, void *buf, size_t n, off_t ptr);
+int pwriteall(int fd, const void *buf, size_t n, off_t ptr);
 
 static inline void
-enpwriteall(int status, int fd, void *buf, size_t n, off_t ptr, const char *fname)
+enpwriteall(int status, int fd, const void *buf, size_t n, off_t ptr, const char *fname)
 {
 	if (pwriteall(fd, buf, n, ptr))
 		enprintf(status, "pwrite %s:", fname);
 }
 
-int writezeroes(int fd, void *buf, size_t bufsize, size_t n);
+int writezeroes(int fd, const void *buf, size_t bufsize, size_t n);
 
 static inline void
-enwritezeroes(int status, int fd, void *buf, size_t bufsize, size_t n, const char *fname)
+enwritezeroes(int status, int fd, const void *buf, size_t bufsize, size_t n, const char *fname)
 {
 	if (writezeroes(fd, buf, bufsize, n))
 		enprintf(status, "write %s:", fname);

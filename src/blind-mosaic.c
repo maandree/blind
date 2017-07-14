@@ -114,7 +114,7 @@ search_lf(void *restrict output, void *restrict mbuf, struct stream *mosaic,
 
 static void
 search_f(void *restrict output, void *restrict mbuf, struct stream *mosaic,
-	 size_t x, size_t y, size_t index, double ch1, double ch2, double ch3, double ch4)
+	 size_t x, size_t y, size_t index, float ch1, float ch2, float ch3, float ch4)
 {
 	SEARCH(float, search_f);
 }

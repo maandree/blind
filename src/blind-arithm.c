@@ -28,11 +28,6 @@ typedef void (*process_func)(struct stream *left, struct stream *right, size_t n
 			rh = ((TYPE *)(right->buf + i))[CHI],\
 			(ALGO)), 0) : 0)
 
-#if defined(__GNUC__) && !defined(__clang__)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunsafe-loop-optimizations"
-#endif
-
 #define X(NAME, ALGO, PIXFMT, TYPE)\
 	static void\
 	process_##PIXFMT##_##NAME(struct stream *left, struct stream *right, size_t n)\
@@ -49,10 +44,6 @@ typedef void (*process_func)(struct stream *left, struct stream *right, size_t n
 LIST_OPERATORS(xyza, double)
 LIST_OPERATORS(xyzaf, float)
 #undef X
-
-#if defined(__GNUC__) && !defined(__clang__)
-# pragma GCC diagnostic pop
-#endif
 
 static process_func
 get_process_xyza(const char *operation)

@@ -60,7 +60,7 @@ static int with_vector;
 			y2 -= y1;\
 			u = atan2(y2, x2);\
 			b = sqrt(x2 * x2 + y2 * y2);\
-			b *= spirals;\
+			b *= (TYPE)spirals;\
 			if (logarithmic)\
 				b = log(b);\
 			b /= pow(2 * (TYPE)M_PI, e);\
@@ -100,7 +100,7 @@ static int with_vector;
 						r = (r - v) / (2 * (TYPE)M_PI);\
 					}\
 					if (angle)\
-						r = (int)(r + 1) + v / (2 * (TYPE)M_PI);\
+						r = (TYPE)(int)(r + 1) + v / (2 * (TYPE)M_PI); \
 					else\
 						r = mod(r, 1 / (TYPE)spirals) * (TYPE)spirals + r - mod(r, (TYPE)1);\
 					buf[ptr][0] = buf[ptr][1] = buf[ptr][2] = buf[ptr][3] = r;\

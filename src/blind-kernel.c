@@ -1,11 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-#if defined(__GNUC__) && !defined(__clang__)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunsafe-loop-optimizations"
-#endif
-
 USAGE("[-xyza] kernel [parameter] ...")
 
 #define SUBUSAGE(FORMAT)          "usage: %s [-xyza] " FORMAT, argv0

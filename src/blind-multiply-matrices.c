@@ -82,7 +82,7 @@ main(int argc, char *argv[])
 		usage();
 
 	if (natural) {
-		rev_argv = alloca(argc * sizeof(*rev_argv));
+		rev_argv = alloca((size_t)argc * sizeof(*rev_argv));
 		for (j = 0; j < argc; j++)
 			rev_argv[j] = argv[argc - 1 - j];
 		argv = rev_argv;

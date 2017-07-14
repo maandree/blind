@@ -21,7 +21,7 @@ static int spiral = 0;
 					a = posmod(a, (TYPE)2);\
 					a = a > 1 ? 2 - a : a;\
 					if (spiral)\
-						a = (a > 0.5 ? 1 - a : a) * 2;\
+						a = (a > (TYPE)0.5 ? 1 - a : a) * 2; \
 					((TYPE *)(stream->buf))[4 * i + 0] = a;\
 					((TYPE *)(stream->buf))[4 * i + 1] = a;\
 					((TYPE *)(stream->buf))[4 * i + 2] = a;\
@@ -42,10 +42,10 @@ static int spiral = 0;
 					z = z > 1 ? 2 - z : z;\
 					a = a > 1 ? 2 - a : a;\
 					if (spiral) {\
-						x = (x > 0.5 ? 1 - x : x) * 2;\
-						y = (y > 0.5 ? 1 - y : y) * 2;\
-						z = (z > 0.5 ? 1 - z : z) * 2;\
-						a = (a > 0.5 ? 1 - a : a) * 2;\
+						x = (x > (TYPE)0.5 ? 1 - x : x) * 2;\
+						y = (y > (TYPE)0.5 ? 1 - y : y) * 2;\
+						z = (z > (TYPE)0.5 ? 1 - z : z) * 2;\
+						a = (a > (TYPE)0.5 ? 1 - a : a) * 2;\
 					}\
 					((TYPE *)(stream->buf))[4 * i + 0] = x;\
 					((TYPE *)(stream->buf))[4 * i + 1] = y;\

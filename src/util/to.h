@@ -25,7 +25,7 @@ DEF_STR_TO_INT(toi, int, tolli, long long int, "i")
 #define toji tolli
 
 #define DEF_STR_TO_INT(FNAME, TYPE, PRI)\
-	static inline TYPE\
+	static TYPE\
 	en##FNAME##_flag(int status, int flag, const char *s, TYPE min, TYPE max)\
 	{\
 		TYPE ret = 0;\
@@ -42,7 +42,7 @@ DEF_STR_TO_INT(toi, int, tolli, long long int, "i")
 		return en##FNAME##_flag(1, flag, s, min, max);\
 	}\
 	\
-	static inline TYPE\
+	static TYPE\
 	en##FNAME##_arg(int status, const char *name, const char *s, TYPE min, TYPE max)\
 	{\
 		TYPE ret = 0;\
@@ -100,7 +100,7 @@ DEF_STR_TO_INT(toi, int, "i")
 		return 0;\
 	}\
 	\
-	static inline TYPE\
+	static TYPE\
 	en##FNAME##_flag(int status, int flag, const char *s)\
 	{\
 		TYPE ret = 0;\
@@ -115,7 +115,7 @@ DEF_STR_TO_INT(toi, int, "i")
 		return en##FNAME##_flag(1, flag, s);\
 	}\
 	\
-	static inline TYPE\
+	static TYPE\
 	en##FNAME##_arg(int status, const char *name, const char *s)\
 	{\
 		TYPE ret = 0;\

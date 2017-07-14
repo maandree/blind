@@ -94,9 +94,9 @@ erange:
 
 
 int
-writeall(int fd, void *buf, size_t n)
+writeall(int fd, const void *buf, size_t n)
 {
-	char *buffer = buf;
+	const char *buffer = buf;
 	ssize_t r;
 	while (n) {
 		r = write(fd, buffer, n);
@@ -122,13 +122,13 @@ readall(int fd, void *buf, size_t n)
 			break;
 		ptr += (size_t)r;
 	}
-	return ptr;
+	return (ssize_t)ptr;
 }
 
 int
-pwriteall(int fd, void *buf, size_t n, off_t ptr)
+pwriteall(int fd, const void *buf, size_t n, off_t ptr)
 {
-	char *buffer = buf;
+	const char *buffer = buf;
 	ssize_t r;
 	while (n) {
 		r = pwrite(fd, buffer, n, (off_t)ptr);
@@ -142,7 +142,7 @@ pwriteall(int fd, void *buf, size_t n, off_t ptr)
 }
 
 int
-writezeroes(int fd, void *buf, size_t bufsize, size_t n)
+writezeroes(int fd, const void *buf, size_t bufsize, size_t n)
 {
 	size_t p, m;
 	for (p = 0; p < n; p += m) {

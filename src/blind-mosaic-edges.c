@@ -99,7 +99,7 @@ main(int argc, char *argv[])
 
 			continue;
 		at_edge:
-			edges[i >> 3] |= 1 << (i & 7);
+			edges[i >> 3] |= (char)(1 << (i & 7));
 		}
 		for (i = 0; i < n; i++) {
 			v = (edges[i >> 3] >> (i & 7)) & 1;

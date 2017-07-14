@@ -28,7 +28,7 @@ esend_fd(int sock, int fd)
 	cmsg->cmsg_type = SCM_RIGHTS;
 	memcpy(CMSG_DATA(cmsg), &fd, sizeof(fd));
 
-	if (sendmsg(sock, &msg, 0) != iov.iov_len)
+	if (sendmsg(sock, &msg, 0) != (ssize_t)iov.iov_len)
 		eprintf("sendmsg:");
 }
 
@@ -51,7 +51,7 @@ main(int argc, char *argv[])
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	if (strlen(argv[0]) + 1 + abstract > sizeof(addr.sun_path)) {
+	if (strlen(argv[0]) + (size_t)(1 + abstract) > sizeof(addr.sun_path)) {
 		errno = ENAMETOOLONG;
 		eprintf("%s:", argv[0]);
 	}

@@ -75,7 +75,7 @@ int
 main(int argc, char *argv[])
 {
 	double colour_lf[4];
-	double colour_f[4];
+	float colour_f[4];
 
 	ARGBEGIN {
 	case 'a':

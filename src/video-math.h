@@ -2,7 +2,7 @@
 #include <math.h>
 
 static inline double
-nnpow(double a, double b)
+nnpow_d(double a, double b)
 {
 	int neg = a < 0;
 	a = pow(neg ? -a : a, b);
@@ -10,7 +10,7 @@ nnpow(double a, double b)
 }
 
 static inline float
-nnpowf(float a, float b)
+nnpow_f(float a, float b)
 {
 	int neg = a < 0;
 	a = powf(neg ? -a : a, b);
@@ -18,61 +18,61 @@ nnpowf(float a, float b)
 }
 
 static inline double
-posmod(double a, double b)
+posmod_d(double a, double b)
 {
 	double x = fmod(a, b);
 	return x < 0 ? x + b : x;
 }
 
 static inline float
-posmodf(float a, float b)
+posmod_f(float a, float b)
 {
 	float x = fmodf(a, b);
 	return x < 0 ? x + b : x;
 }
 
 static inline double
-degsin(double u)
+degsin_d(double u)
 {
 	if (!fmod(u, 90)) {
-		int64_t v = u;
+		int64_t v = (int64_t)u;
 		v = ((v / 90) % 4 + 4) % 4;
 		return ((double[]){0, 1, 0, -1})[v];
 	}
-	return sin(u * (M_PI / 180.0));
+	return sin(u * (M_PI / 180));
 }
 
 static inline float
-degsinf(float u)
+degsin_f(float u)
 {
 	if (!fmodf(u, 90)) {
-		int64_t v = u;
+		int64_t v = (int64_t)u;
 		v = ((v / 90) % 4 + 4) % 4;
 		return ((float[]){0, 1, 0, -1})[v];
 	}
-	return sin(u * (float)(M_PI / 180.0));
+	return sinf(u * (float)(M_PI / 180));
 }
 
 static inline double
-degcos(double u)
+degcos_d(double u)
 {
 	if (!fmod(u, 90)) {
-		int64_t v = u;
+		int64_t v = (int64_t)u;
 		v = ((v / 90) % 4 + 4) % 4;
 		return ((double[]){1, 0, -1, 0})[v];
 	}
-	return cos(u * (M_PI / 180.0));
+	return cos(u * (M_PI / 180));
 }
 
 static inline float
-degcosf(float u)
+degcos_f(float u)
 {
 	if (!fmodf(u, 90)) {
-		int64_t v = u;
+		int64_t v = (int64_t)u;
 		v = ((v / 90) % 4 + 4) % 4;
 		return ((float[]){1, 0, -1, 0})[v];
 	}
-	return cos(u * (float)(M_PI / 180.0));
+	return cosf(u * (float)(M_PI / 180));
 }
 
 #define GENERIC(TYPE, FUNC, ...)\
@@ -101,25 +101,25 @@ degcosf(float u)
 						GENERIC(double, FUNC##_d, A, __VA_ARGS__), \
 						GENERIC(float,  FUNC##_f, A, __VA_ARGS__)))
 
-#define pow(...)         MATH_GENERIC_N(pow,      __VA_ARGS__)
-#define log2(...)        MATH_GENERIC_1(log2,     __VA_ARGS__)
-#define log(...)         MATH_GENERIC_1(log,      __VA_ARGS__)
-#define abs(...)         MATH_GENERIC_1(fabs,     __VA_ARGS__)
-#define sqrt(...)        MATH_GENERIC_1(sqrt,     __VA_ARGS__)
-#define exp(...)         MATH_GENERIC_1(exp,      __VA_ARGS__)
-#define g_isnan(...)     MATH_GENERIC_1(isnan,    __VA_ARGS__)
-#define g_isinf(...)     MATH_GENERIC_1(isinf,    __VA_ARGS__)
-#define g_isfinite(...)  MATH_GENERIC_1(isfinite, __VA_ARGS__)
-#define nnpow(...)       MATH_GENERIC_N(nnpow,    __VA_ARGS__)
-#define mod(...)         MATH_GENERIC_N(fmod,     __VA_ARGS__)
-#define posmod(...)      MATH_GENERIC_N(posmod,   __VA_ARGS__)
-#define cos(...)         MATH_GENERIC_1(cos,      __VA_ARGS__)
-#define sin(...)         MATH_GENERIC_1(sin,      __VA_ARGS__)
-#define tan(...)         MATH_GENERIC_1(tan,      __VA_ARGS__)
-#define atan2(...)       MATH_GENERIC_N(atan2,    __VA_ARGS__)
-#define degcos(...)      MATH_GENERIC_1(degcos,   __VA_ARGS__)
-#define degsin(...)      MATH_GENERIC_1(degsin,   __VA_ARGS__)
+#define pow(...)        MATH_GENERIC_N(pow,      __VA_ARGS__)
+#define log2(...)       MATH_GENERIC_1(log2,     __VA_ARGS__)
+#define log(...)        MATH_GENERIC_1(log,      __VA_ARGS__)
+#define abs(...)        MATH_GENERIC_1(fabs,     __VA_ARGS__)
+#define sqrt(...)       MATH_GENERIC_1(sqrt,     __VA_ARGS__)
+#define exp(...)        MATH_GENERIC_1(exp,      __VA_ARGS__)
+#define g_isnan(...)    MATH_GENERIC_1(isnan,    __VA_ARGS__)
+#define g_isinf(...)    MATH_GENERIC_1(isinf,    __VA_ARGS__)
+#define g_isfinite(...) MATH_GENERIC_1(isfinite, __VA_ARGS__)
+#define mod(...)        MATH_GENERIC_N(fmod,     __VA_ARGS__)
+#define cos(...)        MATH_GENERIC_1(cos,      __VA_ARGS__)
+#define sin(...)        MATH_GENERIC_1(sin,      __VA_ARGS__)
+#define tan(...)        MATH_GENERIC_1(tan,      __VA_ARGS__)
+#define atan2(...)      MATH_GENERIC_N(atan2,    __VA_ARGS__)
 
+#define nnpow(...)       BLIND_GENERIC_N(nnpow,       __VA_ARGS__)
+#define posmod(...)      BLIND_GENERIC_N(posmod,      __VA_ARGS__)
+#define degcos(...)      BLIND_GENERIC_1(degcos,      __VA_ARGS__)
+#define degsin(...)      BLIND_GENERIC_1(degsin,      __VA_ARGS__)
 #define srgb_encode(...) BLIND_GENERIC_1(srgb_encode, __VA_ARGS__)
 #define srgb_decode(...) BLIND_GENERIC_1(srgb_decode, __VA_ARGS__)
 

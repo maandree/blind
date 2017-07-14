@@ -11,7 +11,7 @@ int
 main(int argc, char *argv[])
 {
 	char buf[PIPE_BUF];
-	int *fds = alloca(argc * sizeof(*fds));
+	int *fds = alloca((size_t)argc * sizeof(*fds));
 	size_t i, n = 0, done;
 	ssize_t r, w, *ps;
 
@@ -34,7 +34,7 @@ main(int argc, char *argv[])
 			for (i = 0; i < n; i++) {
 				if (ps[i] == r)
 					continue;
-				w = write(fds[i], buf + ps[i], r - ps[i]);
+				w = write(fds[i], buf + ps[i], (size_t)(r - ps[i]));
 				if (w < 0) {
 					close(fds[i]);
 					n--;

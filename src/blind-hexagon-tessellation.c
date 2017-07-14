@@ -57,7 +57,7 @@ main(int argc, char *argv[])
 		eprintf("pixel format %s is not supported, try xyza\n", pixfmt);
 
 	strcpy(stream.pixfmt, pixfmt);
-	stream.width  = (size_t)(diameter * sqrt(3.));
+	stream.width  = (size_t)((double)diameter * sqrt(3.));
 	stream.height = diameter * 3 / 2;
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
@@ -100,7 +100,7 @@ main(int argc, char *argv[])
 			} else {
 				k = (stream.width <= x * 4 && x * 4 < stream.width * 3) + 2;
 			}
-			ewriteall(STDOUT_FILENO, colours + k * pixwidth, pixwidth, "<stdout>");
+			ewriteall(STDOUT_FILENO, colours + (size_t)k * pixwidth, pixwidth, "<stdout>");
 		}
 	}
 

@@ -7,8 +7,14 @@
 # pragma clang diagnostic ignored "-Wfloat-equal"
 # pragma clang diagnostic ignored "-Wformat-nonliteral"
 # pragma clang diagnostic ignored "-Wcovered-switch-default"
+# pragma clang diagnostic ignored "-Wfloat-conversion"
+# pragma clang diagnostic ignored "-Wabsolute-value"
+# pragma clang diagnostic ignored "-Wconditional-uninitialized"
+# pragma clang diagnostic ignored "-Wunreachable-code-return"
 #elif defined(__GNUC__)
 # pragma GCC diagnostic ignored "-Wfloat-equal"
+# pragma GCC diagnostic ignored "-Wunsafe-loop-optimizations"
+# pragma GCC diagnostic ignored "-Wfloat-conversion"
 #endif
 
 #include "stream.h"
