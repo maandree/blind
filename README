@@ -144,6 +144,9 @@ UTILITIES
        blind-mosaic-edges(1)
               Find edges in a mosaic video
 
+       blind-multiply-matrices(1)
+              Multiply matrix-vidoes
+
        blind-next-frame(1)
               Extracts the next frame from a video
 

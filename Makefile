@@ -50,6 +50,7 @@ BIN =\
 	blind-matrix-transpose\
 	blind-mosaic\
 	blind-mosaic-edges\
+	blind-multiply-matrices\
 	blind-next-frame\
 	blind-norm\
 	blind-quaternion-product\
