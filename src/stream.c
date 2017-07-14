@@ -282,12 +282,13 @@ ensend_frames(int status, struct stream *stream, int outfd, size_t frames, const
 	for (ret = 0; ret < frames; ret++) {
 		for (p = stream->pixel_size; p; p--) {
 			for (h = stream->height; h; h--) {
-				for (w = stream->width; w; w -= n, stream->ptr -= n) {
+				for (w = stream->width; w; w -= n) {
 					if (!stream->ptr && !enread_stream(status, stream, w))
 						goto done;
 					n = MIN(stream->ptr, w);
 					if (outfd >= 0)
 						enwriteall(status, outfd, stream->buf, n, outfname);
+					memmove(stream->buf, stream->buf + n, stream->ptr -= n);
 				}
 			}
 		}
@@ -308,12 +309,13 @@ ensend_rows(int status, struct stream *stream, int outfd, size_t rows, const cha
 
 	for (ret = 0; ret < rows; ret++) {
 		for (p = stream->pixel_size; p; p--) {
-			for (w = stream->width; w; w -= n, stream->ptr -= n) {
+			for (w = stream->width; w; w -= n) {
 				if (!stream->ptr && !enread_stream(status, stream, w))
 					goto done;
 				n = MIN(stream->ptr, w);
 				if (outfd >= 0)
 					enwriteall(status, outfd, stream->buf, n, outfname);
+				memmove(stream->buf, stream->buf + n, stream->ptr -= n);
 			}
 		}
 	}
@@ -332,12 +334,13 @@ ensend_pixels(int status, struct stream *stream, int outfd, size_t pixels, const
 	size_t p, n, ret;
 
 	for (ret = 0; ret < pixels; ret++) {
-		for (p = stream->pixel_size; p; p -= n, stream->ptr -= n) {
+		for (p = stream->pixel_size; p; p -= n) {
 			if (!stream->ptr && !enread_stream(status, stream, p))
 				goto done;
 			n = MIN(stream->ptr, p);
 			if (outfd >= 0)
 				enwriteall(status, outfd, stream->buf, n, outfname);
+			memmove(stream->buf, stream->buf + n, stream->ptr -= n);
 		}
 	}
 
