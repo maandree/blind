@@ -43,10 +43,10 @@ main(int argc, char *argv[])
 	struct stream left, right;
 	void (*process)(struct stream *left, struct stream *right, size_t n);
 
-	UNOFLAGS(argc != 2);
+	UNOFLAGS(argc != 1);
 
 	eopen_stream(&left, NULL);
-	eopen_stream(&right, argv[1]);
+	eopen_stream(&right, argv[0]);
 
 	if (!strcmp(left.pixfmt, "xyza"))
 		process = process_lf;

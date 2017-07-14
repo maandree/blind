@@ -54,23 +54,12 @@ blind-cone-gradient: add ability to make gradient superelliptic
 
 blind-arithm: add support for multiple streams
 
-bug: blind-stack: cannot use file outside /dev/fd/
-
 Add [-j jobs] to blind-from-video and blind-to-video.
 
 Generate a header file with the appropriate values for USING_BINARY32, USING_BINARY64.
 long double is slightly faster than long.
 long double (xyza q) could be added as another format.
 unsigned char (xyza 8) could be added as another format, it's probably good for previewing
-
-
-UNTESTED:
-	blind-norm
-	blind-dot-product
-	blind-cross-product
-	blind-quaternion-product
-	blind-vector-projection
-	blind-coordinate-field
 
 
 HELP REQUIRED:
