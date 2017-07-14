@@ -59,7 +59,7 @@ main(int argc, char *argv[])
 
 	eopen_stream(&stream, NULL);
 
-	if (stream.width != 1 && stream.height != 1)
+	if (stream.width != 1 || stream.height != 1)
 		eprintf("<stdin>: each frame must contain exactly 1 pixels\n");
 
 	stream.width  = 3;
