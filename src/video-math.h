@@ -71,6 +71,7 @@ posmodf(float a, float b)
 #define posmod(...)      MATH_GENERIC_N(posmod,   __VA_ARGS__)
 #define cos(...)         MATH_GENERIC_1(cos,      __VA_ARGS__)
 #define sin(...)         MATH_GENERIC_1(sin,      __VA_ARGS__)
+#define tan(...)         MATH_GENERIC_1(tan,      __VA_ARGS__)
 #define atan2(...)       MATH_GENERIC_N(atan2,    __VA_ARGS__)
 
 #define srgb_encode(...) BLIND_GENERIC_1(srgb_encode, __VA_ARGS__)

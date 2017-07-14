@@ -41,6 +41,13 @@ BIN =\
 	blind-invert-luma\
 	blind-linear-gradient\
 	blind-make-kernel\
+	blind-matrix-orthoproject\
+	blind-matrix-reflect\
+	blind-matrix-rotate\
+	blind-matrix-scale\
+	blind-matrix-shear\
+	blind-matrix-translate\
+	blind-matrix-transpose\
 	blind-mosaic\
 	blind-mosaic-edges\
 	blind-next-frame\
