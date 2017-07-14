@@ -16,8 +16,8 @@ USAGE("")
 			       (CAST)(((TYPE *)(stream->buf + i))[3]));\
 	} while (0)
 
-static void process_xyza (struct stream *stream, size_t n) {PROCESS(double, double, "lf");}
-static void process_xyzaf(struct stream *stream, size_t n) {PROCESS(float,  double, "lf");}
+static void process_xyza (struct stream *stream, size_t n) {PROCESS(double, double, ".25lf");}
+static void process_xyzaf(struct stream *stream, size_t n) {PROCESS(float,  double, ".25lf");}
 
 int
 main(int argc, char *argv[])

@@ -18,7 +18,7 @@ static int equal = 0;
 		typedef TYPE pixel_t[4];\
 		size_t rn = stream->height, r1, r2, c;\
 		size_t cn = stream->width > rn ? stream->width : 2 * rn;\
-		pixel_t *matrix = buf, *p1, *p2 = NULL;\
+		pixel_t *matrix = buf, *p1, *p2;\
 		TYPE t;\
 		\
 		for (r1 = 0; r1 < rn; r1++) {\
@@ -29,7 +29,7 @@ static int equal = 0;
 					if (p2[r1][0])\
 						break;\
 				}\
-				if (r2 == rn)\
+				if (r2 >= rn)\
 					eprintf("matrix is not invertable\n");\
 				for (c = 0; c < cn; c++)\
 					t = p1[c][0], p1[c][0] = p2[c][0], p2[c][0] = t;\
@@ -82,9 +82,11 @@ main(int argc, char *argv[])
 	efflush(stdout, "<stdout>");
 
 	if (!strcmp(stream.pixfmt, "xyza")) {
+		one = alloca(4 * sizeof(double));
 		*(double *)one = 1;
 		process = process_lf;
 	} else if (!strcmp(stream.pixfmt, "xyza f")) {
+		one = alloca(4 * sizeof(float));
 		*(float *)one = 1;
 		process = process_f;
 	} else {
@@ -105,7 +107,7 @@ main(int argc, char *argv[])
 			for (y = stream.height; y--;) {
 				memmove(buf + y * row_size, buf + y * stream.row_size, stream.row_size);
 				memset(buf + y * row_size + stream.row_size, 0, stream.row_size);
-				memcpy(buf + y * row_size + y * stream.pixel_size, one, stream.pixel_size);
+				memcpy(buf + y * row_size + stream.row_size + y * stream.pixel_size, one, stream.pixel_size);
 			}
 		}
 		if (equal) {
@@ -113,7 +115,7 @@ main(int argc, char *argv[])
 			for (y = 0; y < stream.height; y++) {
 				for (x = 0; x < stream.width; x++) {
 					p = buf + y * row_size + x * stream.pixel_size;
-					memcpy(p + chan_size, p, chan_size);
+					memcpy(p, p + chan_size, chan_size);
 					memcpy(p + 2 * chan_size, p, 2 * chan_size);
 				}
 			}
@@ -124,7 +126,7 @@ main(int argc, char *argv[])
 			process(&stream, buf + 3 * chan_size);
 		}
 		for (y = 0; y < stream.height; y++)
-			ewriteall(STDOUT_FILENO, buf + y * row_size + stream.row_size, stream.row_size, "<stdout>");
+			ewriteall(STDOUT_FILENO, buf + y * row_size + stream.col_size, row_size - stream.col_size, "<stdout>");
 	}
 
 	free(buf);
