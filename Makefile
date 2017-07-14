@@ -39,6 +39,7 @@ BIN =\
 	blind-hexagon-tessellation\
 	blind-interleave\
 	blind-invert-luma\
+	blind-invert-matrix\
 	blind-linear-gradient\
 	blind-make-kernel\
 	blind-matrix-orthoproject\

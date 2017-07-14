@@ -111,6 +111,9 @@ UTILITIES
        blind-invert-luma(1)
               Invert the luminosity of a video
 
+       blind-invert-matrix(1)
+              Invert matrix-video
+
        blind-linear-gradient(1)
               Generate a video with a linear gradient
 
