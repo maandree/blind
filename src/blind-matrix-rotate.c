@@ -29,9 +29,9 @@ static int per_channel = 0;
 				matrix[4][0] = matrix[0][0] = cos(buf[1]);\
 				matrix[3][0] = -(matrix[1][0] = sin(buf[1]));\
 				matrix[0][3] = matrix[0][2] = matrix[0][1] = matrix[0][0];\
-				matrix[1][3] = matrix[0][2] = matrix[0][1] = matrix[1][0];\
-				matrix[3][3] = matrix[0][2] = matrix[0][1] = matrix[3][0];\
-				matrix[4][3] = matrix[0][2] = matrix[0][1] = matrix[4][0];\
+				matrix[1][3] = matrix[1][2] = matrix[1][1] = matrix[1][0];\
+				matrix[3][3] = matrix[3][2] = matrix[3][1] = matrix[3][0];\
+				matrix[4][3] = matrix[4][2] = matrix[4][1] = matrix[4][0];\
 			}\
 			ewriteall(STDOUT_FILENO, matrix, sizeof(matrix), "<stdout>");\
 		}\
