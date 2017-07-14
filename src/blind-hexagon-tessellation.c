@@ -6,21 +6,21 @@ USAGE("[-F pixel-format] block-diameter")
 #define SET_XYZA(TYPE)\
 	(pixwidth *= sizeof(double),\
 	 colours = alloca(4 * pixwidth),\
-	 ((TYPE *)colours)[ 0] = (TYPE)(0.0000 * D65_XYZ_X),\
-	 ((TYPE *)colours)[ 1] = (TYPE)(0.0000),\
-	 ((TYPE *)colours)[ 2] = (TYPE)(0.0000 * D65_XYZ_Z),\
+	 ((TYPE *)colours)[ 0] = (TYPE)0.412457445582367600,\
+	 ((TYPE *)colours)[ 1] = (TYPE)0.212673370378408280,\
+	 ((TYPE *)colours)[ 2] = (TYPE)0.019333942761673460,\
 	 ((TYPE *)colours)[ 3] = (TYPE)1,\
-	 ((TYPE *)colours)[ 4] = (TYPE)(0.3333 * D65_XYZ_X),\
-	 ((TYPE *)colours)[ 5] = (TYPE)(0.3333),\
-	 ((TYPE *)colours)[ 6] = (TYPE)(0.3333 * D65_XYZ_Z),\
+	 ((TYPE *)colours)[ 4] = (TYPE)0.770033310827883400,\
+	 ((TYPE *)colours)[ 5] = (TYPE)0.927825100869440000,\
+	 ((TYPE *)colours)[ 6] = (TYPE)0.138525897843512050,\
 	 ((TYPE *)colours)[ 7] = (TYPE)1,\
-	 ((TYPE *)colours)[ 8] = (TYPE)(0.6667 * D65_XYZ_X),\
-	 ((TYPE *)colours)[ 9] = (TYPE)(0.6667),\
-	 ((TYPE *)colours)[10] = (TYPE)(0.6667 * D65_XYZ_Z),\
+	 ((TYPE *)colours)[ 8] = (TYPE)0.357575865245515900,\
+	 ((TYPE *)colours)[ 9] = (TYPE)0.715151730491031800,\
+	 ((TYPE *)colours)[10] = (TYPE)0.119191955081838600,\
 	 ((TYPE *)colours)[11] = (TYPE)1,\
-	 ((TYPE *)colours)[12] = (TYPE)(1.0000 * D65_XYZ_X),\
-	 ((TYPE *)colours)[13] = (TYPE)(1.0000),\
-	 ((TYPE *)colours)[14] = (TYPE)(1.0000 * D65_XYZ_Z),\
+	 ((TYPE *)colours)[12] = (TYPE)D65_XYZ_X,\
+	 ((TYPE *)colours)[13] = (TYPE)1.0000,\
+	 ((TYPE *)colours)[14] = (TYPE)D65_XYZ_Z,\
 	 ((TYPE *)colours)[15] = (TYPE)1)
 
 static struct stream stream = { .width = 0, .height = 0, .frames = 1 };
