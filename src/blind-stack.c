@@ -65,7 +65,9 @@ main(int argc, char *argv[])
 
 	for (i = 0; i < n_streams; i++) {
 		eopen_stream(streams + i, argv[i]);
-		if (shortest ? (streams[i].frames && streams[i].frames) < frames : streams[i].frames > frames)
+		if (shortest ?
+		    (streams[i].frames && streams[i].frames < frames) :
+		    (streams[i].frames || streams[i].frames > frames))
 			frames = streams[i].frames;
 	}
 
