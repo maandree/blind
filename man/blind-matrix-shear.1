@@ -3,7 +3,7 @@
 blind-matrix-shear - Create an affine 2D-transformation matrix for shearing
 .SH SYNOPSIS
 .B blind-matrix-shear
-[-ac]
+[-a [-d]] [-c]
 .SH DESCRIPTION
 .B blind-matrix-shear
 creates an affine 2D-transformation matrix for
@@ -37,6 +37,9 @@ Create different matrices for each channel. Use
 values from each channel in stdin to create
 matrices whose values are stored in the same
 channels in stdout.
+.TP
+.B -d
+Input angles in degrees rather than radians.
 .SH NOTES
 The description assumes the Y-axis grows downwards.
 .P

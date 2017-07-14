@@ -3,7 +3,7 @@
 blind-matrix-rotate - Create an affine 2D-transformation matrix for rotation
 .SH SYNOPSIS
 .B blind-matrix-rotate
-[-c]
+[-cd]
 .SH DESCRIPTION
 .B blind-matrix-rotate
 creates an affine 2D-transformation matrix for
@@ -28,9 +28,21 @@ Create different matrices for each channel. Use
 values from each channel in stdin to create
 matrices whose values are stored in the same
 channels in stdout.
+.TP
+.B -d
+Input angles in degrees rather than radians.
 .SH NOTES
 The image is rotated anti-clockwise if the Y-axis
 grows upwards rather than downwards.
+.P
+Due to truncation error, when rotating a multiple
+of 90 degrees, it is preferable to use
+.B -d
+with lets
+.B blind-matrix-rotate
+eliminate the error. If this is not done,
+.BR blind-invert-matrix (1)
+may return odd results.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-from-text (1),

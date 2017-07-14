@@ -31,6 +31,50 @@ posmodf(float a, float b)
 	return x < 0 ? x + b : x;
 }
 
+static inline double
+degsin(double u)
+{
+	if (!fmod(u, 90)) {
+		int64_t v = u;
+		v = ((v / 90) % 4 + 4) % 4;
+		return ((double[]){0, 1, 0, -1})[v];
+	}
+	return sin(u * (M_PI / 180.0));
+}
+
+static inline float
+degsinf(float u)
+{
+	if (!fmodf(u, 90)) {
+		int64_t v = u;
+		v = ((v / 90) % 4 + 4) % 4;
+		return ((float[]){0, 1, 0, -1})[v];
+	}
+	return sin(u * (float)(M_PI / 180.0));
+}
+
+static inline double
+degcos(double u)
+{
+	if (!fmod(u, 90)) {
+		int64_t v = u;
+		v = ((v / 90) % 4 + 4) % 4;
+		return ((double[]){1, 0, -1, 0})[v];
+	}
+	return cos(u * (M_PI / 180.0));
+}
+
+static inline float
+degcosf(float u)
+{
+	if (!fmodf(u, 90)) {
+		int64_t v = u;
+		v = ((v / 90) % 4 + 4) % 4;
+		return ((float[]){1, 0, -1, 0})[v];
+	}
+	return cos(u * (float)(M_PI / 180.0));
+}
+
 #define GENERIC(TYPE, FUNC, ...)\
 	TYPE:           FUNC(__VA_ARGS__),\
 	TYPE *:         FUNC(__VA_ARGS__),\
@@ -73,6 +117,8 @@ posmodf(float a, float b)
 #define sin(...)         MATH_GENERIC_1(sin,      __VA_ARGS__)
 #define tan(...)         MATH_GENERIC_1(tan,      __VA_ARGS__)
 #define atan2(...)       MATH_GENERIC_N(atan2,    __VA_ARGS__)
+#define degcos(...)      MATH_GENERIC_1(degcos,   __VA_ARGS__)
+#define degsin(...)      MATH_GENERIC_1(degsin,   __VA_ARGS__)
 
 #define srgb_encode(...) BLIND_GENERIC_1(srgb_encode, __VA_ARGS__)
 #define srgb_decode(...) BLIND_GENERIC_1(srgb_decode, __VA_ARGS__)

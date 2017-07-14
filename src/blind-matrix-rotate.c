@@ -1,9 +1,10 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-c]")
+USAGE("[-cd]")
 
 static int per_channel = 0;
+static int in_degrees = 0;
 
 #define PROCESS(TYPE)\
 	do {\
@@ -19,15 +20,25 @@ static int per_channel = 0;
 		}\
 		\
 		while (eread_frame(stream, buf)) {\
-			if (per_channel) {\
+			if (per_channel && in_degrees) {\
+				for (i = 0; i < 4; i++) {\
+					matrix[4][i] = matrix[0][i] = degcos(buf[i]);\
+					matrix[3][i] = -(matrix[1][i] = degsin(buf[i]));\
+				}\
+			} else if (per_channel) {\
 				for (i = 0; i < 4; i++) {\
 					matrix[4][i] = matrix[0][i] = cos(buf[i]);\
 					matrix[3][i] = -(matrix[1][i] = sin(buf[i]));\
 				}\
 			} else {\
 				buf[1] *= buf[3];\
-				matrix[4][0] = matrix[0][0] = cos(buf[1]);\
-				matrix[3][0] = -(matrix[1][0] = sin(buf[1]));\
+				if (in_degrees) {\
+					matrix[4][0] = matrix[0][0] = degcos(buf[1]);\
+					matrix[3][0] = -(matrix[1][0] = degsin(buf[1]));\
+				} else {\
+					matrix[4][0] = matrix[0][0] = cos(buf[1]);\
+					matrix[3][0] = -(matrix[1][0] = sin(buf[1]));\
+				}\
 				matrix[0][3] = matrix[0][2] = matrix[0][1] = matrix[0][0];\
 				matrix[1][3] = matrix[1][2] = matrix[1][1] = matrix[1][0];\
 				matrix[3][3] = matrix[3][2] = matrix[3][1] = matrix[3][0];\
@@ -49,6 +60,9 @@ main(int argc, char *argv[])
 	ARGBEGIN {
 	case 'c':
 		per_channel = 1;
+		break;
+	case 'd':
+		in_degrees = 1;
 		break;
 	default:
 		usage();

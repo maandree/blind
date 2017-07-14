@@ -1,16 +1,18 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-ac]")
+USAGE("[-a [-d]][c]")
 
 static int by_angle = 0;
 static int per_channel = 0;
+static int in_degrees = 0;
 
 #define PROCESS(TYPE)\
 	do {\
 		typedef TYPE pixel_t[4];\
 		pixel_t matrix[9];\
 		pixel_t buf[2];\
+		TYPE conv = in_degrees ? (TYPE)(M_PI / 180.) : 1;\
 		int i;\
 		\
 		for (i = 0; i < 4; i++) {\
@@ -22,8 +24,8 @@ static int per_channel = 0;
 		while (eread_frame(stream, buf)) {\
 			if (by_angle) {\
 				for (i = !per_channel; i < (per_channel ? 4 : 2); i++) {\
-					buf[0][i] = tan(buf[0][i]);\
-					buf[1][i] = tan(buf[1][i]);\
+					buf[0][i] = tan(buf[0][i] * conv);\
+					buf[1][i] = tan(buf[1][i] * conv);\
 				}\
 			}\
 			if (per_channel) {\
@@ -55,11 +57,14 @@ main(int argc, char *argv[])
 	case 'c':
 		per_channel = 1;
 		break;
+	case 'd':
+		in_degrees = 1;
+		break;
 	default:
 		usage();
 	} ARGEND;
 
-	if (argc)
+	if (argc || (in_degrees && !by_angle))
 		usage();
 
 	eopen_stream(&stream, NULL);
