@@ -187,8 +187,8 @@ platform.h: generate-macros
 
 install: all
 	mkdir -p -- "$(DESTDIR)$(PREFIX)/bin"
-	cp -f -- $(BIN) "$(DESTDIR)$(PREFIX)/bin"
-	cd -- "$(DESTDIR)$(PREFIX)/bin" && chmod 755 $(BIN)
+	cp -f -- $(BIN) $(SCRIPTS) "$(DESTDIR)$(PREFIX)/bin"
+	cd -- "$(DESTDIR)$(PREFIX)/bin" && chmod 755 $(BIN) $(SCRIPTS)
 	mkdir -p -- "$(DESTDIR)$(MANPREFIX)/man1"
 	set -e && for m in $(MAN1); do \
 		sed '1s/ blind$$/ " blind $(VERSION)"/g' \
@@ -208,7 +208,8 @@ install-mcb: mcb
 		$(LN) -f -- blind-single-colour "$(DESTDIR)$(PREFIX)/bin/$$c"; done
 	rm -f -- "$(DESTDIR)$(PREFIX)/bin/blind-single-colour"
 	cp -f -- blind-mcb "$(DESTDIR)$(PREFIX)/bin/blind-single-colour"
-	chmod 755 -- "$(DESTDIR)$(PREFIX)/bin/blind-single-colour"
+	cp -f -- $(SCRIPTS) "$(DESTDIR)$(PREFIX)/bin"
+	cd -- "$(DESTDIR)$(PREFIX)/bin" && chmod 755 -- blind-single-colour $(SCRIPTS)
 	mkdir -p -- "$(DESTDIR)$(MANPREFIX)/man1"
 	set -e && for m in $(MAN1); do \
 		sed '1s/ blind$$/ " blind $(VERSION)"/g' \
@@ -223,7 +224,7 @@ install-mcb: mcb
 	cd -- "$(DESTDIR)$(MANPREFIX)/man7" && chmod 644 $(MAN7)
 
 uninstall:
-	cd -- "$(DESTDIR)$(PREFIX)/bin" && rm -f $(BIN)
+	cd -- "$(DESTDIR)$(PREFIX)/bin" && rm -f $(BIN) $(SCRIPTS)
 	cd -- "$(DESTDIR)$(MANPREFIX)/man1" && rm -f $(MAN1)
 	cd -- "$(DESTDIR)$(MANPREFIX)/man7" && rm -f $(MAN7)
 
