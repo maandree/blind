@@ -3,10 +3,6 @@
 
 USAGE("[file ...]")
 
-#if !defined(PIPE_BUF)
-# define PIPE_BUF BUFSIZ
-#endif
-
 int
 main(int argc, char *argv[])
 {

@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#ifndef TYPE
 #include "common.h"
 
 USAGE("[-f frames | -f 'inf'] [-F pixel-format] -w width -h height (X Y Z | Y) [alpha]")
@@ -7,29 +8,8 @@ static struct stream stream = { .width = 0, .height = 0, .frames = 1 };
 static double X, Y, Z, alpha = 1;
 static int inf = 0;
 
-#define PROCESS(TYPE)\
-	do {\
-		typedef TYPE pixel_t[4];\
-		pixel_t buf[BUFSIZ / 4];\
-		size_t x, y, n;\
-		ssize_t r;\
-		\
-		for (x = 0; x < ELEMENTSOF(buf); x++) {\
-			buf[x][0] = (TYPE)X;\
-			buf[x][1] = (TYPE)Y;\
-			buf[x][2] = (TYPE)Z;\
-			buf[x][3] = (TYPE)alpha;\
-		}\
-		while (inf || stream.frames--)\
-			for (y = stream.height; y--;)\
-				for (x = stream.width * sizeof(*buf); x;)\
-					for (x -= n = MIN(sizeof(buf), x); n; n -= (size_t)r)\
-						if ((r = write(STDOUT_FILENO, buf, n)) < 0)\
-							eprintf("write <stdout>:");\
-	} while (0)
-
-static void process_xyza(void)  {PROCESS(double);}
-static void process_xyzaf(void) {PROCESS(float);}
+#define FILE "blind-single-colour.c"
+#include "define-functions.h"
 
 int
 main(int argc, char *argv[])
@@ -79,9 +59,9 @@ main(int argc, char *argv[])
 
 	pixfmt = get_pixel_format(pixfmt, "xyza");
 	if (!strcmp(pixfmt, "xyza"))
-		process = process_xyza;
+		process = process_lf;
 	else if (!strcmp(pixfmt, "xyza f"))
-		process = process_xyzaf;
+		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", pixfmt);
 
@@ -92,3 +72,28 @@ main(int argc, char *argv[])
 	process();
 	return 0;
 }
+
+#else
+
+static void
+PROCESS(void)
+{
+	typedef TYPE pixel_t[4];
+	pixel_t buf[BUFSIZ / 4];
+	size_t x, y, n;
+	ssize_t r;
+	for (x = 0; x < ELEMENTSOF(buf); x++) {
+		buf[x][0] = (TYPE)X;
+		buf[x][1] = (TYPE)Y;
+		buf[x][2] = (TYPE)Z;
+		buf[x][3] = (TYPE)alpha;
+	}
+	while (inf || stream.frames--)
+		for (y = stream.height; y--;)
+			for (x = stream.width * sizeof(*buf); x;)
+				for (x -= n = MIN(sizeof(buf), x); n; n -= (size_t)r)
+					if ((r = write(STDOUT_FILENO, buf, n)) < 0)
+						eprintf("write <stdout>:");
+}
+
+#endif

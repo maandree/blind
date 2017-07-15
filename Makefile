@@ -112,6 +112,7 @@ COMMON_OBJ =\
 HDR =\
 	arg.h\
 	common.h\
+	define-functions.h\
 	stream.h\
 	util.h\
 	util/to.h\

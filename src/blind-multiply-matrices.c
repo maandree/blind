@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#ifndef TYPE
 #include "common.h"
 
 USAGE("[-en] leftmost-stream ... rightmost-stream")
@@ -6,56 +7,8 @@ USAGE("[-en] leftmost-stream ... rightmost-stream")
 static int equal = 0;
 static size_t max_frame_size;
 
-#define PROCESS(TYPE)\
-	do {\
-		typedef TYPE pixel_t[4];\
-		pixel_t *res, *left, *right, *tmp;\
-		size_t i, j, w, h, h2, x, y, k, r;\
-		res = emalloc(max_frame_size);\
-		left = emalloc(max_frame_size);\
-		right = emalloc(max_frame_size);\
-		\
-		while (eread_frame(streams + (n_streams - 1), res)) {\
-			w = streams[n_streams - 1].width;\
-			h = streams[n_streams - 1].height;\
-			for (i = n_streams - 1; i--;) {\
-				tmp = res, res = right, right = tmp;\
-				if (!eread_frame(streams + i, left))\
-					goto done;\
-				h2 = streams[i].height;\
-				memset(res, 0, w * h2 * streams->pixel_size);\
-				\
-				/* XXX Is there any significant performance to be gained by transposing `right`? */\
-				if (equal) {\
-					for (y = r = 0; y < h2; y++) {\
-						for (x = 0; x < w; x++, r++) {\
-							for (k = 0; k < h; k++) \
-								res[r][0] += left[y * h + k][0] * right[k * w + x][0];\
-							for (j = 1; j < streams->n_chan; j++)\
-								res[r][j] = res[r][0];\
-						}\
-					}\
-				} else {\
-					for (y = r = 0; y < h2; y++)\
-						for (x = 0; x < w; x++, r++) \
-							for (k = 0; k < h; k++)\
-								for (j = 0; j < streams->n_chan; j++)\
-									res[r][j] += left[y * h + k][j] * right[k * w + x][j];\
-				}\
-				\
-				h = h2;\
-			}\
-			ewriteall(STDOUT_FILENO, res, streams->frame_size, "<stdout>");\
-		}\
-		\
-	done:\
-		free(res);\
-		free(left);\
-		free(right);\
-	} while (0)
-
-static void process_lf(struct stream *streams, size_t n_streams) { PROCESS(double); }
-static void process_f (struct stream *streams, size_t n_streams) { PROCESS(float); }
+#define FILE "blind-multiply-matrices.c"
+#include "define-functions.h"
 
 int
 main(int argc, char *argv[])
@@ -137,3 +90,56 @@ main(int argc, char *argv[])
 	free(streams);
 	return 0;
 }
+
+#else
+
+static void
+PROCESS(struct stream *streams, size_t n_streams)
+{
+	typedef TYPE pixel_t[4];
+	pixel_t *res, *left, *right, *tmp;
+	size_t i, j, w, h, h2, x, y, k, r;
+	res = emalloc(max_frame_size);
+	left = emalloc(max_frame_size);
+	right = emalloc(max_frame_size);
+
+	while (eread_frame(streams + (n_streams - 1), res)) {
+		w = streams[n_streams - 1].width;
+		h = streams[n_streams - 1].height;
+		for (i = n_streams - 1; i--;) {
+			tmp = res, res = right, right = tmp;
+			if (!eread_frame(streams + i, left))
+				goto done;
+			h2 = streams[i].height;
+			memset(res, 0, w * h2 * streams->pixel_size);
+
+			/* XXX Is there any significant performance to be gained by transposing `right`? */
+			if (equal) {
+				for (y = r = 0; y < h2; y++) {
+					for (x = 0; x < w; x++, r++) {
+						for (k = 0; k < h; k++)
+							res[r][0] += left[y * h + k][0] * right[k * w + x][0];
+						for (j = 1; j < streams->n_chan; j++)
+							res[r][j] = res[r][0];
+					}
+				}
+			} else {
+				for (y = r = 0; y < h2; y++)
+					for (x = 0; x < w; x++, r++)
+						for (k = 0; k < h; k++)
+							for (j = 0; j < streams->n_chan; j++)
+								res[r][j] += left[y * h + k][j] * right[k * w + x][j];
+			}
+
+			h = h2;
+		}
+		ewriteall(STDOUT_FILENO, res, streams->frame_size, "<stdout>");
+	}
+
+done:
+	free(res);
+	free(left);
+	free(right);
+}
+
+#endif

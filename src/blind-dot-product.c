@@ -1,27 +1,11 @@
 /* See LICENSE file for copyright and license details. */
+#ifndef TYPE
 #include "common.h"
 
 USAGE("right-hand-stream")
 
-#define PROCESS(TYPE, SUFFIX)\
-	static void\
-	process_##SUFFIX(struct stream *left, struct stream *right, size_t n)\
-	{\
-		size_t i, j, s = left->n_chan * sizeof(TYPE);\
-		TYPE v, *l, *r;\
-		for (i = 0; i < n; i += s) {\
-			l = (TYPE *)(left->buf + i);\
-			r = (TYPE *)(right->buf + i);\
-			v = 0;\
-			for (j = 0; j < left->n_chan; j++)\
-				v += l[j] * r[j];\
-			for (j = 0; j < left->n_chan; j++)\
-				l[j] = v;\
-		}\
-	}
-
-PROCESS(double, lf)
-PROCESS(float, f)
+#define FILE "blind-dot-product.c"
+#include "define-functions.h"
 
 int
 main(int argc, char *argv[])
@@ -46,3 +30,23 @@ main(int argc, char *argv[])
 	process_two_streams(&left, &right, STDOUT_FILENO, "<stdout>", process);
 	return 0;
 }
+
+#else
+
+static void
+PROCESS(struct stream *left, struct stream *right, size_t n)
+{
+	size_t i, j, s = left->n_chan * sizeof(TYPE);
+	TYPE v, *l, *r;
+	for (i = 0; i < n; i += s) {
+		l = (TYPE *)(left->buf + i);
+		r = (TYPE *)(right->buf + i);
+		v = 0;
+		for (j = 0; j < left->n_chan; j++)
+			v += l[j] * r[j];
+		for (j = 0; j < left->n_chan; j++)
+			l[j] = v;
+	}
+}
+
+#endif

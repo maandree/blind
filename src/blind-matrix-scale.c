@@ -1,43 +1,13 @@
 /* See LICENSE file for copyright and license details. */
+#ifndef TYPE
 #include "common.h"
 
 USAGE("[-c]")
 
 static int per_channel = 0;
 
-#define PROCESS(TYPE)\
-	do {\
-		typedef TYPE pixel_t[4];\
-		pixel_t matrix[9];\
-		pixel_t buf[2];\
-		size_t i;\
-		\
-		for (i = 0; i < stream->n_chan; i++) {\
-			matrix[0][i] = 1, matrix[1][i] = 0, matrix[2][i] = 0;\
-			matrix[3][i] = 0, matrix[4][i] = 1, matrix[5][i] = 0;\
-			matrix[6][i] = 0, matrix[7][i] = 0, matrix[8][i] = 1;\
-		}\
-		\
-		while (eread_frame(stream, buf)) {\
-			if (per_channel) {\
-				for (i = 0; i < stream->n_chan; i++) {\
-					matrix[0][i] = buf[0][i];\
-					matrix[4][i] = buf[1][i];\
-				}\
-			} else {\
-				buf[0][1] *= buf[0][3];\
-				buf[1][1] *= buf[1][3];\
-				for (i = 0; i < stream->n_chan; i++) {\
-					matrix[0][i] = buf[0][1];\
-					matrix[4][i] = buf[1][1];\
-				}\
-			}\
-			ewriteall(STDOUT_FILENO, matrix, sizeof(matrix), "<stdout>");\
-		}\
-	} while (0)
-
-static void process_lf(struct stream *stream) { PROCESS(double); }
-static void process_f(struct stream *stream) { PROCESS(float); }
+#define FILE "blind-matrix-scale.c"
+#include "define-functions.h"
 
 int
 main(int argc, char *argv[])
@@ -76,3 +46,39 @@ main(int argc, char *argv[])
 	process(&stream);
 	return 0;
 }
+
+#else
+
+static void
+PROCESS(struct stream *stream)
+{
+	typedef TYPE pixel_t[4];
+	pixel_t matrix[9];
+	pixel_t buf[2];
+	size_t i;
+
+	for (i = 0; i < stream->n_chan; i++) {
+		matrix[0][i] = 1, matrix[1][i] = 0, matrix[2][i] = 0;
+		matrix[3][i] = 0, matrix[4][i] = 1, matrix[5][i] = 0;
+		matrix[6][i] = 0, matrix[7][i] = 0, matrix[8][i] = 1;
+	}
+
+	while (eread_frame(stream, buf)) {
+		if (per_channel) {
+			for (i = 0; i < stream->n_chan; i++) {
+				matrix[0][i] = buf[0][i];
+				matrix[4][i] = buf[1][i];
+			}
+		} else {
+			buf[0][1] *= buf[0][3];
+			buf[1][1] *= buf[1][3];
+			for (i = 0; i < stream->n_chan; i++) {
+				matrix[0][i] = buf[0][1];
+				matrix[4][i] = buf[1][1];
+			}
+		}
+		ewriteall(STDOUT_FILENO, matrix, sizeof(matrix), "<stdout>");
+	}
+}
+
+#endif

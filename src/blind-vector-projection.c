@@ -1,45 +1,13 @@
 /* See LICENSE file for copyright and license details. */
+#ifndef TYPE
 #include "common.h"
 
 USAGE("[-r | -s] plane-stream")
 
 static int level = 1;
 
-#define PROCESS(TYPE, SUFFIX)\
-	static void\
-	process_##SUFFIX(struct stream *left, struct stream *right, size_t n)\
-	{\
-		size_t i;\
-		TYPE *lx, *ly, *lz, *la, rx, ry, rz, ra, x, y, z, a, norm;\
-		for (i = 0; i < n; i += 4 * sizeof(TYPE)) {\
-			lx = ((TYPE *)(left->buf + i)) + 0, rx = ((TYPE *)(right->buf + i))[0];\
-			ly = ((TYPE *)(left->buf + i)) + 1, ry = ((TYPE *)(right->buf + i))[1];\
-			lz = ((TYPE *)(left->buf + i)) + 2, rz = ((TYPE *)(right->buf + i))[2];\
-			la = ((TYPE *)(left->buf + i)) + 3, ra = ((TYPE *)(right->buf + i))[3];\
-			norm = rx * rx + ry * ry + rz * rz + ra * ra;\
-			norm = sqrt(norm);\
-			x = y = z = a = *lx * rx + *ly * ry + *lz * rz + *la * ra;\
-			if (level) {\
-				x *= rx;\
-				y *= ry;\
-				z *= rz;\
-				a *= rz;\
-				if (level > 1) {\
-					x = *lx - x;\
-					y = *ly - y;\
-					z = *lz - z;\
-					a = *la - a;\
-				}\
-			}\
-			*lx = x;\
-			*ly = y;\
-			*lz = z;\
-			*la = a;\
-		}\
-	}
-
-PROCESS(double, lf)
-PROCESS(float, f)
+#define FILE "blind-vector-projection.c"
+#include "define-functions.h"
 
 int
 main(int argc, char *argv[])
@@ -80,3 +48,39 @@ main(int argc, char *argv[])
 	process_two_streams(&left, &right, STDOUT_FILENO, "<stdout>", process);
 	return 0;
 }
+
+#else
+
+static void
+PROCESS(struct stream *left, struct stream *right, size_t n)
+{
+	size_t i;
+	TYPE *lx, *ly, *lz, *la, rx, ry, rz, ra, x, y, z, a, norm;
+	for (i = 0; i < n; i += 4 * sizeof(TYPE)) {
+		lx = ((TYPE *)(left->buf + i)) + 0, rx = ((TYPE *)(right->buf + i))[0];
+		ly = ((TYPE *)(left->buf + i)) + 1, ry = ((TYPE *)(right->buf + i))[1];
+		lz = ((TYPE *)(left->buf + i)) + 2, rz = ((TYPE *)(right->buf + i))[2];
+		la = ((TYPE *)(left->buf + i)) + 3, ra = ((TYPE *)(right->buf + i))[3];
+		norm = rx * rx + ry * ry + rz * rz + ra * ra;
+		norm = sqrt(norm);
+		x = y = z = a = *lx * rx + *ly * ry + *lz * rz + *la * ra;
+		if (level) {
+			x *= rx;
+			y *= ry;
+			z *= rz;
+			a *= rz;
+			if (level > 1) {
+				x = *lx - x;
+				y = *ly - y;
+				z = *lz - z;
+				a = *la - a;
+			}
+		}
+		*lx = x;
+		*ly = y;
+		*lz = z;
+		*la = a;
+	}
+}
+
+#endif

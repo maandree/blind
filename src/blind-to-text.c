@@ -1,8 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-#include <string.h>
-
 USAGE("")
 
 #define PROCESS(TYPE, CAST, FMT)\

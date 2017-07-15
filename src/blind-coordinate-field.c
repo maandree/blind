@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#ifndef TYPE
 #include "common.h"
 
 USAGE("[-f frames | -f 'inf'] [-F pixel-format] -w width -h height")
@@ -6,25 +7,8 @@ USAGE("[-f frames | -f 'inf'] [-F pixel-format] -w width -h height")
 static struct stream stream = { .width = 0, .height = 0, .frames = 1 };
 static int inf = 0;
 
-#define PROCESS(TYPE)\
-	do {\
-		TYPE buf[4] = {0, 0, 0, 0};\
-		size_t x, y;\
-		\
-		while (inf || stream.frames--) {\
-			for (y = 0; y < stream.height; y++) {\
-				buf[1] = (TYPE)y;\
-				for (x = 0; x < stream.width; x++) {\
-					buf[0] = (TYPE)x;\
-					if (write(STDOUT_FILENO, buf, sizeof(buf)) < 0)\
-						eprintf("write <stdout>:");\
-				}\
-			}\
-		}\
-	} while (0)
-
-static void process_lf(void) {PROCESS(double);}
-static void process_f(void) {PROCESS(float);}
+#define FILE "blind-coordinate-field.c"
+#include "define-functions.h"
 
 int
 main(int argc, char *argv[])
@@ -75,3 +59,24 @@ main(int argc, char *argv[])
 	process();
 	return 0;
 }
+
+#else
+
+static void
+PROCESS(void)
+{
+	TYPE buf[4] = {0, 0, 0, 0};
+	size_t x, y;
+	while (inf || stream.frames--) {
+		for (y = 0; y < stream.height; y++) {
+			buf[1] = (TYPE)y;
+			for (x = 0; x < stream.width; x++) {
+				buf[0] = (TYPE)x;
+				if (write(STDOUT_FILENO, buf, sizeof(buf)) < 0)
+					eprintf("write <stdout>:");
+			}
+		}
+	}
+}
+
+#endif

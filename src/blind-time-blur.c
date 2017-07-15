@@ -1,52 +1,13 @@
 /* See LICENSE file for copyright and license details. */
+#ifndef TYPE
 #include "common.h"
 
 USAGE("alpha-stream")
 
 static int first = 1;
 
-#define PROCESS(TYPE)\
-	do {\
-		typedef TYPE pixel_t[4];\
-		pixel_t *restrict clr = (pixel_t *)cbuf;\
-		pixel_t *restrict alf = (pixel_t *)abuf;\
-		pixel_t *img = (pixel_t *)output;\
-		size_t i, n = colour->frame_size / sizeof(pixel_t);\
-		TYPE a1, a2;\
-		\
-		if (first) {\
-			memcpy(output, cbuf, colour->frame_size);\
-			first = 0;\
-			return;\
-		}\
-		\
-		for (i = 0; i < n; i++, clr++, alf++, img++) {\
-			a1 = (*img)[3];\
-			a2 = (*clr)[3] * (*alf)[1] * (*alf)[3];\
-			a1 *= (1 - a2);\
-			(*img)[0] = (*img)[0] * a1 + (*clr)[0] * a2;\
-			(*img)[1] = (*img)[1] * a1 + (*clr)[1] * a2;\
-			(*img)[2] = (*img)[2] * a1 + (*clr)[2] * a2;\
-			(*img)[3] = a1 + a2;\
-		}\
-		\
-		(void) colour;\
-		(void) alpha;\
-	} while (0)
-
-static void
-process_lf(char *output, char *restrict cbuf, char *restrict abuf,
-	   struct stream *colour, struct stream *alpha)
-{
-	PROCESS(double);
-}
-
-static void
-process_f(char *output, char *restrict cbuf, char *restrict abuf,
-	  struct stream *colour, struct stream *alpha)
-{
-	PROCESS(float);
-}
+#define FILE "blind-time-blur.c"
+#include "define-functions.h"
 
 int
 main(int argc, char *argv[])
@@ -79,3 +40,39 @@ main(int argc, char *argv[])
 	process_each_frame_two_streams(&colour, &alpha, STDOUT_FILENO, "<stdout>", process);
 	return 0;
 }
+
+#else
+
+static void
+PROCESS(char *output, char *restrict cbuf, char *restrict abuf,
+        struct stream *colour, struct stream *alpha)
+{
+	typedef TYPE pixel_t[4];
+	pixel_t *restrict clr = (pixel_t *)cbuf;
+	pixel_t *restrict alf = (pixel_t *)abuf;
+	pixel_t *img = (pixel_t *)output;
+	size_t i, n = colour->frame_size / sizeof(pixel_t);
+	TYPE a1, a2;
+
+	if (first) {
+		memcpy(output, cbuf, colour->frame_size);
+		first = 0;
+		return;
+	}
+
+	for (i = 0; i < n; i++, clr++, alf++, img++) {
+		a1 = (*img)[3];
+		a2 = (*clr)[3] * (*alf)[1] * (*alf)[3];
+		a1 *= (1 - a2);
+		(*img)[0] = (*img)[0] * a1 + (*clr)[0] * a2;
+		(*img)[1] = (*img)[1] * a1 + (*clr)[1] * a2;
+		(*img)[2] = (*img)[2] * a1 + (*clr)[2] * a2;
+		(*img)[3] = a1 + a2;
+	}
+
+	(void) colour;
+	(void) alpha;
+
+}
+
+#endif

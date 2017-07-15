@@ -64,3 +64,7 @@
 #ifndef CMSG_LEN
 # define CMSG_LEN(len) (CMSG_ALIGN(sizeof(struct cmsghdr)) + (len))
 #endif
+
+#if !defined(PIPE_BUF)
+# define PIPE_BUF BUFSIZ
+#endif
