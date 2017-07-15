@@ -5,6 +5,9 @@ VERSION = 1.1
 PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
+# Commands
+LN = ln -s
+
 # You may want to remove -DHAVE_PRCTL, -DHAVE_EPOLL, and
 # -DHAVE_SENDFILE from CPPFLAGS if you are not using Linux.
 CFLAGS   = -std=c11 -Wall -pedantic -O2

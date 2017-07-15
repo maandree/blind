@@ -151,12 +151,33 @@ MAN7 = blind.7
 
 
 all: $(BIN)
+mcb: blind-mcb
 
 %: %.o $(COMMON_OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 %.o: src/%.c src/*.h src/*/*.h platform.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+%.mcb.o: src/%.c src/*.h src/*/*.h platform.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -Dmain="$$(printf 'main_%s\n' $* | tr -- - _)" -c -o $@ $<
+
+blind-mcb.c: Makefile
+	printf '#include <%s.h>\n' stdio string > blind-mcb.c
+	printf 'int main_%s(int argc, char *argv[]);\n' $(BIN) | tr -- - _ >> blind-mcb.c
+	printf 'int main(int argc, char *argv[]) {\n' >> blind-mcb.c
+	printf 'char *cmd = strrchr(*argv, '"'/'"');\n' >> blind-mcb.c
+	printf 'cmd = cmd ? cmd + 1 : *argv;\n' >> blind-mcb.c
+	for c in $(BIN); do \
+		printf 'if (!strcmp(cmd, "%s"))\n\treturn main_%s(argc, argv);\n' "$$c" "$$c" | \
+			sed '/^\t/s/-/_/g'; \
+	done >> blind-mcb.c
+	printf 'fprintf(stderr, "Invalid command: %%s\\n", cmd);\n' >> blind-mcb.c
+	printf 'return 1;\n' >> blind-mcb.c
+	printf '}\n' >> blind-mcb.c
+
+blind-mcb: blind-mcb.o $(BIN:=.mcb.o) $(COMMON_OBJ)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 generate-macros: src/generate-macros.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $< $(LDFLAGS)
@@ -168,6 +189,26 @@ install: all
 	mkdir -p -- "$(DESTDIR)$(PREFIX)/bin"
 	cp -f -- $(BIN) "$(DESTDIR)$(PREFIX)/bin"
 	cd -- "$(DESTDIR)$(PREFIX)/bin" && chmod 755 $(BIN)
+	mkdir -p -- "$(DESTDIR)$(MANPREFIX)/man1"
+	set -e && for m in $(MAN1); do \
+		sed '1s/ blind$$/ " blind $(VERSION)"/g' \
+		< "man/$$m" > "$(DESTDIR)$(MANPREFIX)/man1/$$m"; \
+	done
+	cd -- "$(DESTDIR)$(MANPREFIX)/man1" && chmod 644 $(MAN1)
+	mkdir -p -- "$(DESTDIR)$(MANPREFIX)/man7"
+	set -e && for m in $(MAN7); do \
+		sed '1s/ blind$$/ " blind $(VERSION)"/g' \
+		< "man/$$m" > "$(DESTDIR)$(MANPREFIX)/man7/$$m"; \
+	done
+	cd -- "$(DESTDIR)$(MANPREFIX)/man7" && chmod 644 $(MAN7)
+
+install-mcb: mcb
+	mkdir -p -- "$(DESTDIR)$(PREFIX)/bin"
+	for c in $(BIN); do \
+		$(LN) -f -- blind-single-colour "$(DESTDIR)$(PREFIX)/bin/$$c"; done
+	rm -f -- "$(DESTDIR)$(PREFIX)/bin/blind-single-colour"
+	cp -f -- blind-mcb "$(DESTDIR)$(PREFIX)/bin/blind-single-colour"
+	chmod 755 -- "$(DESTDIR)$(PREFIX)/bin/blind-single-colour"
 	mkdir -p -- "$(DESTDIR)$(MANPREFIX)/man1"
 	set -e && for m in $(MAN1); do \
 		sed '1s/ blind$$/ " blind $(VERSION)"/g' \
@@ -203,8 +244,9 @@ dist:
 
 clean:
 	-rm -f $(BIN) *.o blind-$(VERSION).tar.gz platform.h generate-macros
+	-rm -f blind-mcb.c blind-mcb.o blind-mcb
 	-rm -rf "blind-$(VERSION)"
 
 
-.PHONY: all install uninstall dist clean
+.PHONY: all mcb install install-mcb uninstall dist clean
 .PRECIOUS: $(COMMON_OBJ) platform.h
