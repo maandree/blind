@@ -9,9 +9,6 @@
 
 USAGE("[-s]")
 
-#define USING_BINARY32 0
-#define USING_BINARY64 0
-
 #define CONV(ITYPE, OTYPE, SOTYPE, EXPONENT, HA2EXPONENT, FRACTION)\
 	do {\
 		static int cache_i = 0;\

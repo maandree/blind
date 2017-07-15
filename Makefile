@@ -155,8 +155,14 @@ all: $(BIN)
 %: %.o $(COMMON_OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-%.o: src/%.c src/*.h src/*/*.h
+%.o: src/%.c src/*.h src/*/*.h platform.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+generate-macros: src/generate-macros.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $< $(LDFLAGS)
+
+platform.h: generate-macros
+	./generate-macros > platform.h
 
 install: all
 	mkdir -p -- "$(DESTDIR)$(PREFIX)/bin"
@@ -196,9 +202,9 @@ dist:
 	rm -rf "blind-$(VERSION)"
 
 clean:
-	-rm -f $(BIN) *.o blind-$(VERSION).tar.gz
+	-rm -f $(BIN) *.o blind-$(VERSION).tar.gz platform.h generate-macros
 	-rm -rf "blind-$(VERSION)"
 
 
 .PHONY: all install uninstall dist clean
-.PRECIOUS: $(COMMON_OBJ)
+.PRECIOUS: $(COMMON_OBJ) platform.h

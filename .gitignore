@@ -7,6 +7,8 @@
 *.swp
 *.o
 *.out
+/platform.h
+/generate-macros
 /blind-*
 !/blind-rotate-90
 !/blind-rotate-180
