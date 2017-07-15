@@ -5,7 +5,6 @@ USAGE("[-e] [theta0-stream]")
 
 static int equal = 0;
 
-
 #define PROCESS(TYPE, SUFFIX)\
 	static void\
 	process_##SUFFIX(struct stream *grad, struct stream *theta0)\
@@ -70,7 +69,6 @@ static int equal = 0;
 PROCESS(double, lf)
 PROCESS(float, f)
 
-
 int
 main(int argc, char *argv[])
 {
@@ -96,9 +94,9 @@ main(int argc, char *argv[])
 			eprintf("theta0-stream must be of dimension 1x1\n");
 	}
 
-	if (!strcmp(stream.pixfmt, "xyza"))
+	if (stream.encoding == DOUBLE)
 		process = process_lf;
-	else if (!strcmp(stream.pixfmt, "xyza f"))
+	else if (stream.encoding == FLOAT)
 		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);

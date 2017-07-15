@@ -7,7 +7,6 @@ static size_t width = 0;
 static size_t height = 0;
 static int with_multiplier;
 
-
 #define PROCESS(TYPE, SUFFIX)\
 	static void\
 	process_##SUFFIX(struct stream *stream)\
@@ -62,7 +61,6 @@ static int with_multiplier;
 
 PROCESS(double, lf)
 PROCESS(float, f)
-
 
 int
 main(int argc, char *argv[])

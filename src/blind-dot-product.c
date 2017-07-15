@@ -7,14 +7,16 @@ USAGE("right-hand-stream")
 	static void\
 	process_##SUFFIX(struct stream *left, struct stream *right, size_t n)\
 	{\
-		size_t i;\
-		TYPE *lx, *ly, *lz, *la, *rx, *ry, *rz, *ra;\
-		for (i = 0; i < n; i += 4 * sizeof(TYPE)) {\
-			lx = ((TYPE *)(left->buf + i)) + 0, rx = ((TYPE *)(right->buf + i)) + 0;\
-			ly = ((TYPE *)(left->buf + i)) + 1, ry = ((TYPE *)(right->buf + i)) + 1;\
-			lz = ((TYPE *)(left->buf + i)) + 2, rz = ((TYPE *)(right->buf + i)) + 2;\
-			la = ((TYPE *)(left->buf + i)) + 3, ra = ((TYPE *)(right->buf + i)) + 3;\
-			*lx = *ly = *lz = *la = *lx * *rx + *ly * *ry + *lz * *rz + *la * *ra;\
+		size_t i, j, s = left->n_chan * sizeof(TYPE);\
+		TYPE v, *l, *r;\
+		for (i = 0; i < n; i += s) {\
+			l = (TYPE *)(left->buf + i);\
+			r = (TYPE *)(right->buf + i);\
+			v = 0;\
+			for (j = 0; j < left->n_chan; j++)\
+				v += l[j] * r[j];\
+			for (j = 0; j < left->n_chan; j++)\
+				l[j] = v;\
 		}\
 	}
 
@@ -32,9 +34,9 @@ main(int argc, char *argv[])
 	eopen_stream(&left, NULL);
 	eopen_stream(&right, argv[0]);
 
-	if (!strcmp(left.pixfmt, "xyza"))
+	if (left.encoding == DOUBLE)
 		process = process_lf;
-	else if (!strcmp(left.pixfmt, "xyza f"))
+	else if (left.encoding == FLOAT)
 		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", left.pixfmt);

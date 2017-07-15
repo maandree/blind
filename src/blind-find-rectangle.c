@@ -111,13 +111,13 @@ main(int argc, char *argv[])
 	cache = emalloc2(stream.width + 1, sizeof(*cache));
 	buf   = emalloc(stream.row_size);
 
-	if (!strcmp(stream.pixfmt, "xyza")) {
+	if (stream.encoding == DOUBLE) {
 		colour_lf[0] = X;
 		colour_lf[1] = Y;
 		colour_lf[2] = Z;
 		colour_lf[3] = alpha;
 		process(colour_lf);
-	} else if (!strcmp(stream.pixfmt, "xyza f")) {
+	} else if (stream.encoding == FLOAT) {
 		colour_f[0] = (float)X;
 		colour_f[1] = (float)Y;
 		colour_f[2] = (float)Z;

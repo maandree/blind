@@ -10,9 +10,9 @@ static int per_channel = 0;
 		typedef TYPE pixel_t[4];\
 		pixel_t matrix[9];\
 		pixel_t buf;\
-		int i;\
+		size_t i;\
 		\
-		for (i = 0; i < 4; i++) {\
+		for (i = 0; i < stream->n_chan; i++) {\
 			matrix[0][i] = 1, matrix[1][i] = 0, matrix[2][i] = 0;\
 			matrix[3][i] = 0, matrix[4][i] = 1, matrix[5][i] = 0;\
 			matrix[6][i] = 0, matrix[7][i] = 0, matrix[8][i] = 1;\
@@ -20,13 +20,14 @@ static int per_channel = 0;
 		\
 		while (eread_frame(stream, buf)) {\
 			if (per_channel) {\
-				for (i = 0; i < 4; i++) {\
+				for (i = 0; i < stream->n_chan; i++) {\
 					matrix[3][i] = matrix[1][i] = buf[i];\
 					matrix[4][i] = matrix[0][i] = 1 - buf[i];\
 				}\
 			} else {\
-				for (i = 0; i < 4; i++) {\
-					matrix[3][i] = matrix[1][i] = buf[1] * buf[3];\
+				buf[1] *= buf[3];\
+				for (i = 0; i < stream->n_chan; i++) {\
+					matrix[3][i] = matrix[1][i] = buf[1];\
 					matrix[4][i] = matrix[0][i] = 1 - matrix[3][i];\
 				}\
 			}\
@@ -64,9 +65,9 @@ main(int argc, char *argv[])
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
-	if (!strcmp(stream.pixfmt, "xyza"))
+	if (stream.encoding == DOUBLE)
 		process = process_lf;
-	else if (!strcmp(stream.pixfmt, "xyza f"))
+	else if (stream.encoding == FLOAT)
 		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);

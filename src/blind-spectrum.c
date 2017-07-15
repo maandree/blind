@@ -6,7 +6,6 @@ USAGE("[-y] [-z depth] spectrum-stream")
 static int luma = 0;
 static size_t nz = 1;
 
-
 #define PROCESS(TYPE, SUFFIX)\
 	static void\
 	process_##SUFFIX(struct stream *stream, struct stream *spectrum)\
@@ -122,7 +121,6 @@ static size_t nz = 1;
 
 PROCESS(double, lf)
 PROCESS(float, f)
-
 
 int
 main(int argc, char *argv[])

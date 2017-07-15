@@ -95,12 +95,22 @@ enopen_stream(int status, struct stream *stream, const char *file)
 int
 set_pixel_size(struct stream *stream)
 {
-	if (!strcmp(stream->pixfmt, "xyza"))
-		stream->pixel_size = 4 * sizeof(double);
-	else if (!strcmp(stream->pixfmt, "xyza f"))
-		stream->pixel_size = 4 * sizeof(float);
-	else
+	if (!strcmp(stream->pixfmt, "xyza")) {
+		stream->n_chan = 4;
+		stream->chan_size = sizeof(double);
+		stream->space = CIEXYZ;
+		stream->alpha = UNPREMULTIPLIED;
+		stream->encoding = DOUBLE;
+	} else if (!strcmp(stream->pixfmt, "xyza f")) {
+		stream->n_chan = 4;
+		stream->chan_size = sizeof(float);
+		stream->space = CIEXYZ;
+		stream->alpha = UNPREMULTIPLIED;
+		stream->encoding = FLOAT;
+	} else {
 		return -1;
+	}
+	stream->pixel_size = stream->n_chan * stream->chan_size;
 	stream->row_size   = stream->pixel_size * stream->width;
 	stream->col_size   = stream->pixel_size * stream->height;
 	stream->frame_size = stream->pixel_size * stream->height * stream->width;
@@ -212,31 +222,31 @@ encheck_compat(int status, const struct stream *a, const struct stream *b)
 const char *
 get_pixel_format(const char *specified, const char *current)
 {
-	const char *base = NULL;
-	int as_float = 0;
+	enum colour_space space;
+	enum encoding encoding;
 
 	if (!strcmp(current, "xyza"))
-		base = "xyza";
+		space = CIEXYZ, encoding = DOUBLE;
 	else if (!strcmp(current, "xyza f"))
-		base = "xyza", as_float = 1;
+		space = CIEXYZ, encoding = FLOAT;
 	else
 		return specified;
 
 	if (!strcmp(specified, "xyza"))
-		base = "xyza";
+		space = CIEXYZ;
 	else if (!strcmp(specified, "xyza f"))
 		return "xyza f";
 	else if (!strcmp(specified, "xyza !f"))
 		return "xyza";
 	else if (!strcmp(specified, "f"))
-		as_float = 1;
+		encoding = FLOAT;
 	else if (!strcmp(specified, "!f"))
-		as_float = 0;
+		encoding = DOUBLE;
 	else
 		return specified;
 
-	if (!strcmp(base, "xyza"))
-		return as_float ? "xyza f" : "xyza";
+	if (space == CIEXYZ)
+		return encoding == FLOAT ? "xyza f" : "xyza";
 	else
 		return specified;
 }

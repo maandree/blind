@@ -63,16 +63,31 @@ enum dimension {
 	LENGTH = 4
 };
 
+enum colour_space {
+	CIEXYZ
+};
+
+enum alpha {
+	UNPREMULTIPLIED
+};
+
+enum encoding {
+	FLOAT,
+	DOUBLE
+};
+
 struct stream {
 	size_t frames;
 	size_t width;
 	size_t height;
+	size_t n_chan;
+	size_t chan_size;
 	size_t pixel_size;
 	char pixfmt[32];
+	enum colour_space space;
+	enum alpha alpha;
+	enum encoding encoding;
 	int fd;
-#if INT_MAX != LONG_MAX
-	int padding__;
-#endif
 	size_t ptr;
 	size_t xptr;
 	char buf[BUFSIZ];

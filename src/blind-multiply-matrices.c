@@ -30,15 +30,16 @@ static size_t max_frame_size;
 					for (y = r = 0; y < h2; y++) {\
 						for (x = 0; x < w; x++, r++) {\
 							for (k = 0; k < h; k++) \
-								res[r][1] += left[y * h + k][1] * right[k * w + x][1];\
-							res[r][3] = res[r][2] = res[r][0] = res[r][1];\
+								res[r][0] += left[y * h + k][0] * right[k * w + x][0];\
+							for (j = 1; j < streams->n_chan; j++)\
+								res[r][j] = res[r][0];\
 						}\
 					}\
 				} else {\
 					for (y = r = 0; y < h2; y++)\
 						for (x = 0; x < w; x++, r++) \
 							for (k = 0; k < h; k++)\
-								for (j = 0; j < 4; j++)\
+								for (j = 0; j < streams->n_chan; j++)\
 									res[r][j] += left[y * h + k][j] * right[k * w + x][j];\
 				}\
 				\
@@ -112,9 +113,9 @@ main(int argc, char *argv[])
 		height = streams[i].height;
 	}
 
-	if (!strcmp(streams->pixfmt, "xyza"))
+	if (streams->encoding == DOUBLE)
 		process = process_lf;
-	else if (!strcmp(streams->pixfmt, "xyza f"))
+	else if (streams->encoding == FLOAT)
 		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", streams->pixfmt);

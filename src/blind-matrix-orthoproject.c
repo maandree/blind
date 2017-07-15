@@ -11,9 +11,9 @@ static int per_channel = 0;
 		pixel_t matrix[9];\
 		pixel_t buf[2];\
 		TYPE x2, y2, norm2;\
-		int i;\
+		size_t i;\
 		\
-		for (i = 0; i < 4; i++) {\
+		for (i = 0; i < stream->n_chan; i++) {\
 			matrix[0][i] = 1, matrix[1][i] = 0, matrix[2][i] = 0;\
 			matrix[3][i] = 0, matrix[4][i] = 1, matrix[5][i] = 0;\
 			matrix[6][i] = 0, matrix[7][i] = 0, matrix[8][i] = 1;\
@@ -21,7 +21,7 @@ static int per_channel = 0;
 		\
 		while (eread_frame(stream, buf)) {\
 			if (per_channel) {\
-				for (i = 0; i < 4; i++) {\
+				for (i = 0; i < stream->n_chan; i++) {\
 					x2 = buf[0][i] * buf[0][i];\
 					y2 = buf[1][i] * buf[1][i];\
 					norm2 = x2 + y2;\
@@ -38,10 +38,12 @@ static int per_channel = 0;
 				matrix[0][0] = x2 / norm2;\
 				matrix[4][0] = y2 / norm2;\
 				matrix[3][0] = matrix[1][0] = buf[0][1] * buf[1][1] / norm2;\
-				matrix[0][3] = matrix[0][2] = matrix[0][1] = matrix[0][0];\
-				matrix[1][3] = matrix[1][2] = matrix[1][1] = matrix[1][0];\
-				matrix[3][3] = matrix[3][2] = matrix[3][1] = matrix[3][0];\
-				matrix[4][3] = matrix[4][2] = matrix[4][1] = matrix[4][0];\
+				for (i = 1; i < stream->n_chan; i++) {\
+					matrix[0][i] = matrix[0][0];\
+					matrix[1][i] = matrix[1][0];\
+					matrix[3][i] = matrix[3][0];\
+					matrix[4][i] = matrix[4][0];\
+				}\
 			}\
 			ewriteall(STDOUT_FILENO, matrix, sizeof(matrix), "<stdout>");\
 		}\
@@ -77,9 +79,9 @@ main(int argc, char *argv[])
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
-	if (!strcmp(stream.pixfmt, "xyza"))
+	if (stream.encoding == DOUBLE)
 		process = process_lf;
-	else if (!strcmp(stream.pixfmt, "xyza f"))
+	else if (stream.encoding == FLOAT)
 		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);

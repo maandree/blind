@@ -3,10 +3,8 @@
 
 USAGE("palette-stream")
 
-
 static double (*compare)(double x1, double y1, double z1, double a1, double x2, double y2, double z2, double a2);
 /* TODO add more formulae: https://en.wikipedia.org/wiki/Color_difference */
-
 
 static double
 distance_xyz(double x1, double y1, double z1, double a1, double x2, double y2, double z2, double a2)
@@ -17,7 +15,6 @@ distance_xyz(double x1, double y1, double z1, double a1, double x2, double y2, d
 	a2 -= a1, a2 *= a2;
 	return sqrt(x2 + y2 + z2 + a2);
 }
-
 
 #define PROCESS(TYPE, SUFFIX)\
 	static void\
@@ -68,7 +65,6 @@ distance_xyz(double x1, double y1, double z1, double a1, double x2, double y2, d
 
 PROCESS(double, lf)
 PROCESS(float, f)
-
 
 int
 main(int argc, char *argv[])

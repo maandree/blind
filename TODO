@@ -1,3 +1,5 @@
+Fix blind-from-named without command
+
 blind-transform		affine transformation by matrix multiplication, -t for tiling, -s for
 				improve quality on downscaling (pixels' neighbours must not change).
 blind-primary-key	replace a primary with transparency, -g for greyscaled images.

@@ -3,16 +3,13 @@
 
 USAGE("")
 
-
 static size_t width;
-
 
 static int
 pixcmp(const void *a, const void *b)
 {
 	return memcmp(a, b, width);
 }
-
 
 static size_t
 unique(char *base, size_t n)
@@ -23,7 +20,6 @@ unique(char *base, size_t n)
 			memcpy(base + (r - 1) * width, base + i * width, width);
 	return r;
 }
-
 
 static size_t
 merge(char **sink, size_t n, char *new, size_t m, size_t *siz)
@@ -51,7 +47,6 @@ merge(char **sink, size_t n, char *new, size_t m, size_t *siz)
 	memcpy(*sink + n * width, new + j * width, m * width);
 	return n + m;
 }
-
 
 int
 main(int argc, char *argv[])

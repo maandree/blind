@@ -12,7 +12,6 @@ static size_t height = 0;
 static int with_params;
 static int with_vector;
 
-
 #define PROCESS(TYPE, SUFFIX)\
 	static void\
 	process_##SUFFIX(struct stream *stream)\
@@ -115,7 +114,6 @@ static int with_vector;
 
 PROCESS(double, lf)
 PROCESS(float, f)
-
 
 int
 main(int argc, char *argv[])

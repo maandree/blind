@@ -8,17 +8,17 @@ USAGE("colour-file")
 	process_##SUFFIX(struct stream *stream, int fd, const char *fname)\
 	{\
 		char buf[sizeof(stream->buf)];\
-		size_t i, n;\
-		TYPE a;\
+		size_t i, j, n;\
+		TYPE a, *p, *b;\
 		do {\
 			n = stream->ptr / stream->pixel_size;\
-			for (i = 0; i < n; i++) {\
-				a = ((TYPE *)(stream->buf))[4 * i + 3];\
-				((TYPE *)(stream->buf))[4 * i + 3] = 1;\
-				((TYPE *)buf)[4 * i + 0] = a;\
-				((TYPE *)buf)[4 * i + 1] = a;\
-				((TYPE *)buf)[4 * i + 2] = a;\
-				((TYPE *)buf)[4 * i + 3] = 1;\
+			p = (TYPE *)(stream->buf) + stream->n_chan - 1;\
+			b = (TYPE *)buf;\
+			for (i = 0; i < n; i++, p += stream->n_chan) {\
+				a = *p, *p = 1;\
+				for (j = stream->n_chan - 1; j--;)\
+					*b++ = a;\
+				*b++ = 1;\
 			}\
 			n *= stream->pixel_size;\
 			ewriteall(fd, stream->buf, n, fname);\
@@ -32,7 +32,6 @@ USAGE("colour-file")
 PROCESS(double, lf)
 PROCESS(float, f)
 
-
 int
 main(int argc, char *argv[])
 {
@@ -45,9 +44,9 @@ main(int argc, char *argv[])
 	eopen_stream(&stream, NULL);
 	fd = eopen(argv[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
 
-	if (!strcmp(stream.pixfmt, "xyza"))
+	if (stream.encoding == DOUBLE)
 		process = process_lf;
-	else if (!strcmp(stream.pixfmt, "xyza f"))
+	else if (stream.encoding == FLOAT)
 		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);

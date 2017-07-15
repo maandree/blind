@@ -8,7 +8,6 @@ static int skip_x = 0;
 static int skip_y = 0;
 static int skip_z = 0;
 
-
 #define PROCESS(TYPE, SUFFIX)\
 	static void\
 	process_##SUFFIX(struct stream *stream)\
@@ -42,7 +41,6 @@ static int skip_z = 0;
 
 PROCESS(double, lf)
 PROCESS(float, f)
-
 
 int
 main(int argc, char *argv[])

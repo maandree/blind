@@ -10,7 +10,7 @@ static int equal = 0;
 		p2 = matrix + r2 * cn;\
 		t = p2[r1][0];\
 		for (c = 0; c < cn; c++)\
-			p1[c][0] -= p2[c][0] * t;\
+			p2[c][0] -= p1[c][0] * t;\
 	} while (0)
 
 #define PROCESS(TYPE)\
@@ -34,9 +34,9 @@ static int equal = 0;
 				for (c = 0; c < cn; c++)\
 					t = p1[c][0], p1[c][0] = p2[c][0], p2[c][0] = t;\
 			}\
-			t = p1[r1][0];\
+			t = 1 / p1[r1][0];\
 			for (c = 0; c < cn; c++)\
-				p1[c][0] /= t;\
+				p1[c][0] *= t;\
 			for (r2 = r1 + 1; r2 < rn; r2++)\
 				SUB_ROWS();\
 		}\
@@ -55,7 +55,7 @@ int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	size_t width, x, y, row_size, chan_size;
+	size_t width, x, y, row_size;
 	char *buf, *one = alloca(4 * sizeof(double)), *p;
 	void (*process)(struct stream *stream, void *buf);
 
@@ -81,22 +81,20 @@ main(int argc, char *argv[])
 	stream.width = width;
 	efflush(stdout, "<stdout>");
 
+	one = alloca(stream.pixel_size);
 	if (!strcmp(stream.pixfmt, "xyza")) {
-		one = alloca(4 * sizeof(double));
 		*(double *)one = 1;
 		process = process_lf;
 	} else if (!strcmp(stream.pixfmt, "xyza f")) {
-		one = alloca(4 * sizeof(float));
 		*(float *)one = 1;
 		process = process_f;
 	} else {
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 	}
 
-	chan_size = stream.pixel_size / 4;
-	memcpy(one + 1 * chan_size, one, chan_size);
-	memcpy(one + 2 * chan_size, one, chan_size);
-	memcpy(one + 3 * chan_size, one, chan_size);
+	memcpy(one + 1 * stream.chan_size, one, stream.chan_size);
+	memcpy(one + 2 * stream.chan_size, one, stream.chan_size);
+	memcpy(one + 3 * stream.chan_size, one, stream.chan_size);
 
 	width = stream.width > stream.height ? stream.width : 2 * stream.height;
 	buf = emalloc2(width, stream.col_size);
@@ -111,19 +109,19 @@ main(int argc, char *argv[])
 			}
 		}
 		if (equal) {
-			process(&stream, buf + 1 * chan_size);
+			process(&stream, buf + 1 * stream.chan_size);
 			for (y = 0; y < stream.height; y++) {
 				for (x = 0; x < stream.width; x++) {
 					p = buf + y * row_size + x * stream.pixel_size;
-					memcpy(p, p + chan_size, chan_size);
-					memcpy(p + 2 * chan_size, p, 2 * chan_size);
+					memcpy(p, p + stream.chan_size, stream.chan_size);
+					memcpy(p + 2 * stream.chan_size, p, 2 * stream.chan_size);
 				}
 			}
 		} else {
-			process(&stream, buf + 0 * chan_size);
-			process(&stream, buf + 1 * chan_size);
-			process(&stream, buf + 2 * chan_size);
-			process(&stream, buf + 3 * chan_size);
+			process(&stream, buf + 0 * stream.chan_size);
+			process(&stream, buf + 1 * stream.chan_size);
+			process(&stream, buf + 2 * stream.chan_size);
+			process(&stream, buf + 3 * stream.chan_size);
 		}
 		for (y = 0; y < stream.height; y++)
 			ewriteall(STDOUT_FILENO, buf + y * row_size + stream.col_size, row_size - stream.col_size, "<stdout>");

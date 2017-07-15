@@ -72,10 +72,10 @@ USAGE("[-s]")
 	} while (0)
 
 static double conv_double(uint64_t portable) {CONV(uint64_t, int64_t, double, 11, 1023, 52);}
-static float  conv_float (uint32_t portable) {CONV(uint32_t, int32_t, float, 8, 127, 23);}
+static float  conv_float (uint32_t portable) {CONV(uint32_t, int32_t, float,   8,  127, 23);}
 
-static void process_xyza (struct stream *stream, int strict) {PROCESS(uint64_t, double, 64);}
-static void process_xyzaf(struct stream *stream, int strict) {PROCESS(uint32_t, float, 32);}
+static void process_lf(struct stream *stream, int strict) {PROCESS(uint64_t, double, 64);}
+static void process_f (struct stream *stream, int strict) {PROCESS(uint32_t, float,  32);}
 
 int
 main(int argc, char *argv[])
@@ -96,10 +96,10 @@ main(int argc, char *argv[])
 
 	eopen_stream(&stream, NULL);
 
-	if (!strcmp(stream.pixfmt, "xyza"))
-		process = process_xyza;
-	else if (!strcmp(stream.pixfmt, "xyza f"))
-		process = process_xyzaf;
+	if (stream.encoding == DOUBLE)
+		process = process_lf;
+	else if (stream.encoding == FLOAT)
+		process = process_f;
 	else
 		eprintf("pixel format %s is not supported\n", stream.pixfmt);
 

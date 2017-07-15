@@ -39,9 +39,9 @@ main(int argc, char *argv[])
 	eopen_stream(&left, NULL);
 	eopen_stream(&right, argv[0]);
 
-	if (!strcmp(left.pixfmt, "xyza"))
+	if (left.encoding == DOUBLE)
 		process = process_lf;
-	else if (!strcmp(left.pixfmt, "xyza f"))
+	else if (left.encoding == FLOAT)
 		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", left.pixfmt);

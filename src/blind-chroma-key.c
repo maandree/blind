@@ -3,7 +3,6 @@
 
 USAGE("key-stream")
 
-
 #define PROCESS(TYPE, SUFFIX)\
 	static void\
 	process_##SUFFIX(struct stream *stream, struct stream *key)\
@@ -60,7 +59,6 @@ USAGE("key-stream")
 
 PROCESS(double, lf)
 PROCESS(float, f)
-
 
 int
 main(int argc, char *argv[])

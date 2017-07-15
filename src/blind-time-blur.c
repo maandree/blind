@@ -35,15 +35,15 @@ static int first = 1;
 	} while (0)
 
 static void
-process_xyza(char *output, char *restrict cbuf, char *restrict abuf,
-	     struct stream *colour, struct stream *alpha)
+process_lf(char *output, char *restrict cbuf, char *restrict abuf,
+	   struct stream *colour, struct stream *alpha)
 {
 	PROCESS(double);
 }
 
 static void
-process_xyzaf(char *output, char *restrict cbuf, char *restrict abuf,
-	      struct stream *colour, struct stream *alpha)
+process_f(char *output, char *restrict cbuf, char *restrict abuf,
+	  struct stream *colour, struct stream *alpha)
 {
 	PROCESS(float);
 }
@@ -66,10 +66,10 @@ main(int argc, char *argv[])
 	eopen_stream(&colour, NULL);
 	eopen_stream(&alpha, argv[0]);
 
-	if (!strcmp(colour.pixfmt, "xyza"))
-		process = process_xyza;
-	else if (!strcmp(colour.pixfmt, "xyza f"))
-		process = process_xyzaf;
+	if (colour.encoding == DOUBLE)
+		process = process_lf;
+	else if (colour.encoding == FLOAT)
+		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 

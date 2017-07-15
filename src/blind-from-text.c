@@ -20,8 +20,8 @@ USAGE("")
 		}\
 	} while (0)
 
-static void process_xyza (void) {PROCESS(double, "lf");}
-static void process_xyzaf(void) {PROCESS(float, "f");}
+static void process_lf(void) { PROCESS(double, "lf"); }
+static void process_f(void)  { PROCESS(float,  "f");  }
 
 int
 main(int argc, char *argv[])
@@ -54,10 +54,10 @@ main(int argc, char *argv[])
 	ewriteall(STDOUT_FILENO, stream.buf, stream.ptr, "<stdout>");
 	einit_stream(&stream);
 
-	if (!strcmp(stream.pixfmt, "xyza"))
-		process = process_xyza;
-	else if (!strcmp(stream.pixfmt, "xyza f"))
-		process = process_xyzaf;
+	if (stream.encoding == DOUBLE)
+		process = process_lf;
+	else if (stream.encoding == FLOAT)
+		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 

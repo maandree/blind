@@ -8,16 +8,13 @@ USAGE("")
 #define PROCESS(TYPE, CAST, FMT)\
 	do {\
 		size_t i;\
-		for (i = 0; i < n; i += stream->pixel_size)\
-			printf("%"FMT" %"FMT" %"FMT" %"FMT"\n",\
-			       (CAST)(((TYPE *)(stream->buf + i))[0]),\
-			       (CAST)(((TYPE *)(stream->buf + i))[1]),\
-			       (CAST)(((TYPE *)(stream->buf + i))[2]),\
-			       (CAST)(((TYPE *)(stream->buf + i))[3]));\
+		TYPE *p = (TYPE *)(stream->buf);\
+		for (i = 0, n /= stream->chan_size; i < n; i++)\
+			printf("%"FMT"%c", (CAST)(p[i]), (i + 1) % stream->n_chan ? ' ' : '\n');\
 	} while (0)
 
-static void process_xyza (struct stream *stream, size_t n) {PROCESS(double, double, ".25lf");}
-static void process_xyzaf(struct stream *stream, size_t n) {PROCESS(float,  double, ".25lf");}
+static void process_lf(struct stream *stream, size_t n) {PROCESS(double, double, ".25lf");}
+static void process_f (struct stream *stream, size_t n) {PROCESS(float,  double, ".25lf");}
 
 int
 main(int argc, char *argv[])
@@ -29,10 +26,10 @@ main(int argc, char *argv[])
 
 	eopen_stream(&stream, NULL);
 
-	if (!strcmp(stream.pixfmt, "xyza"))
-		process = process_xyza;
-	else if (!strcmp(stream.pixfmt, "xyza f"))
-		process = process_xyzaf;
+	if (stream.encoding == DOUBLE)
+		process = process_lf;
+	else if (stream.encoding == FLOAT)
+		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 

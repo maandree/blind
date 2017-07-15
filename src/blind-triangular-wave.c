@@ -6,54 +6,37 @@ USAGE("[-es]")
 static int equal = 0;
 static int spiral = 0;
 
-
 #define PROCESS(TYPE, SUFFIX)\
 	static void\
 	process_##SUFFIX(struct stream *stream)\
 	{\
-		size_t i, n;\
-		TYPE x, y, z, a;\
+		size_t i, j, n;\
+		TYPE v, *p;\
 		do {\
-			n = stream->ptr / stream->pixel_size;\
 			if (equal) {\
+				n = stream->ptr / stream->pixel_size;\
 				for (i = 0; i < n; i++) {\
-					a = ((TYPE *)(stream->buf))[4 * i + 3];\
-					a = posmod(a, (TYPE)2);\
-					a = a > 1 ? 2 - a : a;\
+					p = (TYPE *)(stream->buf) + i * stream->n_chan;\
+					v = posmod(*p, (TYPE)2);\
+					v = v > 1 ? 2 - v : v;\
 					if (spiral)\
-						a = (a > (TYPE)0.5 ? 1 - a : a) * 2; \
-					((TYPE *)(stream->buf))[4 * i + 0] = a;\
-					((TYPE *)(stream->buf))[4 * i + 1] = a;\
-					((TYPE *)(stream->buf))[4 * i + 2] = a;\
-					((TYPE *)(stream->buf))[4 * i + 3] = a;\
+						v = (v > (TYPE)0.5 ? 1 - v : v) * 2;\
+					for (j = 0; j < stream->n_chan; j++)\
+						p[j] = v;\
 				}\
+				n *= stream->pixel_size;\
 			} else {\
+				n = stream->ptr / stream->chan_size;\
 				for (i = 0; i < n; i++) {\
-					x = ((TYPE *)(stream->buf))[4 * i + 0];\
-					y = ((TYPE *)(stream->buf))[4 * i + 1];\
-					z = ((TYPE *)(stream->buf))[4 * i + 2];\
-					a = ((TYPE *)(stream->buf))[4 * i + 3];\
-					x = posmod(x, (TYPE)2);\
-					y = posmod(y, (TYPE)2);\
-					z = posmod(z, (TYPE)2);\
-					a = posmod(a, (TYPE)2);\
-					x = x > 1 ? 2 - x : x;\
-					y = y > 1 ? 2 - y : y;\
-					z = z > 1 ? 2 - z : z;\
-					a = a > 1 ? 2 - a : a;\
-					if (spiral) {\
-						x = (x > (TYPE)0.5 ? 1 - x : x) * 2;\
-						y = (y > (TYPE)0.5 ? 1 - y : y) * 2;\
-						z = (z > (TYPE)0.5 ? 1 - z : z) * 2;\
-						a = (a > (TYPE)0.5 ? 1 - a : a) * 2;\
-					}\
-					((TYPE *)(stream->buf))[4 * i + 0] = x;\
-					((TYPE *)(stream->buf))[4 * i + 1] = y;\
-					((TYPE *)(stream->buf))[4 * i + 2] = z;\
-					((TYPE *)(stream->buf))[4 * i + 3] = a;\
+					p = (TYPE *)(stream->buf) + i;\
+					v = posmod(*p, (TYPE)2);\
+					v = v > 1 ? 2 - v : v;\
+					if (spiral)\
+						v = (v > (TYPE)0.5 ? 1 - v : v) * 2;\
+					*p = v;\
 				}\
+				n *= stream->chan_size;\
 			}\
-			n *= stream->pixel_size;\
 			ewriteall(STDOUT_FILENO, stream->buf, n, "<stdout>");\
 			memmove(stream->buf, stream->buf + n, stream->ptr -= n);\
 		} while (eread_stream(stream, SIZE_MAX));\
@@ -63,7 +46,6 @@ static int spiral = 0;
 
 PROCESS(double, lf)
 PROCESS(float, f)
-
 
 int
 main(int argc, char *argv[])
@@ -87,9 +69,9 @@ main(int argc, char *argv[])
 
 	eopen_stream(&stream, NULL);
 
-	if (!strcmp(stream.pixfmt, "xyza"))
+	if (stream.encoding == DOUBLE)
 		process = process_lf;
-	else if (!strcmp(stream.pixfmt, "xyza f"))
+	else if (stream.encoding == FLOAT)
 		process = process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
