@@ -64,5 +64,6 @@ unsigned char (xyza 8) could be added as another format, it's probably good for 
 
 
 HELP REQUIRED:
-	blind-z-map		create a Z-map video from two or more videos
-	blind-track		track the movement of a point
+	blind-z-map			create a Z-map video from two or more videos
+	blind-track			track the movement of a point
+	blind-transition-mosaic		gradually turn a mosaic pattern into another
