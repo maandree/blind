@@ -32,6 +32,8 @@ main(int argc, char *argv[])
 
 	eopen_stream(&stream, NULL);
 
+	SELECT_PROCESS_FUNCTION(&stream);
+
 	if (stream.width != 1 || stream.height != 1)
 		eprintf("<stdin>: each frame must contain exactly 1 pixels\n");
 
@@ -39,13 +41,6 @@ main(int argc, char *argv[])
 	stream.height = 3;
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
-
-	if (stream.encoding == DOUBLE)
-		process = process_lf;
-	else if (stream.encoding == FLOAT)
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
 	process(&stream);
 	return 0;

@@ -18,13 +18,7 @@ main(int argc, char *argv[])
 	eopen_stream(&colour, NULL);
 	eopen_stream(&luma, argv[0]);
 
-	if (!strcmp(colour.pixfmt, "xyza"))
-		process = process_lf;
-	else if (!strcmp(colour.pixfmt, "xyza f"))
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
-
+	SELECT_PROCESS_FUNCTION(&colour);
 	fprint_stream_head(stdout, &colour);
 	efflush(stdout, "<stdout>");
 	process_two_streams(&colour, &luma, STDOUT_FILENO, "<stdout>", process);

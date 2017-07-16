@@ -157,18 +157,11 @@ main(int argc, char *argv[])
 	eopen_stream(&colour, NULL);
 	eopen_stream(&mosaic, argv[0]);
 
-	if (!strcmp(colour.pixfmt, "xyza"))
-		process = process_lf;
-	else if (!strcmp(colour.pixfmt, "xyza f"))
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
-
+	SELECT_PROCESS_FUNCTION(&colour);
 	echeck_compat(&colour, &mosaic);
 
 	fprint_stream_head(stdout, &colour);
 	efflush(stdout, "<stdout>");
 	process_each_frame_two_streams(&colour, &mosaic, STDOUT_FILENO, "<stdout>", process);
-
 	return 0;
 }

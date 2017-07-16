@@ -3,6 +3,8 @@
 
 USAGE("[-s]")
 
+static int strict = 1;
+
 #define CONV(ITYPE, SITYPE, OTYPE, EXPONENT, HA2EXPONENT, FRACTION)\
 	do {\
 		static int cache_i = 0;\
@@ -74,15 +76,14 @@ USAGE("[-s]")
 static double conv_double(uint64_t portable) {CONV(uint64_t, int64_t, double, 11, 1023, 52);}
 static float  conv_float (uint32_t portable) {CONV(uint32_t, int32_t, float,   8,  127, 23);}
 
-static void process_lf(struct stream *stream, int strict) {PROCESS(uint64_t, double, 64);}
-static void process_f (struct stream *stream, int strict) {PROCESS(uint32_t, float,  32);}
+static void process_lf(struct stream *stream) {PROCESS(uint64_t, double, 64);}
+static void process_f (struct stream *stream) {PROCESS(uint32_t, float,  32);}
 
 int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	int strict = 1;
-	void (*process)(struct stream *stream, int strict);
+	void (*process)(struct stream *stream);
 
 	ARGBEGIN {
 	case 's':
@@ -91,20 +92,16 @@ main(int argc, char *argv[])
 	default:
 		usage();
 	} ARGEND;
+
 	if (argc)
 		usage();
 
 	eopen_stream(&stream, NULL);
 
-	if (stream.encoding == DOUBLE)
-		process = process_lf;
-	else if (stream.encoding == FLOAT)
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported\n", stream.pixfmt);
+	SELECT_PROCESS_FUNCTION(&stream);
 
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
-	process(&stream, strict);
+	process(&stream);
 	return 0;
 }

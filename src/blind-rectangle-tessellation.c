@@ -4,8 +4,7 @@
 USAGE("[-F pixel-format] block-width block-height")
 
 #define SET_XYZA(TYPE)\
-	(pixwidth *= sizeof(double),\
-	 colours = alloca(4 * pixwidth),\
+	(colours = alloca(4 * stream.pixel_size),\
 	 ((TYPE *)colours)[ 0] = (TYPE)0.412457445582367600,\
 	 ((TYPE *)colours)[ 1] = (TYPE)0.212673370378408280,\
 	 ((TYPE *)colours)[ 2] = (TYPE)0.019333942761673460,\
@@ -30,7 +29,6 @@ main(int argc, char *argv[])
 {
 	size_t width, height;
 	const char *pixfmt = "xyza";
-	size_t pixwidth = 4;
 	char *colours;
 	size_t x1, y1, x2, y2;
 
@@ -48,15 +46,12 @@ main(int argc, char *argv[])
 	width  = etozu_arg("block-width", argv[0], 1, SIZE_MAX);
 	height = etozu_arg("block-height", argv[1], 1, SIZE_MAX);
 
-	pixfmt = get_pixel_format(pixfmt, "xyza");
-	if (!strcmp(pixfmt, "xyza"))
+	eset_pixel_format(&stream, pixfmt);
+	if (stream.encoding == DOUBLE)
 		SET_XYZA(double);
-	else if (!strcmp(pixfmt, "xyza f"))
-		SET_XYZA(float);
 	else
-		eprintf("pixel format %s is not supported, try xyza\n", pixfmt);
+		SET_XYZA(float);
 
-	strcpy(stream.pixfmt, pixfmt);
 	stream.width  = 2 * width;
 	stream.height = 2 * height;
 	fprint_stream_head(stdout, &stream);
@@ -66,7 +61,8 @@ main(int argc, char *argv[])
 		for (y2 = 0; y2 < height; y2++)
 			for (x1 = 0; x1 < 2; x1++)
 				for (x2 = 0; x2 < width; x2++)
-					ewriteall(STDOUT_FILENO, colours + (y1 * 2 + x1) * pixwidth, pixwidth, "<stdout>");
+					ewriteall(STDOUT_FILENO, colours + (y1 * 2 + x1) * stream.pixel_size,
+					          stream.pixel_size, "<stdout>");
 
 	return 0;
 }

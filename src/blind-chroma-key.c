@@ -18,13 +18,7 @@ main(int argc, char *argv[])
 	eopen_stream(&stream, NULL);
 	eopen_stream(&key, argv[0]);
 
-	if (!strcmp(stream.pixfmt, "xyza"))
-		process = process_lf;
-	else if (!strcmp(stream.pixfmt, "xyza f"))
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
-
+	SELECT_PROCESS_FUNCTION(&stream);
 	if (strcmp(stream.pixfmt, key.pixfmt))
 		eprintf("videos use incompatible pixel formats\n");
 

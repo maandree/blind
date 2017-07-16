@@ -19,18 +19,11 @@ main(int argc, char *argv[])
 	eopen_stream(&stream, NULL);
 	fd = eopen(argv[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
 
-	if (stream.encoding == DOUBLE)
-		process = process_lf;
-	else if (stream.encoding == FLOAT)
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
-
+	SELECT_PROCESS_FUNCTION(&stream);
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 	if (dprint_stream_head(fd, &stream) < 0)
 		eprintf("dprintf %s:", argv[0]);
-
 	process(&stream, fd, argv[0]);
 	return 0;
 }

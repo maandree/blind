@@ -10,9 +10,7 @@ main(int argc, char *argv[])
 	int tiled_y = 0;
 	struct stream stream;
 	void *colours[2];
-	char *buf;
-	char *edges;
-	char *here;
+	char *buf, *edges, *here;
 	size_t i, n, x, y;
 	int v;
 
@@ -65,37 +63,37 @@ main(int argc, char *argv[])
 			x = i % stream.width;
 			y = i / stream.width;
 
-			if (x != stream.width - 1 &&
-			    memcmp(here + stream.pixel_size, here, stream.pixel_size))
-				goto at_edge;
+			if (x != stream.width - 1) {
+				if (memcmp(here + stream.pixel_size, here, stream.pixel_size))
+					goto at_edge;
+			} else if (tiled_x) {
+				if (memcmp(here + stream.pixel_size - stream.row_size, here, stream.pixel_size))
+					goto at_edge;
+			}
 
-			if (tiled_x && x == stream.width - 1 &&
-			    memcmp(here + stream.pixel_size - stream.row_size, here, stream.pixel_size))
-				goto at_edge;
+			if (x) {
+				if (memcmp(here - stream.pixel_size, here, stream.pixel_size))
+					goto at_edge;
+			} else if (tiled_x) {
+				if (memcmp(here + stream.row_size - stream.pixel_size, here, stream.pixel_size))
+					goto at_edge;
+			}
 
-			if (x &&
-			    memcmp(here - stream.pixel_size, here, stream.pixel_size))
-				goto at_edge;
+			if (y != stream.height - 1) {
+				if (memcmp(here + stream.row_size, here, stream.pixel_size))
+					goto at_edge;
+			} else if (tiled_y) {
+				if (memcmp(here + stream.row_size - stream.frame_size, here, stream.pixel_size))
+					goto at_edge;
+			}
 
-			if (tiled_x && !x &&
-			    memcmp(here + stream.row_size - stream.pixel_size, here, stream.pixel_size))
-				goto at_edge;
-
-			if (y != stream.height - 1 &&
-			    memcmp(here + stream.row_size, here, stream.pixel_size))
-				goto at_edge;
-
-			if (tiled_y && y == stream.height - 1 &&
-			    memcmp(here + stream.row_size - stream.frame_size, here, stream.pixel_size))
-				goto at_edge;
-
-			if (y &&
-			    memcmp(here - stream.row_size, here, stream.pixel_size))
-				goto at_edge;
-
-			if (tiled_y && !y &&
-			    memcmp(here + stream.frame_size - stream.row_size, here, stream.pixel_size))
-				goto at_edge;
+			if (y) {
+				if (memcmp(here - stream.row_size, here, stream.pixel_size))
+					goto at_edge;
+			} else if (tiled_y) {
+				if (memcmp(here + stream.frame_size - stream.row_size, here, stream.pixel_size))
+					goto at_edge;
+			}
 
 			continue;
 		at_edge:

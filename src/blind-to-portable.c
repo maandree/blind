@@ -108,18 +108,13 @@ main(int argc, char *argv[])
 	default:
 		usage();
 	} ARGEND;
+
 	if (argc)
 		usage();
 
 	eopen_stream(&stream, NULL);
 
-	if (stream.encoding == DOUBLE)
-		process = process_lf;
-	else if (stream.encoding == FLOAT)
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported\n", stream.pixfmt);
-
+	SELECT_PROCESS_FUNCTION(&stream);
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 	process(&stream, strict);

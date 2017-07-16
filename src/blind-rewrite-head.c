@@ -65,7 +65,6 @@ main(int argc, char *argv[])
 		usage();
 	} ARGEND;
 
-
 	if (headless) {
 		if (argc != 5)
 			eprintf("all positional arguments are mandatory unless -h is used\n");
@@ -73,13 +72,11 @@ main(int argc, char *argv[])
 		usage();
 	}
 
-
 	memset(&stream, 0, sizeof(stream));
 	stream.file = argv[0];
 	stream.fd = eopen(stream.file, O_RDWR);
 	if (!headless)
 		einit_stream(&stream);
-
 
 	if (argc < 2 || !strcmp(argv[1], "auto"))
 		frames_auto = 1;
@@ -102,13 +99,11 @@ main(int argc, char *argv[])
 	else if (strcmp(argv[4], "same")) {
 		if (strlen(argv[4]) >= sizeof(stream.pixfmt))
 			eprintf("choosen pixel format is unsupported\n");
-		strcpy(stream.pixfmt, argv[5]);
-		if (set_pixel_size(&stream))
+		if (set_pixel_format(&stream, argv[5]))
 			eprintf("choosen pixel format is unsupported\n");
 	} else if (headless) {
 		eprintf("cannot use both 'same' and -h\n");
 	}
-
 
 	rewrite(&stream, frames_auto);
 	close(stream.fd);

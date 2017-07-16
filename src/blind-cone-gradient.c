@@ -41,12 +41,7 @@ main(int argc, char *argv[])
 
 	eopen_stream(&stream, NULL);
 
-	if (!strcmp(stream.pixfmt, "xyza"))
-		process = process_lf;
-	else if (!strcmp(stream.pixfmt, "xyza f"))
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
+	SELECT_PROCESS_FUNCTION(&stream);
 
 	if (stream.width > 3 || stream.height > 3 ||
 	    stream.width * stream.height < 2 ||
@@ -72,7 +67,7 @@ PROCESS(struct stream *stream)
 	pixel_t buf[BUFSIZ / sizeof(pixel_t)];
 	TYPE *params, x1, y1, x2, y2;
 	TYPE x, y, u, v, m = 1;
-	size_t ix, iy, ptr = 0;
+	size_t i, ix, iy, ptr = 0;
 
 	for (;;) {
 		while (stream->ptr < stream->frame_size) {
@@ -116,7 +111,8 @@ PROCESS(struct stream *stream)
 							v = 2 - v;
 					}
 				}
-				buf[ptr][0] = buf[ptr][1] = buf[ptr][2] = buf[ptr][3] = v;
+				for (i = 0; i < stream->n_chan; i++)
+					buf[ptr][i] = x;
 				if (++ptr == ELEMENTSOF(buf)) {
 					ewriteall(STDOUT_FILENO, buf, sizeof(buf), "<stdout>");
 					ptr = 0;

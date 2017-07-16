@@ -1,27 +1,11 @@
 /* See LICENSE file for copyright and license details. */
+#ifndef TYPE
 #include "common.h"
 
 USAGE("")
 
-#define PROCESS(TYPE, FMT)\
-	do {\
-		TYPE buf[BUFSIZ / sizeof(TYPE)];\
-		size_t i;\
-		int r, done = 0;\
-		while (!done) {\
-			for (i = 0; i < ELEMENTSOF(buf); i += (size_t)r) {\
-				r = scanf("%"FMT, buf + i);\
-				if (r == EOF) {\
-					done = 1;\
-					break;\
-				}\
-			}\
-			ewriteall(STDOUT_FILENO, buf, i * sizeof(*buf), "<stdout>");\
-		}\
-	} while (0)
-
-static void process_lf(void) { PROCESS(double, "lf"); }
-static void process_f(void)  { PROCESS(float,  "f");  }
+#define FILE "blind-from-text.c"
+#include "define-functions.h"
 
 int
 main(int argc, char *argv[])
@@ -54,15 +38,31 @@ main(int argc, char *argv[])
 	ewriteall(STDOUT_FILENO, stream.buf, stream.ptr, "<stdout>");
 	einit_stream(&stream);
 
-	if (stream.encoding == DOUBLE)
-		process = process_lf;
-	else if (stream.encoding == FLOAT)
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
-
+	SELECT_PROCESS_FUNCTION(&stream);
 	process();
 
 	efshut(stdin, "<stdin>");
 	return 0;
 }
+
+#else
+
+static void
+PROCESS(void)
+{
+	TYPE buf[BUFSIZ / sizeof(TYPE)];
+	size_t i;
+	int r, done = 0;
+	while (!done) {
+		for (i = 0; i < ELEMENTSOF(buf); i += (size_t)r) {
+			r = scanf("%"SCAN_TYPE, buf + i);
+			if (r == EOF) {
+				done = 1;
+				break;
+			}
+		}
+		ewriteall(STDOUT_FILENO, buf, i * sizeof(*buf), "<stdout>");
+	}
+}
+
+#endif

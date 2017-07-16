@@ -68,3 +68,11 @@
 #if !defined(PIPE_BUF)
 # define PIPE_BUF BUFSIZ
 #endif
+
+#define SELECT_PROCESS_FUNCTION(stream)\
+	do {\
+		if ((stream)->encoding == DOUBLE)\
+			process = process_lf;\
+		else\
+			process = process_f;\
+	} while (0)

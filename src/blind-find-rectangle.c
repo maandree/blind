@@ -9,7 +9,6 @@ struct pair {
 };
 
 static struct stream stream;
-static double X, Y, Z, alpha = 1;
 static size_t min_width = 1;
 static size_t min_height = 1;
 static size_t min_area = 1;
@@ -76,6 +75,7 @@ main(int argc, char *argv[])
 {
 	double colour_lf[4];
 	float colour_f[4];
+	double X, Y, Z, alpha = 1;
 
 	ARGBEGIN {
 	case 'a':
@@ -117,14 +117,12 @@ main(int argc, char *argv[])
 		colour_lf[2] = Z;
 		colour_lf[3] = alpha;
 		process(colour_lf);
-	} else if (stream.encoding == FLOAT) {
+	} else {
 		colour_f[0] = (float)X;
 		colour_f[1] = (float)Y;
 		colour_f[2] = (float)Z;
 		colour_f[3] = (float)alpha;
 		process(colour_f);
-	} else {
-		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 	}
 
 	fshut(stdout, "<stdout>");

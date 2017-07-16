@@ -73,7 +73,7 @@ eninit_stream(int status, struct stream *stream)
 	memmove(stream->buf, stream->buf + 5, stream->ptr -= 5);
 	stream->headlen = n + 5;
 
-	enset_pixel_size(status, stream);
+	enset_pixel_format(status, stream, NULL);
 
 	stream->xptr = 0;
 
@@ -93,8 +93,15 @@ enopen_stream(int status, struct stream *stream, const char *file)
 
 
 int
-set_pixel_size(struct stream *stream)
+set_pixel_format(struct stream *stream, const char *pixfmt)
 {
+	if (pixfmt) {
+		pixfmt = get_pixel_format(pixfmt, "xyza");
+		if (strlen(pixfmt) >= sizeof(stream->pixfmt))
+			return -1;
+		strcpy(stream->pixfmt, pixfmt);
+	}
+
 	if (!strcmp(stream->pixfmt, "xyza")) {
 		stream->n_chan = 4;
 		stream->chan_size = sizeof(double);
@@ -110,6 +117,7 @@ set_pixel_size(struct stream *stream)
 	} else {
 		return -1;
 	}
+
 	stream->pixel_size = stream->n_chan * stream->chan_size;
 	stream->row_size   = stream->pixel_size * stream->width;
 	stream->col_size   = stream->pixel_size * stream->height;
@@ -118,11 +126,15 @@ set_pixel_size(struct stream *stream)
 }
 
 void
-enset_pixel_size(int status, struct stream *stream)
+enset_pixel_format(int status, struct stream *stream, const char *pixfmt)
 {
-	if (set_pixel_size(stream))
-		enprintf(status, "file %s uses unsupported pixel format: %s\n",
-			 stream->file, stream->pixfmt);
+	if (!set_pixel_format(stream, pixfmt)) {
+		if (pixfmt)
+			enprintf(status, "pixel format %s is not supported, try xyza\n", pixfmt);
+		else
+			enprintf(status, "%s: unsupported pixel format: %s\n",
+			         stream->file, stream->pixfmt);
+	}
 }
 
 

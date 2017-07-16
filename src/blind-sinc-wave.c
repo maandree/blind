@@ -34,12 +34,7 @@ main(int argc, char *argv[])
 			eprintf("theta0-stream must be of dimension 1x1\n");
 	}
 
-	if (stream.encoding == DOUBLE)
-		process = process_lf;
-	else if (stream.encoding == FLOAT)
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
+	SELECT_PROCESS_FUNCTION(&stream);
 
 	if (have_theta0 && strcmp(stream.pixfmt, theta0.pixfmt))
 		eprintf("videos use incompatible pixel formats\n");

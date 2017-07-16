@@ -63,11 +63,9 @@ main(int argc, char *argv[])
 
 	do {
 		n = stream.ptr / width;
-
 		qsort(stream.buf, n, width, pixcmp);
 		m = unique(stream.buf, n);
 		ptr = merge(&colours, ptr, stream.buf, m, &siz);
-
 		n *= width;
 		memmove(stream.buf, stream.buf + n, stream.ptr -= n);
 	} while (eread_stream(&stream, SIZE_MAX));

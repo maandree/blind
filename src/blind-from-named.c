@@ -40,9 +40,6 @@ erecv_fd(int sock)
 }
 
 #if !defined(HAVE_SENDFILE)
-# if !defined(PIPE_BUF)
-#  define PIPE_BUF BUFSIZ
-# endif
 static ssize_t
 sendfile(int outfd, int infd, off_t *offset, size_t count)
 {

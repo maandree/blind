@@ -6,12 +6,10 @@ USAGE("[-f frames] width height pixel-format ...")
 int
 main(int argc, char *argv[])
 {
-	struct stream stream;
+	struct stream stream = { .frames = 1, .fd = STDIN_FILENO, .file = "<stdin>" };
 	size_t n;
 	int i;
 	char *p;
-
-	stream.frames = 1;
 
 	ARGBEGIN {
 	case 'f':
@@ -24,10 +22,7 @@ main(int argc, char *argv[])
 	if (argc < 3)
 		usage();
 
-	stream.fd = STDIN_FILENO;
-	stream.file = "<stdin>";
 	stream.pixfmt[0] = '\0';
-
 	stream.width  = entozu_arg(2, "the width",  argv[0], 1, SIZE_MAX);
 	stream.height = entozu_arg(2, "the height", argv[1], 1, SIZE_MAX);
 	argv += 2, argc -= 2;
@@ -42,8 +37,7 @@ main(int argc, char *argv[])
 			p = stpcpy(p, argv[i]);
 		}
 	}
-
-	enset_pixel_size(2, &stream);
+	enset_pixel_format(2, &stream, NULL);
 
 	fprint_stream_head(stdout, &stream);
 	enfflush(2, stdout, "<stdout>");

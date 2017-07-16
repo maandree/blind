@@ -21,7 +21,7 @@ main(int argc, char *argv[])
 	while (eread_frame(&stream, buf))
 		for (ptr = stream.frame_size; ptr;)
 			ewriteall(STDOUT_FILENO, buf + (ptr -= stream.row_size),
-				  stream.row_size, "<stdout>");
+			          stream.row_size, "<stdout>");
 	/* ewriteall is faster than writev(3) and vmsplice(3) */
 
 	free(buf);

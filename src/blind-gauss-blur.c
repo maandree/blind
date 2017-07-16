@@ -273,15 +273,15 @@ static size_t spread = 0;
 	} while (0)
 
 static void
-process_xyza(char *restrict output, char *restrict cbuf, char *restrict sbuf,
-	     struct stream *colour, struct stream *sigma)
+process_lf(char *restrict output, char *restrict cbuf, char *restrict sbuf,
+           struct stream *colour, struct stream *sigma)
 {
 	PROCESS(double);
 }
 
 static void
-process_xyzaf(char *restrict output, char *restrict cbuf, char *restrict sbuf,
-	     struct stream *colour, struct stream *sigma)
+process_f(char *restrict output, char *restrict cbuf, char *restrict sbuf,
+          struct stream *colour, struct stream *sigma)
 {
 	PROCESS(float);
 }
@@ -292,7 +292,7 @@ main(int argc, char *argv[])
 	struct stream colour, sigma;
 	char *arg;
 	void (*process)(char *restrict output, char *restrict cbuf, char *restrict sbuf,
-			struct stream *colour, struct stream *sigma);
+	                struct stream *colour, struct stream *sigma);
 
 	ARGBEGIN {
 	case 'a':
@@ -333,12 +333,7 @@ main(int argc, char *argv[])
 	eopen_stream(&colour, NULL);
 	eopen_stream(&sigma, argv[0]);
 
-	if (!strcmp(colour.pixfmt, "xyza"))
-		process = process_xyza;
-	else if (!strcmp(colour.pixfmt, "xyza f"))
-		process = process_xyzaf;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
+	SELECT_PROCESS_FUNCTION(&colour);
 
 	echeck_compat(&colour, &sigma);
 
@@ -348,6 +343,5 @@ main(int argc, char *argv[])
 	fprint_stream_head(stdout, &colour);
 	efflush(stdout, "<stdout>");
 	process_each_frame_two_streams(&colour, &sigma, STDOUT_FILENO, "<stdout>", process);
-
 	return 0;
 }

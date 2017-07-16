@@ -37,7 +37,7 @@
 
 #define einit_stream(...)             eninit_stream(1, __VA_ARGS__)
 #define eopen_stream(...)             enopen_stream(1, __VA_ARGS__)
-#define eset_pixel_size(...)          enset_pixel_size(1, __VA_ARGS__)
+#define eset_pixel_format(...)        enset_pixel_format(1, __VA_ARGS__)
 #define eread_stream(...)             enread_stream(1, __VA_ARGS__)
 #define einf_check_fd(...)            eninf_check_fd(1, __VA_ARGS__)
 #define echeck_dimensions(...)        encheck_dimensions(1, __VA_ARGS__)
@@ -100,8 +100,8 @@ struct stream {
 
 void eninit_stream(int status, struct stream *stream);
 void enopen_stream(int status, struct stream *stream, const char *file);
-int set_pixel_size(struct stream *stream);
-void enset_pixel_size(int status, struct stream *stream);
+int set_pixel_format(struct stream *stream, const char *pixfmt);
+void enset_pixel_format(int status, struct stream *stream, const char *pixfmt);
 void fprint_stream_head(FILE *fp, struct stream *stream);
 int dprint_stream_head(int fd, struct stream *stream);
 size_t enread_stream(int status, struct stream *stream, size_t n);

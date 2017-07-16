@@ -66,12 +66,7 @@ main(int argc, char *argv[])
 		height = streams[i].height;
 	}
 
-	if (streams->encoding == DOUBLE)
-		process = process_lf;
-	else if (streams->encoding == FLOAT)
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", streams->pixfmt);
+	SELECT_PROCESS_FUNCTION(streams);
 
 	w = streams->width,  streams->width  = max_width;
 	h = streams->height, streams->height = max_height;

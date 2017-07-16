@@ -57,15 +57,9 @@ main(int argc, char *argv[])
 	if (inf)
 		einf_check_fd(STDOUT_FILENO, "<stdout>");
 
-	pixfmt = get_pixel_format(pixfmt, "xyza");
-	if (!strcmp(pixfmt, "xyza"))
-		process = process_lf;
-	else if (!strcmp(pixfmt, "xyza f"))
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", pixfmt);
+	eset_pixel_format(&stream, pixfmt);
+	SELECT_PROCESS_FUNCTION(&stream);
 
-	strcpy(stream.pixfmt, pixfmt);
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 

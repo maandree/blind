@@ -14,7 +14,7 @@ main(int argc, char *argv[])
 {
 	struct stream colour, alpha;
 	void (*process)(char *restrict output, char *restrict cbuf, char *restrict abuf,
-			struct stream *colour, struct stream *alpha);
+	                struct stream *colour, struct stream *alpha);
 
 	ARGBEGIN {
 	default:
@@ -27,13 +27,7 @@ main(int argc, char *argv[])
 	eopen_stream(&colour, NULL);
 	eopen_stream(&alpha, argv[0]);
 
-	if (colour.encoding == DOUBLE)
-		process = process_lf;
-	else if (colour.encoding == FLOAT)
-		process = process_f;
-	else
-		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
-
+	SELECT_PROCESS_FUNCTION(&colour);
 	echeck_compat(&colour, &alpha);
 	fprint_stream_head(stdout, &colour);
 	efflush(stdout, "<stdout>");
