@@ -128,7 +128,7 @@ set_pixel_format(struct stream *stream, const char *pixfmt)
 void
 enset_pixel_format(int status, struct stream *stream, const char *pixfmt)
 {
-	if (!set_pixel_format(stream, pixfmt)) {
+	if (set_pixel_format(stream, pixfmt)) {
 		if (pixfmt)
 			enprintf(status, "pixel format %s is not supported, try xyza\n", pixfmt);
 		else

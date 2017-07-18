@@ -50,6 +50,7 @@ BIN =\
 	blind-matrix-translate\
 	blind-matrix-transpose\
 	blind-mosaic\
+	blind-mosaic-corners\
 	blind-mosaic-edges\
 	blind-multiply-matrices\
 	blind-next-frame\
