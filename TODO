@@ -42,6 +42,9 @@ blind-convex-gradient	create a gradient in the shape of a convex lens
 blind-concave-gradient	create a gradient in the shape of a concave lens
 			(convexo-concave gradient is not necessary is blind-convex-gradient
 			 or blind-concave-gradient can be combined with blind-arithm for this)
+blind-preview		a graphical tool for previewing the output of a pipeline
+				should display the output for a selected frame or image
+				should have sliders to tune environment variables
 
 blind-from-video: add options to:
 	* just run ffmpeg just print the output
