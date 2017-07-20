@@ -3,6 +3,7 @@ include $(CONFIGFILE)
 
 
 BIN =\
+	blind-affine-colour\
 	blind-apply-palette\
 	blind-arithm\
 	blind-cat-cols\
@@ -76,6 +77,7 @@ BIN =\
 	blind-spectrum\
 	blind-spiral-gradient\
 	blind-split\
+	blind-split-chans\
 	blind-split-cols\
 	blind-split-rows\
 	blind-square-gradient\

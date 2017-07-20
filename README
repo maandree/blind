@@ -12,6 +12,9 @@ DESCRIPTION
        storing the video without first convert it with blind-to-video(1).
 
 UTILITIES
+       blind-affine-colour(1)
+              Apply an affine transformation to the colours in a video
+
        blind-arithm(1)
               Perform simple arithmetic on a video
 
@@ -233,6 +236,9 @@ UTILITIES
 
        blind-split(1)
               Split a video, by frame, into multiple videos
+
+       blind-split-chans(1)
+              Split colour channels into separate videos
 
        blind-split-cols(1)
               Split a video vertically into multiple videos
