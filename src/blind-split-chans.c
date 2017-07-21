@@ -1,17 +1,27 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("X-file Y-file Z-file [alpha-file]")
+USAGE("[-c] X-file Y-file Z-file [alpha-file]")
 
 int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	char xbuf[BUFSIZ], ybuf[BUFSIZ], zbuf[BUFSIZ], abuf[BUFSIZ];
+	char xbuf[sizeof(stream.buf)], ybuf[sizeof(xbuf)], zbuf[sizeof(xbuf)], abuf[sizeof(xbuf)];
 	int xfd, yfd, zfd, afd = -1;
-	size_t i, n, ptr;
+	size_t i, n, ptr, cs;
+	int all_channels = 1;
 
-	UNOFLAGS(argc != 3 && argc != 4);
+	ARGBEGIN {
+	case 'c':
+		all_channels = 0;
+		break;
+	default:
+		usage();
+	} ARGEND;
+
+	if (argc != 3 && argc != 4)
+		usage();
 
 	eopen_stream(&stream, NULL);
 
@@ -30,20 +40,36 @@ main(int argc, char *argv[])
 	if (afd >= 0 && DPRINTF_HEAD(afd, stream.frames, stream.width, stream.height, stream.pixfmt) < 0)
 		eprintf("dprintf %s:", argv[3]);
 
-	n = (stream.n_chan - (afd < 0)) * stream.chan_size;
+	if (!all_channels) {
+		memset(xbuf, 0, sizeof(xbuf));
+		memset(ybuf, 0, sizeof(ybuf));
+		memset(zbuf, 0, sizeof(zbuf));
+		memset(abuf, 0, sizeof(abuf));
+	}
+
+	cs = stream.chan_size;
+	n = (stream.n_chan - (afd < 0)) * cs;
 	do {
 		for (ptr = 0; ptr + stream.pixel_size <= stream.ptr; ptr += stream.pixel_size) {
-			for (i = 0; i < n; i += stream.chan_size) {
-				memcpy(xbuf + ptr + i, stream.buf + ptr + 0 * stream.chan_size, stream.chan_size);
-				memcpy(ybuf + ptr + i, stream.buf + ptr + 1 * stream.chan_size, stream.chan_size);
-				memcpy(zbuf + ptr + i, stream.buf + ptr + 2 * stream.chan_size, stream.chan_size);
+			if (all_channels) {
+				for (i = 0; i < n; i += cs) {
+					memcpy(xbuf + ptr + i, stream.buf + ptr + 0 * cs, cs);
+					memcpy(ybuf + ptr + i, stream.buf + ptr + 1 * cs, cs);
+					memcpy(zbuf + ptr + i, stream.buf + ptr + 2 * cs, cs);
+					if (afd >= 0)
+						memcpy(abuf + ptr + i, stream.buf + ptr + 3 * cs, cs);
+				}
+			} else {
+				memcpy(xbuf + ptr + 0 * cs, stream.buf + ptr + 0 * cs, cs);
+				memcpy(ybuf + ptr + 1 * cs, stream.buf + ptr + 1 * cs, cs);
+				memcpy(zbuf + ptr + 2 * cs, stream.buf + ptr + 2 * cs, cs);
 				if (afd >= 0)
-					memcpy(abuf + ptr + i, stream.buf + ptr + 3 * stream.chan_size, stream.chan_size);
+					memcpy(abuf + ptr + 3 * cs, stream.buf + ptr + 3 * cs, cs);
 			}
 			if (afd < 0) {
-				memcpy(xbuf + ptr + n, stream.buf + ptr + 3 * stream.chan_size, stream.chan_size);
-				memcpy(ybuf + ptr + n, stream.buf + ptr + 3 * stream.chan_size, stream.chan_size);
-				memcpy(zbuf + ptr + n, stream.buf + ptr + 3 * stream.chan_size, stream.chan_size);
+				memcpy(xbuf + ptr + n, stream.buf + ptr + 3 * cs, cs);
+				memcpy(ybuf + ptr + n, stream.buf + ptr + 3 * cs, cs);
+				memcpy(zbuf + ptr + n, stream.buf + ptr + 3 * cs, cs);
 			}
 		}
 		ewriteall(xfd, xbuf, ptr, argv[0]);
