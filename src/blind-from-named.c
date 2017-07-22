@@ -39,42 +39,16 @@ erecv_fd(int sock)
 	return fd;
 }
 
-#if !defined(HAVE_SENDFILE)
-static ssize_t
-sendfile(int outfd, int infd, off_t *offset, size_t count)
-{
-	char buf[PIPE_BUF];
-	ssize_t r, w, p, ret = 0;
-
-	(void) offset;
-	(void) count;
-
-	for (;;) {
-		r = read(infd, buf, sizeof(buf));
-		if (r < 0)
-			eprintf("read <received file>:");
-		if (!r)
-			break;
-		ret += r;
-		for (p = 0; p < r; p += w) {
-			w = write(outfd, buf + p, (size_t)(r - p));
-			if (w < 0)
-				eprintf("write <stdout>:");
-		}
-	}
-
-	return ret;
-}
-#endif
-
 int
 main(int argc, char *argv[])
 {
+	char buf[BUFSIZ];
 	struct sockaddr_un addr;
 	int abstract = 0;
 	int filedes = -1;
 	int tries = 11;
 	int sockfd, fd;
+	ssize_t n;
 
 	ARGBEGIN {
 	case 'a':
@@ -133,14 +107,9 @@ retry:
 		eprintf("execvp %s:", argv[0]);
 	}
 
-	for (;;) {
-		switch (sendfile(STDOUT_FILENO, fd, NULL, SIZE_MAX)) {
-		case 0:
-			return 0;
-		case -1:
-			eprintf("sendfile <stdout> <received file>:");
-		default:
-			break;
-		}
-	}
+	while ((n = read(fd, buf, sizeof(buf))) > 0)
+		ewriteall(STDOUT_FILENO, buf, (size_t)n, "<stdout>");
+	if (n < 0)
+		eprintf("read <received file>:");
+	return 0;
 }
