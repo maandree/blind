@@ -53,7 +53,7 @@ static void
 PROCESS(struct stream *stream)
 {
 	size_t i, n;
-	TYPE x, y, z, a, norm;\
+	TYPE x, y, z, a, norm;
 	do {
 		n = stream->ptr / stream->pixel_size;
 		for (i = 0; i < n; i++) {
