@@ -4,7 +4,6 @@ blind-primary-key	replace a primary with transparency, -g for greyscaled images
 blind-colour-matrix	create colour space conversion matrix
 blind-apply-map		remap pixels (distortion) using the X and Y values, -[xy] for tiling, -s for
 				improve quality on downscaling (pixels' neighbours must not change)
-blind-apply-kernel	apply a convolution matrix.
 blind-find-frame	a graphical tool for locating frames, should highlight key frames, and
 				play audio. Should support both regular videos files and uivf
 				finding key frames: ffprobe -show_frames (lists all frames)

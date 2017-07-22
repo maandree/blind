@@ -15,6 +15,12 @@ UTILITIES
        blind-affine-colour(1)
               Apply an affine transformation to the colours in a video
 
+       blind-apply-kernel(1)
+              Apply a convolution matrix to a video
+
+       blind-apply-palette(1)
+              Apply a colour palette to a video
+
        blind-arithm(1)
               Perform simple arithmetic on a video
 

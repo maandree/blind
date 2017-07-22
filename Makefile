@@ -4,6 +4,7 @@ include $(CONFIGFILE)
 
 BIN =\
 	blind-affine-colour\
+	blind-apply-kernel\
 	blind-apply-palette\
 	blind-arithm\
 	blind-cat-cols\

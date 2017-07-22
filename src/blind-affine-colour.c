@@ -113,6 +113,8 @@ PROCESS(struct stream *colour, struct stream *matrix)
 	} while (eread_stream(colour, SIZE_MAX));
 	if (colour->ptr)
 		eprintf("%s: incomplete frame\n", colour->file);
+
+	free(mbuf);
 }
 
 #endif
