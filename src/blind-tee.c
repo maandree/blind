@@ -13,6 +13,8 @@ main(int argc, char *argv[])
 
 	UNOFLAGS(0);
 
+	signal(SIGPIPE, SIG_IGN);
+
 	fds[n++] = STDOUT_FILENO;
 	while (argc--)
 		fds[n++] = eopen(*argv++, O_WRONLY | O_CREAT | O_TRUNC, 0666);

@@ -64,6 +64,18 @@ epread(int fd, void *buf, size_t n, off_t off, const char *fname)
 	return (size_t)ret;
 }
 
+static inline size_t
+ewrite(int fd, void *buf, size_t n, const char *fname)
+{
+	ssize_t ret = write(fd, buf, n);
+	if (ret < 0) {
+		if (errno = ECONNRESET)
+			raise(SIGPIPE);
+		eprintf("write %s:", fname);
+	}
+	return (size_t)ret;
+}
+
 static inline off_t
 elseek(int fd, off_t offset, int whence, const char *fname)
 {

@@ -86,8 +86,7 @@ PROCESS(void)
 		for (y = stream.height; y--;)
 			for (x = stream.width * sizeof(*buf); x;)
 				for (x -= n = MIN(sizeof(buf), x); n; n -= (size_t)r)
-					if ((r = write(STDOUT_FILENO, buf, n)) < 0)
-						eprintf("write <stdout>:");
+					r = ewrite(STDOUT_FILENO, buf, n, "<stdout>");
 }
 
 #endif

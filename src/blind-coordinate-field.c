@@ -64,8 +64,7 @@ PROCESS(void)
 			buf[1] = (TYPE)y;
 			for (x = 0; x < stream.width; x++) {
 				buf[0] = (TYPE)x;
-				if (write(STDOUT_FILENO, buf, sizeof(buf)) < 0)
-					eprintf("write <stdout>:");
+				ewrite(STDOUT_FILENO, buf, sizeof(buf), "<stdout>");
 			}
 		}
 	}
