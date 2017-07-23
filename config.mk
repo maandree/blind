@@ -5,6 +5,11 @@ VERSION = 1.1
 PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
+# Dependencies
+KORN_SHELL = bash
+# Known to work: bash ksh
+# Does not work: mksh loksh oksh dash
+
 # Commands
 LN = ln -s
 

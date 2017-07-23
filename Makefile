@@ -105,11 +105,13 @@ BIN =\
 #    blind-kernel
 #    blind-temporal-mean
 
-SCRIPTS =\
-	blind-primary-key\
+SH_SCRIPTS =\
 	blind-rotate-90\
 	blind-rotate-180\
 	blind-rotate-270
+
+KSH_SCRIPTS =\
+	blind-primary-key
 
 COMMON_OBJ =\
 	util.o\
@@ -153,6 +155,7 @@ EXAMPLEFILES =\
 
 COMMON_SRC = $(COMMON_SRC:.o=.c)
 SRC = $(BIN:=.c) $(COMMON_SRC)
+SCRIPTS = $(SH_SCRIPTS) $(KSH_SCRIPTS) 
 MAN1 = $(BIN:=.1) $(SCRIPTS:=.1)
 MAN7 = blind.7
 
@@ -195,6 +198,7 @@ platform.h: generate-macros
 install: all
 	mkdir -p -- "$(DESTDIR)$(PREFIX)/bin"
 	cp -f -- $(BIN) $(SCRIPTS) "$(DESTDIR)$(PREFIX)/bin"
+	cd "$(DESTDIR)$(PREFIX)/bin" && sed -i '1s:bash$$:$(KORN_SHELL):' $(KSH_SCRIPTS)
 	cd -- "$(DESTDIR)$(PREFIX)/bin" && chmod 755 $(BIN) $(SCRIPTS)
 	mkdir -p -- "$(DESTDIR)$(MANPREFIX)/man1"
 	set -e && for m in $(MAN1); do \
@@ -216,6 +220,7 @@ install-mcb: mcb
 	rm -f -- "$(DESTDIR)$(PREFIX)/bin/blind-single-colour"
 	cp -f -- blind-mcb "$(DESTDIR)$(PREFIX)/bin/blind-single-colour"
 	cp -f -- $(SCRIPTS) "$(DESTDIR)$(PREFIX)/bin"
+	cd "$(DESTDIR)$(PREFIX)/bin" && sed -i '1s:bash$$:$(KORN_SHELL):' $(KSH_SCRIPTS)
 	cd -- "$(DESTDIR)$(PREFIX)/bin" && chmod 755 -- blind-single-colour $(SCRIPTS)
 	mkdir -p -- "$(DESTDIR)$(MANPREFIX)/man1"
 	set -e && for m in $(MAN1); do \
