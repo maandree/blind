@@ -14,11 +14,12 @@ x=x; y=y; z=z
 ciexyy=0
 zflag=
 grey=0
+keep=0
 
 usage () {
 	xyy="-z x1 y1 x2 y2 x3 y3 [white-x white-y]"
 	xyz="X1 Y1 Z1 X2 Y2 Z2 X3 Y3 Z3 [white-X white-Y white-Z]"
-	printf 'usage: %s [-1 | -2 | -3] [-g] [%s | %s]\n' "$0" "$xyy" "$xyz" >&2
+	printf 'usage: %s [-1 | -2 | -3] [-gk] [%s | %s]\n' "$0" "$xyy" "$xyz" >&2
 	exit 1
 }
 
@@ -40,6 +41,8 @@ while ! test $# = 0; do
 				x=z; y=x; z=y
 			elif test "$flag" = g; then
 				grey=1
+			elif test "$flag" = k; then
+				keep=1
 			elif test "$flag" = z; then
 				ciexyy=1
 			else
@@ -83,6 +86,29 @@ else
 	}
 fi
 
+if test $keep = 0; then
+	primary () { blind-from-named -a blind-${pid}-$x "$@"; }
+	keep_primary () { "$@"; }
+else
+	primary () {
+		blind-from-named -a blind-${pid}-$x \
+			blind-tee >(blind-to-named -a blind-${pid}-k) | \
+			"$@"
+	}
+	keep_primary () {
+		if test $x = x; then
+		    X=; Y=y; Z=z
+		elif test $x = y; then
+		    X=x; Y=; Z=z
+		else
+		    X=x; Y=y; Z=
+		fi
+		blind-from-named -f 7 -a blind-${pid}-k \
+			blind-arithm -a$X$Y$Z add /dev/fd/7 | \
+			"$@"
+	}
+fi
+
 if test $grey = 0; then
 	finalise () { unconvert; }
 else
@@ -101,16 +127,16 @@ fi
 	blind-arithm mul \
 		<(blind-single-colour -f inf -w $width -h $height 0 0 0 1 | \
 			blind-arithm sub \
-				<(blind-from-named -a blind-${pid}-$x \
-					blind-affine-colour -l \
-						<(printf '%s %s %s %s\n' \
-							1 4 4 xyza \
-							$o $o $o $o \
-							$o $o $o $o \
-							$o $o $o $o \
-							$E $E $E $o | \
-							blind-from-text | \
-							blind-repeat inf -))) | \
+				<(primary blind-affine-colour -l \
+					<(printf '%s %s %s %s\n' \
+						1 4 4 xyza \
+						$o $o $o $o \
+						$o $o $o $o \
+						$o $o $o $o \
+						$E $E $E $o | \
+						blind-from-text | \
+						blind-repeat inf -))) | \
+	keep_primary \
 	blind-from-named -f 8 -a blind-${pid}-$y blind-arithm add /dev/fd/8 | \
 	blind-from-named -f 9 -a blind-${pid}-$z blind-arithm add /dev/fd/9 | \
 	finalise
