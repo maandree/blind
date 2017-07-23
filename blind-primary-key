@@ -72,12 +72,14 @@ else
 		blind-affine-colour -al \
 			<(blind-colour-matrix -F "$pixfmt" $zflag -- "$@" | \
 				blind-tee \
-					>(blind-invert-matrix -ae | \blind-to-named -a blind-${pid}-invmat) | \
+					>(blind-invert-matrix -e | \blind-to-named -a blind-${pid}-invmat) | \
 					blind-repeat inf -)
 	}
 	unconvert () {
 		blind-affine-colour -al \
-			<(blind-from-named -a blind-${pid}-invmat blind-repeat inf -)
+			<(blind-from-named -a blind-${pid}-invmat \
+				./blind-arithm -xyz max <(./blind-single-colour -w 3 -h 3 1) | \
+				blind-repeat inf -)
 	}
 fi
 
