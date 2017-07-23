@@ -158,16 +158,18 @@ getfile(int fd, void *buffer, size_t *restrict ptr, size_t *restrict size)
 {
 	char *restrict *restrict buf = buffer;
 	void *new;
+	size_t new_size;
 	ssize_t r;
 
 	for (;;) {
 		if (*ptr == *size) {
-			if (!(new = realloc(*buf, *size << 1))) {
+			new_size = *size ? *size << 1 : BUFSIZ;
+			if (!(new = realloc(*buf, new_size))) {
 				errno = ENOMEM;
 				return -1;
 			}
 			*buf = new;
-			*size <<= 1;
+			*size = new_size;
 		}
 		r = read(fd, *buf + *ptr, *size - *ptr);
 		if (r <= 0) {

@@ -88,14 +88,23 @@ PROCESS(struct stream *colour, struct stream *matrix)
 			if (!x) {
 				if (!y && !eread_segment(matrix, mbuf, dim * matrix->row_size))
 					break;
-				if (!per_pixel)
+				if (!per_pixel) {
+					if (!y) {
+						mat = (TYPE *)mbuf;
+						for (i = 0; i < dim; i++, mat += w)
+							for (j = 0; j < dim; j++)
+								M[i][j] = mat[j * matrix->n_chan + 1]
+									* mat[(j + 1) * matrix->n_chan - 1];
+					}
 					y = (y + 1) % colour->height;
+				}
 			}
 			if (per_pixel) {
 				mat = (TYPE *)(mbuf + x * dim * matrix->pixel_size);
 				for (i = 0; i < dim; i++, mat += w)
 					for (j = 0; j < dim; j++)
-						M[i][j] = mat[j * matrix->n_chan + 1] * mat[(j + 1) * matrix->n_chan - 1];
+						M[i][j] = mat[j * matrix->n_chan + 1]
+							* mat[(j + 1) * matrix->n_chan - 1];
 			}
 			pixel = (TYPE *)(colour->buf + ptr);
 			for (i = 0; i < dim; i++) {

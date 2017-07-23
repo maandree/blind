@@ -107,9 +107,7 @@ retry:
 		eprintf("execvp %s:", argv[0]);
 	}
 
-	while ((n = read(fd, buf, sizeof(buf))) > 0)
+	while ((n = eread(fd, buf, sizeof(buf), "<received file>")))
 		ewriteall(STDOUT_FILENO, buf, (size_t)n, "<stdout>");
-	if (n < 0)
-		eprintf("read <received file>:");
 	return 0;
 }

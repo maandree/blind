@@ -1,7 +1,33 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-F pixel-format] (-z x1 y1 x2 y2 x3 y3 white-x white-y | X1 Y1 Z1 X2 Y2 Z2 X3 Y3 Z3 [white-X white-Y white-Z])")
+USAGE("[-F pixel-format] (-z x1 y1 x2 y2 x3 y3 [white-x white-y] | X1 Y1 Z1 X2 Y2 Z2 X3 Y3 Z3 [white-X white-Y white-Z])")
+
+static void
+invert(double M[3][6])
+{
+	size_t r1, r2, i;
+	double t;
+	for (r1 = 0; r1 < 3; r1++) {
+		if (!M[r1][r1]) {
+			for (r2 = r1 + 1; r2 < 3 && !M[r2][r1]; r2++);
+			if (r2 >= 3)
+				eprintf("the colour space's rank is less than 3\n");
+			for (i = 0; i < 6; i++)
+				t = M[r1][i], M[r1][i] = M[r2][i], M[r2][i] = t;
+		}
+		t = 1. / M[r1][r1];
+		for (i = 0; i < 6; i++)
+			M[r1][i] *= t;
+		for (r2 = r1 + 1; r2 < 3; r2++)
+			for (i = 0, t = M[r2][r1]; i < 6; i++)
+				M[r2][i] -= M[r1][i] * t;
+	}
+	for (r1 = 3; --r1;)
+		for (r2 = r1; r2--;)
+			for (i = 0, t = M[r2][r1]; i < 6; i++)
+				M[r2][i] -= M[r1][i] * t;
+}
 
 int
 main(int argc, char *argv[])
@@ -12,7 +38,7 @@ main(int argc, char *argv[])
 	double x[4], y[4], z[4], M[3][6], t;
 	double Mlf[9 * 4];
 	float Mf[9 * 4];
-	size_t i, j, r1, r2;
+	size_t i, j;
 
 	ARGBEGIN {
 	case 'F':
@@ -59,15 +85,6 @@ main(int argc, char *argv[])
 		x[3] = argc > 9 ? etolf_arg("white-X", argv[9])  : D65_XYZ_X;
 		y[3] = argc > 9 ? etolf_arg("white-Y", argv[10]) : 1;
 		z[3] = argc > 9 ? etolf_arg("white-Z", argv[11]) : D65_XYZ_Z;
-		for (i = 0; i < 4; i++) {
-			if (y[i] && y[i] != 1.) {
-				x[i] /= y[i];
-				z[i] /= y[i];
-				y[i] = 1.;
-			} else if (!y[i]) {
-				x[i] = y[i] = z[i] = 0.;
-			}
-		}
 	}
 
 	for (i = 0; i < 3; i++) {
@@ -78,25 +95,7 @@ main(int argc, char *argv[])
 		M[i][3 + i] = 1.;
 	}
 
-	for (r1 = 0; r1 < 3; r1++) {
-		if (!M[r1][r1]) {
-			for (r2 = r1 + 1; r2 < 3 && !M[r2][r1]; r2++);
-			if (r2 >= 3)
-				eprintf("the colour space's rank is less than 3\n");
-			for (i = 0; i < 6; i++)
-				t = M[r1][i], M[r1][i] = M[r2][i], M[r2][i] = t;
-		}
-		t = 1. / M[r1][r1];
-		for (i = 0; i < 6; i++)
-			M[r1][i] *= t;
-		for (r2 = r1; r2--;)
-			for (i = 0, t = M[r2][r1]; i < 6; i++)
-				M[r2][i] -= M[r1][i] * t;
-	}
-	for (r1 = 3; r1--;)
-		for (r2 = r1; r2--;)
-			for (i = 0, t = M[r2][r1]; i < 6; i++)
-				M[r2][i] -= M[r1][i] * t;
+	invert(M);
 
 	for (i = 0; i < 3; i++) {
 		t = M[i][3] * x[3] + M[i][4] * y[3] + M[i][5] * z[3];
@@ -105,15 +104,22 @@ main(int argc, char *argv[])
 		M[2][i] = t * z[i];
 	}
 
+	for (i = 0; i < 3; i++) {
+		M[i][3] = M[i][4] = M[i][5] = 0.;
+		M[i][3 + i] = 1.;
+	}
+
+	invert(M);
+
 	eset_pixel_format(&stream, pixfmt);
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
 	for (i = 0; i < 3; i++) {
 		for (j = 0; j < 3; j++) {
-			Mlf[i * 12 + j * 4 + 0] = M[i][j];
-			Mlf[i * 12 + j * 4 + 1] = M[i][j];
-			Mlf[i * 12 + j * 4 + 2] = M[i][j];
+			Mlf[i * 12 + j * 4 + 0] = M[i][3 + j];
+			Mlf[i * 12 + j * 4 + 1] = M[i][3 + j];
+			Mlf[i * 12 + j * 4 + 2] = M[i][3 + j];
 			Mlf[i * 12 + j * 4 + 3] = 1.;
 		}
 	}

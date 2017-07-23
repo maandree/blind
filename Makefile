@@ -106,6 +106,7 @@ BIN =\
 #    blind-temporal-mean
 
 SCRIPTS =\
+	blind-primary-key\
 	blind-rotate-90\
 	blind-rotate-180\
 	blind-rotate-270
