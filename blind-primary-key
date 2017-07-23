@@ -27,12 +27,12 @@ while ! test $# = 0; do
 	if test "$1" = --; then
 		shift 1
 		break
-	elif test "${1::1}" = -; then
-		arg="${1:1}"
+	elif test "$(printf '%s\n' "$1" | sed 's/^\(.\).*$/\1/')" = -; then
+		arg="$(printf '%s\n' "$1" | sed 's/^.//')"
 		shift 1
-		while test -n "${arg::1}"; do
-			flag="${arg::1}"
-			arg="${arg:1}"
+		while test -n "$arg"; do
+			flag="$(printf '%s\n' "$arg" | sed 's/^\(.\).*$/\1/')"
+			arg="$(printf '%s\n' "$arg" | sed 's/^.//')"
 			if test "$flag" = 1; then
 				x=x; y=y; z=z
 			elif test "$flag" = 2; then
@@ -81,7 +81,7 @@ else
 	unconvert () {
 		blind-affine-colour -al \
 			<(blind-from-named -a blind-${pid}-invmat \
-				./blind-arithm -xyz max <(./blind-single-colour -w 3 -h 3 1) | \
+				blind-arithm -xyz max <(blind-single-colour -w 3 -h 3 1) | \
 				blind-repeat inf -)
 	}
 fi
