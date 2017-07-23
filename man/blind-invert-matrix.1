@@ -3,7 +3,7 @@
 blind-invert-matrix - Invert matrix-vidoes
 .SH SYNOPSIS
 .B blind-invert-matrix
-[-e]
+[-aexyz]
 .SH DESCRIPTION
 .B blind-invert-matrix
 reads a video representing a matrix from
@@ -18,9 +18,21 @@ eliminated to the identity matrix and the
 resuling augment is printed.
 .SH OPTIONS
 .TP
+.B -a
+Ignore the alpha channel.
+.TP
 .B -e
 Apply optimisation that assumes all channels
 are identical.
+.TP
+.B -x
+Ignore the first channel (the X channel).
+.TP
+.B -y
+Ignore the second channel (the Y channel).
+.TP
+.B -z
+Ignore the third channel (the Z channel).
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-multiply-matrices (1),

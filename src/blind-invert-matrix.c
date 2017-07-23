@@ -2,9 +2,11 @@
 #ifndef TYPE
 #include "common.h"
 
-USAGE("")
+USAGE("[-aexyz]")
 
 static int equal = 0;
+static int skip_ch[] = {0, 0, 0, 0};
+static size_t first_included = 0;
 
 #define FILE "blind-invert-matrix.c"
 #include "define-functions.h"
@@ -14,12 +16,24 @@ main(int argc, char *argv[])
 {
 	struct stream stream;
 	size_t width, x, y, i, row_size;
-	char *buf, *one, *p;
+	char *buf, *one, *p, *q;
 	void (*process)(struct stream *stream, void *buf);
 
 	ARGBEGIN {
+	case 'a':
+		skip_ch[3] = 1;
+		break;
 	case 'e':
 		equal = 1;
+		break;
+	case 'x':
+		skip_ch[0] = 1;
+		break;
+	case 'y':
+		skip_ch[1] = 1;
+		break;
+	case 'z':
+		skip_ch[2] = 1;
 		break;
 	default:
 		usage();
@@ -27,6 +41,11 @@ main(int argc, char *argv[])
 
 	if (argc)
 		usage();
+
+	while (first_included < ELEMENTSOF(skip_ch) && skip_ch[first_included])
+		first_included++;
+	if (first_included == ELEMENTSOF(skip_ch))
+		equal = 0;
 
 	eopen_stream(&stream, NULL);
 	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);
@@ -66,17 +85,20 @@ main(int argc, char *argv[])
 			}
 		}
 		if (equal) {
-			process(&stream, buf);
+			process(&stream, buf + first_included * stream.chan_size);
 			for (y = 0; y < stream.height; y++) {
 				for (x = 0; x < stream.width; x++) {
-					p = buf + y * row_size + x * stream.pixel_size;
-					for (i = 1; i < stream.n_chan; i++)
-						memcpy(p + i * stream.chan_size, p, stream.chan_size);
+					p = buf + y * row_size + x * stream.pixel_size + stream.col_size;
+					q = p + first_included * stream.chan_size;
+					for (i = 0; i < stream.n_chan; i++, p += stream.chan_size)
+						if (i != first_included && !skip_ch[i])
+							memcpy(p, q, stream.chan_size);
 				}
 			}
 		} else {
 			for (i = 0; i < stream.n_chan; i++)
-				process(&stream, buf + i * stream.chan_size);
+				if (!skip_ch[i])
+					process(&stream, buf + i * stream.chan_size);
 		}
 		for (y = 0; y < stream.height; y++)
 			ewriteall(STDOUT_FILENO, buf + y * row_size + stream.col_size, row_size - stream.col_size, "<stdout>");
@@ -107,7 +129,7 @@ PROCESS(struct stream *stream, void *buf)
 
 	for (r1 = 0; r1 < rn; r1++) {
 		p1 = matrix + r1 * cn;
-			if (!p1[r1][0]) {
+		if (!p1[r1][0]) {
 			for (r2 = r1 + 1; r2 < rn; r2++) {
 				p2 = matrix + r2 * cn;
 				if (p2[r1][0])

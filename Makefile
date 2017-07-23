@@ -11,6 +11,7 @@ BIN =\
 	blind-cat-rows\
 	blind-chroma-key\
 	blind-colour-ciexyz\
+	blind-colour-matrix\
 	blind-colour-srgb\
 	blind-compress\
 	blind-concat\

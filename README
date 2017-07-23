@@ -36,8 +36,11 @@ UTILITIES
        blind-colour-ciexyz(1)
               Convert CIE XYZ for use with blind-single-colour(1)
 
+       blind-colour-matrix(1)
+              Create colour space conversion matrix
+
        blind-colour-srgb(1)
-              Convert sRGB for use with blind-single-colour(1)
+              Convert sRGB for use with blind-single-colour(1) and colour-colour-matrix(1)
 
        blind-concat(1)
               Concatenate videos
