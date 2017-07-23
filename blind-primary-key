@@ -97,11 +97,11 @@ else
 	}
 	keep_primary () {
 		if test $x = x; then
-		    X=; Y=y; Z=z
+			X=; Y=y; Z=z
 		elif test $x = y; then
-		    X=x; Y=; Z=z
+			X=x; Y=; Z=z
 		else
-		    X=x; Y=y; Z=
+			X=x; Y=y; Z=
 		fi
 		blind-from-named -f 7 -a blind-${pid}-k \
 			blind-arithm -a$X$Y$Z add /dev/fd/7 | \
