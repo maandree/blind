@@ -31,7 +31,6 @@ blind-mean		mean of multiple streams
 			https://en.wikipedia.org/wiki/Identric_mean
 			https://en.wikipedia.org/wiki/Logarithmic_mean
 			https://en.wikipedia.org/wiki/Stolarsky_mean
-blind-temporal-arithm	blind-arithm but over all frames in a video instead of over all streams
 blind-apply-icc		apply ICC profile to video
 blind-convex-gradient	create a gradient in the shape of a convex lens
 blind-concave-gradient	create a gradient in the shape of a concave lens
@@ -50,8 +49,6 @@ blind-from-video: add options to:
 	  for discarding)
 
 blind-cone-gradient: add ability to make gradient superelliptic
-
-blind-arithm: add support for multiple streams
 
 Add [-j jobs] to blind-from-video and blind-to-video.
 

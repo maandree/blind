@@ -126,6 +126,9 @@ UTILITIES
        blind-invert-matrix(1)
               Invert matrix-video
 
+       blind-kernel(1)
+              Create a convolution matrix
+
        blind-linear-gradient(1)
               Generate a video with a linear gradient
 
@@ -240,6 +243,12 @@ UTILITIES
        blind-skip-pattern(1)
               Skips frames in a video according to pattern
 
+       blind-spatial-arithm(1)
+              Perform simple arithmetic over all pixels for each frame in a video
+
+       blind-spatial-mean(1)
+              Calculate the mean over all pixel for each frame in a video
+
        blind-spectrum(1)
               Transform a gradient into a spectrum
 
@@ -266,6 +275,12 @@ UTILITIES
 
        blind-tee(1)
               /dev/fd/ aware tee(1) implementation
+
+       blind-temporal-arithm(1)
+              Perform simple arithmetic over all frames in a video for each pixel
+
+       blind-temporal-mean(1)
+              Calculate the mean over all frames in a video for each pixel
 
        blind-time-blur(1)
               Draw new frames on top of old frames with partial alpha

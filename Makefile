@@ -43,6 +43,7 @@ BIN =\
 	blind-interleave\
 	blind-invert-luma\
 	blind-invert-matrix\
+	blind-kernel\
 	blind-linear-gradient\
 	blind-make-kernel\
 	blind-matrix-orthoproject\
@@ -76,6 +77,8 @@ BIN =\
 	blind-sinc-wave\
 	blind-sine-wave\
 	blind-skip-pattern\
+	blind-spatial-arithm\
+	blind-spatial-mean\
 	blind-spectrum\
 	blind-spiral-gradient\
 	blind-split\
@@ -85,6 +88,8 @@ BIN =\
 	blind-square-gradient\
 	blind-stack\
 	blind-tee\
+	blind-temporal-arithm\
+	blind-temporal-mean\
 	blind-time-blur\
 	blind-triangular-wave\
 	blind-to-image\
@@ -97,13 +102,7 @@ BIN =\
 	blind-triangle-tessellation\
 	blind-unpremultiply\
 	blind-vector-projection\
-	blind-write-head\
-	blind-kernel\
-	blind-temporal-mean
-
-# TODO Not tested yet (and doesn't have any manpages):
-#    blind-kernel
-#    blind-temporal-mean
+	blind-write-head
 
 SH_SCRIPTS =\
 	blind-rotate-90\

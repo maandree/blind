@@ -5,7 +5,7 @@ blind-arithm - Perform simple arithmetic on a video
 .B blind-arithm
 [-axyz]
 .I operation
-.I right-hand-stream
+.IR right-hand-stream \ ...
 .SH DESCRIPTION
 .B blind-arithm
 reads left-hand operands from stdin, and right-hand
@@ -27,6 +27,16 @@ If stdin is shorter than
 the remainder of
 .I right-hand-stream
 is ignored but may be partially read.
+.P
+IF multiple
+.I right-hand-stream
+are specified, they are applied from left to right,
+with the exception for if	
+.I operation
+is
+.BR exp ,
+in which case they are applied from right to left with
+stdin applied last.
 .SH OPERATIONS
 .TP
 .B add
@@ -86,6 +96,10 @@ Do not modify the Z channel (the third channel).
 .BR blind-cross-product (1),
 .BR blind-quaternion-product (1),
 .BR blind-vector-projection (1),
+.BR blind-spatial-mean (1),
+.BR blind-spatial-arithm (1),
+.BR blind-temporal-mean (1),
+.BR blind-temporal-arithm (1),
 .BR blind-single-colour (1),
 .BR blind-set-alpha (1),
 .BR blind-set-luma (1),

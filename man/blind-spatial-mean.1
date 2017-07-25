@@ -1,0 +1,48 @@
+.TH BLIND-SPATIAL-MEAN 1 blind
+.SH NAME
+blind-spatial-mean - Calculate the mean over all pixel for each frame in a video
+.SH SYNOPSIS
+.B blind-spatial-mean
+[-g | -h | -l
+.I power
+| -p
+.I power
+| -v]
+.SH DESCRIPTION
+.B blind-spatial-mean
+reads a video from stdin and calculates the mean
+over all pixels for frames, and outputs a
+video with one pixel in each frame, to stdout with
+the mean for each frame.
+.P
+Unless otherwise specified, the arithmetic mean
+is calculated.
+.SH OPTIONS
+.TP
+.B -g
+Calculate the geometric mean.
+.TP
+.B -h
+Calculate the harmonic mean.
+.TP
+.BR -l \ \fIpower\fP
+Calculate the Lehmer mean with the specified
+.IR power .
+.TP
+.BR -p \ \fIpower\fP
+Calculate the power mean (Hölder mean) with
+the specified
+.IR power .
+.TP
+.B -v
+Calculate the variance.
+.SH SEE ALSO
+.BR blind (7),
+.BR blind-temporal-arithm (1),
+.BR blind-spatial-arithm (1),
+.BR blind-arithm (1),
+.BR blind-temporal-mean (1),
+.BR blind-rewrite-head (1)
+.SH AUTHORS
+Mattias Andrée
+.RI < maandree@kth.se >

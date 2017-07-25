@@ -52,6 +52,7 @@ main(int argc, char *argv[])
 		break;
 	case 's':
 		shortest = 1;
+		frames = SIZE_MAX;
 		break;
 	default:
 		usage();

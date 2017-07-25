@@ -1,8 +1,8 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-g | -h | -l power | -p power]")
-/* TODO add -w weight-stream */
+USAGE("[-g | -h | -l power | -p power | -v]")
+/* TODO add [-w weight-stream] for -l */
 
 /* Because the syntax for a function returning a function pointer is disgusting. */
 typedef void (*process_func)(struct stream *stream, void *buffer, void *image, size_t frame);
@@ -20,20 +20,23 @@ typedef void (*process_func)(struct stream *stream, void *buffer, void *image, s
 #define LIST_MEANS(TYPE)\
 	/* [default] arithmetic mean */\
 	X(ARITHMETIC, arithmetic, 1, COPY_FRAME,, *img1 += *buf,\
-	  a = (TYPE)1.0 / (TYPE)frame, *img1 *= a)\
+	  a = (TYPE)1 / (TYPE)frame, *img1 *= a)\
 	/* geometric mean */\
 	X(GEOMETRIC, geometric, 1, COPY_FRAME,, *img1 *= *buf,\
-	  a = (TYPE)1.0 / (TYPE)frame, *img1 = nnpow(*img1, a))\
+	  a = (TYPE)1 / (TYPE)frame, *img1 = nnpow(*img1, a))\
 	/* harmonic mean */\
 	X(HARMONIC, harmonic, 1, ZERO_AND_PROCESS_FRAME,, *img1 += (TYPE)1 / *buf,\
 	  a = (TYPE)frame, *img1 = a / *img1)\
-	/* lehmer mean */\
+	/* Lehmer mean */\
 	X(LEHMER, lehmer, 2, ZERO_AND_PROCESS_FRAME, (a = (TYPE)power, b = a - (TYPE)1),\
 	  (*img1 += nnpow(*buf, a), *img2 += nnpow(*buf, b)),, *img1 /= *img2)\
 	/* power mean (Hölder mean) (m = 2 for root square mean; m = 3 for cubic mean) */\
 	X(POWER, power, 1, ZERO_AND_PROCESS_FRAME, a = (TYPE)power,\
-	  *img1 += nnpow(*buf, a), (a = (TYPE)1 / (TYPE)frame, b = (TYPE)(1.0 / power)),\
-	  *img1 = a * nnpow(*img1, b))
+	  *img1 += nnpow(*buf, a), (a = (TYPE)1 / (TYPE)frame, b = (TYPE)(1. / power)), \
+	  *img1 = a * nnpow(*img1, b))\
+	/* variance */\
+	X(VARIANCE, variance, 2, ZERO_AND_PROCESS_FRAME,, (*img1 += *buf * *buf, *img2 += *buf),\
+	  a = (TYPE)1 / (TYPE)frame, *img1 = (*img1 - *img2 * *img2 * a) * a)
 
 enum first_frame_action {
 	COPY_FRAME,
@@ -54,34 +57,37 @@ static double power;
 	{\
 		TYPE *buf = buffer, *img1 = image, a, b;\
 		TYPE *img2 = (TYPE *)(((char *)image) + stream->frame_size);\
-		size_t x, y;\
-		if (!stream) {\
+		size_t x, y, z;\
+		if (!buf) {\
 			PRE_FINALISE;\
-			for (y = 0; y < stream->height; y++)\
-				for (x = 0; x < stream->width; x++, img1++, img2++, buf++)\
-					FINALISE_SUBCELL;\
+			for (z = 0; z < stream->n_chan; z++)\
+				for (y = 0; y < stream->height; y++)\
+					for (x = 0; x < stream->width; x++, img1++, img2++)\
+						FINALISE_SUBCELL;\
 		} else {\
 			PRE_PROCESS;\
-			for (y = 0; y < stream->height; y++)\
-				for (x = 0; x < stream->width; x++, img1++, img2++, buf++)\
-					PROCESS_SUBCELL;\
+			for (z = 0; z < stream->n_chan; z++)\
+				for (y = 0; y < stream->height; y++)\
+					for (x = 0; x < stream->width; x++, img1++, img2++, buf++) {\
+						PROCESS_SUBCELL;\
+					}\
 		}\
 		(void) img2, (void) a, (void) b, (void) frame;\
 	}
-#define X(...) MAKE_PROCESS(xyza, double, __VA_ARGS__)
+#define X(...) MAKE_PROCESS(lf, double, __VA_ARGS__)
 LIST_MEANS(double)
 #undef X
-#define X(...) MAKE_PROCESS(xyzaf, float, __VA_ARGS__)
+#define X(...) MAKE_PROCESS(f, float, __VA_ARGS__)
 LIST_MEANS(float)
 #undef X
 #undef MAKE_PROCESS
 
-#define X(ID, NAME, ...) [ID] = process_xyza_##NAME,
-static const process_func process_functions_xyza[] = { LIST_MEANS() };
+#define X(ID, NAME, ...) [ID] = process_lf_##NAME,
+static const process_func process_functions_lf[] = { LIST_MEANS() };
 #undef X
 
-#define X(ID, NAME, ...) [ID] = process_xyzaf_##NAME,
-static const process_func process_functions_xyzaf[] = { LIST_MEANS() };
+#define X(ID, NAME, ...) [ID] = process_f_##NAME,
+static const process_func process_functions_f[] = { LIST_MEANS() };
 #undef X
 
 int
@@ -109,6 +115,9 @@ main(int argc, char *argv[])
 		method = POWER;
 		power = etolf_flag('p', UARGF());
 		break;
+	case 'v':
+		method = VARIANCE;
+		break;
 	default:
 		usage();
 	} ARGEND;
@@ -130,12 +139,10 @@ main(int argc, char *argv[])
 
 	eopen_stream(&stream, NULL);
 
-        if (!strcmp(stream.pixfmt, "xyza"))
-                process = process_functions_xyza[method];
-        else if (!strcmp(stream.pixfmt, "xyza f"))
-                process = process_functions_xyzaf[method];
+        if (stream.encoding == DOUBLE)
+                process = process_functions_lf[method];
         else
-                eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
+                process = process_functions_f[method];
 
 	stream.frames = 1;
 	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);
@@ -149,14 +156,14 @@ main(int argc, char *argv[])
 
 	frames = 0;
 	if (first_frame_action == COPY_FRAME) {
-		if (!eread_frame(&stream, buf))
+		if (!eread_frame(&stream, img))
 			eprintf("video is no frames\n");
 		frames++;
 	}
 	for (; eread_frame(&stream, buf); frames++)
 		process(&stream, buf, img, frames);
 	if (!frames)
-		eprintf("video is no frames\n");
+		eprintf("video has no frames\n");
 	process(&stream, NULL, img, frames);
 
 	ewriteall(STDOUT_FILENO, img, stream.frame_size, "<stdout>");

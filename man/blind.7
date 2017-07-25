@@ -144,6 +144,9 @@ Invert the luminosity of a video
 .BR blind-invert-matrix (1)
 Invert matrix-video
 .TP
+.BR blind-kernel (1)
+Create a convolution matrix
+.TP
 .BR blind-linear-gradient (1)
 Generate a video with a linear gradient
 .TP
@@ -255,6 +258,12 @@ Apply sine-wave repetition to gradient
 .BR blind-skip-pattern (1)
 Skips frames in a video according to pattern
 .TP
+.BR blind-spatial-arithm (1)
+Perform simple arithmetic over all pixels for each frame in a video
+.TP
+.BR blind-spatial-mean (1)
+Calculate the mean over all pixel for each frame in a video
+.TP
 .BR blind-spectrum (1)
 Transform a gradient into a spectrum
 .TP
@@ -283,6 +292,12 @@ Overlay videos
 /dev/fd/ aware
 .BR tee (1)
 implementation
+.TP
+.BR blind-temporal-arithm (1)
+Perform simple arithmetic over all frames in a video for each pixel
+.TP
+.BR blind-temporal-mean (1)
+Calculate the mean over all frames in a video for each pixel
 .TP
 .BR blind-time-blur (1)
 Draw new frames on top of old frames with partial alpha

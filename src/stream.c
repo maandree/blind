@@ -487,7 +487,7 @@ nprocess_multiple_streams(int status, struct stream *streams, size_t n_streams, 
 	while (n_streams) {
 		n = SIZE_MAX;
 		for (i = 0; i < n_streams; i++) {
-			if (streams[i].ptr < sizeof(streams->buf) && !enread_stream(status, streams + i, SIZE_MAX)) {
+			if (streams[i].ptr < streams->pixel_size && !enread_stream(status, streams + i, SIZE_MAX)) {
 				close(streams[i].fd);
 				streams[i].fd = -1;
 				if (shortest)

@@ -32,6 +32,11 @@ tollu(const char *s, unsigned long long int min, unsigned long long int max, uns
 		errno = ERANGE;
 		return -1;
 	}
+	if (!isdigit(s[*s == 'x' || *s == 'X' || *s == '#']) ||
+	    (*s == '0' && !isdigit(s[1 + (*s == 'x' || *s == 'o' || *s == 'b')]))) {
+		errno = EINVAL;
+		return -1;
+	}
 	if (tolower(*s) == 'x' || *s == '#')
 		*out = strtoull(s + 1, &end, 16);
 	else if (*s == '0' && tolower(s[1]) == 'x')

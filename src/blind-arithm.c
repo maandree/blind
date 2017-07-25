@@ -1,67 +1,71 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-axyz] operation right-hand-stream")
+USAGE("[-axyz] operation right-hand-stream ...")
 
-static int skip_a = 0;
-static int skip_x = 0;
-static int skip_y = 0;
-static int skip_z = 0;
+static int skip_ch[4] = {0, 0, 0, 0};
 
 /* Because the syntax for a function returning a function pointer is disgusting. */
-typedef void (*process_func)(struct stream *left, struct stream *right, size_t n);
+typedef void (*process_func)(struct stream *streams, size_t n_streams, size_t n);
 
 #define LIST_OPERATORS(PIXFMT, TYPE)\
-	X(add, *lh += rh,                  PIXFMT, TYPE)\
-	X(sub, *lh -= rh,                  PIXFMT, TYPE)\
-	X(mul, *lh *= rh,                  PIXFMT, TYPE)\
-	X(div, *lh /= rh,                  PIXFMT, TYPE)\
-	X(mod, *lh = posmod(*lh, rh),      PIXFMT, TYPE)\
-	X(exp, *lh = pow(*lh, rh),         PIXFMT, TYPE)\
-	X(log, *lh = log2(*lh) / log2(rh), PIXFMT, TYPE)\
-	X(min, *lh = MIN(*lh, rh),         PIXFMT, TYPE)\
-	X(max, *lh = MAX(*lh, rh),         PIXFMT, TYPE)\
-	X(abs, *lh = abs(*lh - rh) + rh,   PIXFMT, TYPE)
+	X(add, 0, *lh += rh,                  PIXFMT, TYPE)\
+	X(sub, 0, *lh -= rh,                  PIXFMT, TYPE)\
+	X(mul, 0, *lh *= rh,                  PIXFMT, TYPE)\
+	X(div, 0, *lh /= rh,                  PIXFMT, TYPE)\
+	X(mod, 0, *lh = posmod(*lh, rh),      PIXFMT, TYPE)\
+	X(exp, 1, *lh = pow(*lh, rh),         PIXFMT, TYPE)\
+	X(log, 0, *lh = log2(*lh) / log2(rh), PIXFMT, TYPE)\
+	X(min, 0, *lh = MIN(*lh, rh),         PIXFMT, TYPE)\
+	X(max, 0, *lh = MAX(*lh, rh),         PIXFMT, TYPE)\
+	X(abs, 0, *lh = abs(*lh - rh) + rh,   PIXFMT, TYPE)
 
-#define C(CH, CHI, ALGO, TYPE)\
-	(!skip_##CH ? ((lh = ((TYPE *)(left->buf + i)) + (CHI),\
-			rh = ((TYPE *)(right->buf + i))[CHI],\
-			(ALGO)), 0) : 0)
+#define P(L, R, ALGO, TYPE)\
+	(lh = (TYPE *)(streams[L].buf + k),\
+	 rh = *((TYPE *)(streams[R].buf + k)),\
+	 (ALGO))
 
-#define X(NAME, ALGO, PIXFMT, TYPE)\
+#define X(NAME, RTL, ALGO, PIXFMT, TYPE)\
 	static void\
-	process_##PIXFMT##_##NAME(struct stream *left, struct stream *right, size_t n)\
+	process_##PIXFMT##_##NAME(struct stream *streams, size_t n_streams, size_t n)\
 	{\
-		size_t i;\
+		size_t i, j, k;\
 		TYPE *lh, rh;\
-		for (i = 0; i < n; i += 4 * sizeof(TYPE)) {\
-			C(x, 0, ALGO, TYPE);\
-			C(y, 1, ALGO, TYPE);\
-			C(z, 2, ALGO, TYPE);\
-			C(a, 3, ALGO, TYPE);\
+		if (RTL) {\
+			for (i = 0; i < streams->n_chan; i++)\
+				if (!skip_ch[i])\
+					for (j = n_streams; --j;)\
+						for (k = i * sizeof(TYPE); k < n; k += 4 * sizeof(TYPE))\
+							P(j - 1, j, ALGO, TYPE);\
+		} else {\
+			for (i = 0; i < streams->n_chan; i++)\
+				if (!skip_ch[i])\
+					for (j = 1; j < n_streams; j++)\
+						for (k = i * sizeof(TYPE); k < n; k += 4 * sizeof(TYPE))\
+							P(0, j, ALGO, TYPE);\
 		}\
 	}
-LIST_OPERATORS(xyza, double)
-LIST_OPERATORS(xyzaf, float)
+LIST_OPERATORS(lf, double)
+LIST_OPERATORS(f, float)
 #undef X
 
 static process_func
-get_process_xyza(const char *operation)
+get_process_lf(const char *operation)
 {
-#define X(NAME, ALGO, PIXFMT, TYPE)\
+#define X(NAME, _RTL, _ALGO, PIXFMT, _TYPE)\
 	if (!strcmp(operation, #NAME)) return process_##PIXFMT##_##NAME;
-	LIST_OPERATORS(xyza, double)
+	LIST_OPERATORS(lf, double)
 #undef X
 	eprintf("algorithm not recognised: %s\n", operation);
 	return NULL;
 }
 
 static process_func
-get_process_xyzaf(const char *operation)
+get_process_f(const char *operation)
 {
-#define X(NAME, ALGO, PIXFMT, TYPE)\
+#define X(NAME, _RTL, _ALGO, PIXFMT, _TYPE)\
 	if (!strcmp(operation, #NAME)) return process_##PIXFMT##_##NAME;
-	LIST_OPERATORS(xyzaf, float)
+	LIST_OPERATORS(f, float)
 #undef X
 	eprintf("algorithm not recognised: %s\n", operation);
 	return NULL;
@@ -70,41 +74,46 @@ get_process_xyzaf(const char *operation)
 int
 main(int argc, char *argv[])
 {
-	struct stream left, right;
+	struct stream *streams;
 	process_func process;
+	const char *operation;
+	size_t frames = SIZE_MAX, tmp;
+	int i;
 
 	ARGBEGIN {
 	case 'a':
-		skip_a = 1;
+		skip_ch[3] = 1;
 		break;
 	case 'x':
-		skip_x = 1;
-		break;
 	case 'y':
-		skip_y = 1;
-		break;
 	case 'z':
-		skip_z = 1;
+		skip_ch[ARGC() - 'x'] = 1;
 		break;
 	default:
 		usage();
 	} ARGEND;
 
-	if (argc != 2)
+	if (argc < 2)
 		usage();
 
-	eopen_stream(&left, NULL);
-	eopen_stream(&right, argv[1]);
+	operation = *argv;
+	streams = alloca((size_t)argc * sizeof(*streams));
+	*argv = NULL;
+	for (i = 0; i < argc; i++) {
+		eopen_stream(streams + i, argv[i]);
+		if (streams[i].frames && streams[i].frames < frames)
+			frames = streams[i].frames;
+	}
 
-	if (!strcmp(left.pixfmt, "xyza"))
-		process = get_process_xyza(argv[0]);
-	else if (!strcmp(left.pixfmt, "xyza f"))
-		process = get_process_xyzaf(argv[0]);
+	if (streams->encoding == DOUBLE)
+		process = get_process_lf(operation);
 	else
-		eprintf("pixel format %s is not supported, try xyza\n", left.pixfmt);
+		process = get_process_f(operation);
 
-	fprint_stream_head(stdout, &left);
+	tmp = streams->frames, streams->frames = frames;
+	fprint_stream_head(stdout, streams);
 	efflush(stdout, "<stdout>");
-	process_two_streams(&left, &right, STDOUT_FILENO, "<stdout>", process);
+	streams->frames = tmp;
+	process_multiple_streams(streams, (size_t)argc, STDOUT_FILENO, "<stdout>", 1, process);
 	return 0;
 }

@@ -3,7 +3,7 @@
 
 USAGE("[-xyza] kernel [parameter] ...")
 
-#define SUBUSAGE(FORMAT)          "usage: %s [-xyza] " FORMAT, argv0
+#define SUBUSAGE(FORMAT)          "usage: %s [-xyza] " FORMAT "\n", argv0
 #define STRCASEEQ3(A, B1, B2, B3) (!strcasecmp(A, B1) || !strcasecmp(A, B2) || !strcasecmp(A, B3))
 
 #define LIST_KERNELS\
@@ -37,7 +37,7 @@ kernel_kirsch(int argc, char *argv[], size_t *rows, size_t *cols, double **free_
 	if (STRCASEEQ3(argv[0], "6", "SE", "ES")) return matrices[5];
 	if (STRCASEEQ3(argv[0], "7", "E",  "E"))  return matrices[6];
 	if (STRCASEEQ3(argv[0], "8", "NE", "EN")) return matrices[7];
-	eprintf("Unrecognised direction: %s\n", argv[0]);
+	eprintf("unrecognised direction: %s\n", argv[0]);
 	return NULL;
 }
 
@@ -129,6 +129,7 @@ static const double *
 kernel_gaussian(int argc, char *argv[], size_t *rows, size_t *cols, double **free_this)
 {
 	size_t spread = 0, y, x;
+	ssize_t xx, yy;
 	int unsharpen = 0;
 	double sigma, value, c, k;
 	char *arg;
@@ -160,29 +161,17 @@ kernel_gaussian(int argc, char *argv[], size_t *rows, size_t *cols, double **fre
 
 	*free_this = emalloc3(*rows, *cols, sizeof(double));
 
-	k = sigma * sigma * 2;
+	k = sigma * sigma * 2.;
 	c = M_PI * k;
-	c = sqrt(c);
 	c = 1.0 / c;
 	k = 1.0 / -k;
-
-	for (x = 0; x <= spread; x++) {
-		value = (double)(spread - x);
-		value *= value * k;
-		value = exp(value) * c;
-		for (y = 0; y < *rows; y++) {
+	for (y = 0; y < 2 * spread + 1; y++) {
+		yy = (ssize_t)spread - (ssize_t)y, yy *= yy;
+		for (x = 0; x < 2 * spread + 1; x++) {
+			xx = (ssize_t)spread - (ssize_t)x, xx *= xx;
+			value = (double)(xx + yy) * k;
+			value = exp(value) * c;
 			(*free_this)[y * *cols + x] = value;
-			(*free_this)[y + 1 * *cols + *cols - 1 - x] = value;
-		}
-	}
-
-	for (y = 0; y <= spread; y++) {
-		value = (double)(spread - y);
-		value *= value * k;
-		value = exp(value) * c;
-		for (x = 0; x < *cols; x++) {
-			(*free_this)[y * *cols + x] *= value;
-			(*free_this)[y + 1 * *cols + *cols - 1 - x] *= value;
 		}
 	}
 
@@ -235,13 +224,16 @@ main(int argc, char *argv[])
 		usage();
 	} ARGEND;
 
+	if (!argc)
+		usage();
+
 	if (null_x && null_y && null_z && null_a)
 		null_x = null_y = null_z = null_a = 0;
 
 	if (0);
 #define X(FUNC, NAME)\
 	else if (!strcmp(argv[0], NAME))\
-		kernel = FUNC(argc, argv + 1, &rows, &cols, &free_this);
+		kernel = FUNC(argc - 1, argv + 1, &rows, &cols, &free_this);
 	LIST_KERNELS
 #undef X
 	else
