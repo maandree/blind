@@ -53,6 +53,7 @@ BIN =\
 	blind-matrix-shear\
 	blind-matrix-translate\
 	blind-matrix-transpose\
+	blind-mean\
 	blind-mosaic\
 	blind-mosaic-corners\
 	blind-mosaic-edges\

@@ -156,6 +156,9 @@ UTILITIES
        blind-matrix-transpose(1)
               Create an affine 2D-transformation matrix for transposition
 
+       blind-mean(1)
+              Calcuate the mean over videos for each pixel in each frame
+
        blind-mosaic(1)
               Redraw each frame in video as a mosaic
 

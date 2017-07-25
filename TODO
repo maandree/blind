@@ -1,3 +1,5 @@
+blind-*-mean: replace power with power-stream
+
 blind-transform		affine transformation by matrix multiplication, -[xy] for tiling, -s for
 				improve quality on downscaling (pixels' neighbours must not change)
 blind-apply-map		remap pixels (distortion) using the X and Y values, -[xy] for tiling, -s for
@@ -24,13 +26,6 @@ blind-roberts-cross	https://en.wikipedia.org/wiki/Roberts_cross
 ---			https://en.wikipedia.org/wiki/Canny_edge_detector
 ---			https://en.wikipedia.org/wiki/Deriche_edge_detector
 ---			https://en.wikipedia.org/wiki/Edge_detection
-blind-mean		mean of multiple streams
-			means from blind-temporal-mean
-			https://en.wikipedia.org/wiki/Heinz_mean
-			https://en.wikipedia.org/wiki/Heronian_mean
-			https://en.wikipedia.org/wiki/Identric_mean
-			https://en.wikipedia.org/wiki/Logarithmic_mean
-			https://en.wikipedia.org/wiki/Stolarsky_mean
 blind-apply-icc		apply ICC profile to video
 blind-convex-gradient	create a gradient in the shape of a convex lens
 blind-concave-gradient	create a gradient in the shape of a concave lens

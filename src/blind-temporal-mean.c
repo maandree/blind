@@ -2,7 +2,7 @@
 #include "common.h"
 
 USAGE("[-g | -h | -l power | -p power | -v]")
-/* TODO add [-w weight-stream] for -l */
+/* TODO add [-w weight-stream] for [-ghlpv] */
 
 /* Because the syntax for a function returning a function pointer is disgusting. */
 typedef void (*process_func)(struct stream *stream, void *buffer, void *image, size_t frame);
