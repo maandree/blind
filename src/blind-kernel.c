@@ -5,9 +5,13 @@ USAGE("[-xyza] kernel [parameter] ...")
 
 #define SUBUSAGE(FORMAT)          "usage: %s [-xyza] " FORMAT "\n", argv0
 #define STRCASEEQ3(A, B1, B2, B3) (!strcasecmp(A, B1) || !strcasecmp(A, B2) || !strcasecmp(A, B3))
+#define STRCASEEQ2(A, B1, B2)     (!strcasecmp(A, B1) || !strcasecmp(A, B2))
 
 #define LIST_KERNELS\
 	X(kernel_kirsch,   "kirsch")\
+	X(kernel_gradient, "gradient")\
+	X(kernel_sobel,    "sobel")\
+	X(kernel_emboss,   "emboss")\
 	X(kernel_box_blur, "box blur")\
 	X(kernel_sharpen,  "sharpen")\
 	X(kernel_gaussian, "gaussian")
@@ -37,6 +41,95 @@ kernel_kirsch(int argc, char *argv[], size_t *rows, size_t *cols, double **free_
 	if (STRCASEEQ3(argv[0], "6", "SE", "ES")) return matrices[5];
 	if (STRCASEEQ3(argv[0], "7", "E",  "E"))  return matrices[6];
 	if (STRCASEEQ3(argv[0], "8", "NE", "EN")) return matrices[7];
+	eprintf("unrecognised direction: %s\n", argv[0]);
+	return NULL;
+}
+
+static const double *
+kernel_gradient(int argc, char *argv[], size_t *rows, size_t *cols, double **free_this)
+{
+	static const double matrices[][9] = {
+		{ 1,  1,  1,    0, 0,  0,   -1, -1, -1},
+		{ 1,  1,  0,    1, 0, -1,    0, -1, -1},
+		{ 1,  0, -1,    1, 0, -1,    1,  0, -1},
+		{ 0, -1, -1,    1, 0, -1,    1,  1,  0},
+		{-1, -1, -1,    0, 0,  0,    1,  1,  1},
+		{-1, -1,  0,   -1, 0,  1,    0,  1,  1},
+		{-1,  0,  1,   -1, 0,  1,   -1,  0,  1},
+		{ 0,  1,  1,   -1, 0,  1,   -1, -1,  0},
+	};
+	*free_this = NULL;
+	*rows = *cols = 3;
+	if (argc != 1)
+		eprintf(SUBUSAGE("'gradient' direction"));
+	if (STRCASEEQ2(argv[0], "N",  "N"))  return matrices[0];
+	if (STRCASEEQ2(argv[0], "NW", "WN")) return matrices[1];
+	if (STRCASEEQ2(argv[0], "W",  "W"))  return matrices[2];
+	if (STRCASEEQ2(argv[0], "SW", "WS")) return matrices[3];
+	if (STRCASEEQ2(argv[0], "S",  "H"))  return matrices[4];
+	if (STRCASEEQ2(argv[0], "SE", "ES")) return matrices[5];
+	if (STRCASEEQ2(argv[0], "E",  "V"))  return matrices[6];
+	if (STRCASEEQ2(argv[0], "NE", "EN")) return matrices[7];
+	eprintf("unrecognised direction: %s\n", argv[0]);
+	return NULL;
+}
+
+static const double *
+kernel_sobel(int argc, char *argv[], size_t *rows, size_t *cols, double **free_this)
+{
+	static const double matrices[][9] = {
+		{ 1,  2,  1,    0, 0,  0,   -1, -2, -1},
+		{ 2,  1,  0,    1, 0, -1,    0, -1, -2},
+		{ 1,  0, -1,    2, 0, -2,    1,  0, -1},
+		{ 0, -1, -2,    1, 0, -1,    2,  1,  0},
+		{-1, -2, -1,    0, 0,  0,    1,  2,  1},
+		{-2, -1,  0,   -1, 0,  1,    0,  1,  2},
+		{-1,  0,  1,   -2, 0,  2,   -1,  0,  1},
+		{ 0,  1,  2,   -1, 0,  1,   -2, -1,  0},
+	};
+	*free_this = NULL;
+	*rows = *cols = 3;
+	if (argc != 1)
+		eprintf(SUBUSAGE("'sobel' direction"));
+	if (STRCASEEQ2(argv[0], "N",  "H"))  return matrices[0];
+	if (STRCASEEQ2(argv[0], "NW", "WN")) return matrices[1];
+	if (STRCASEEQ2(argv[0], "W",  "V"))  return matrices[2];
+	if (STRCASEEQ2(argv[0], "SW", "WS")) return matrices[3];
+	if (STRCASEEQ2(argv[0], "S",  "S"))  return matrices[4];
+	if (STRCASEEQ2(argv[0], "SE", "ES")) return matrices[5];
+	if (STRCASEEQ2(argv[0], "E",  "E"))  return matrices[6];
+	if (STRCASEEQ2(argv[0], "NE", "EN")) return matrices[7];
+	eprintf("unrecognised direction: %s\n", argv[0]);
+	return NULL;
+}
+
+static const double *
+kernel_emboss(int argc, char *argv[], size_t *rows, size_t *cols, double **free_this)
+{
+	static const double matrices[][9] = {
+		{ 1,  2,  1,    0, 1,  0,   -1, -2, -1},
+		{ 2,  1,  0,    1, 1, -1,    0, -1, -2},
+		{ 1,  0, -1,    2, 1, -2,    1,  0, -1},
+		{ 0, -1, -2,    1, 1, -1,    2,  1,  0},
+		{-1, -2, -1,    0, 1,  0,    1,  2,  1},
+		{-2, -1,  0,   -1, 1,  1,    0,  1,  2},
+		{-1,  0,  1,   -2, 1,  2,   -1,  0,  1},
+		{ 0,  1,  2,   -1, 1,  1,   -2, -1,  0},
+	};
+	*free_this = NULL;
+	*rows = *cols = 3;
+	if (argc > 1)
+		eprintf(SUBUSAGE("'emboss' [direction]"));
+	if (!argc)
+		return matrices[5];
+	if (STRCASEEQ2(argv[0], "N",  "N"))  return matrices[0];
+	if (STRCASEEQ2(argv[0], "NW", "WN")) return matrices[1];
+	if (STRCASEEQ2(argv[0], "W",  "W"))  return matrices[2];
+	if (STRCASEEQ2(argv[0], "SW", "WS")) return matrices[3];
+	if (STRCASEEQ2(argv[0], "S",  "S"))  return matrices[4];
+	if (STRCASEEQ2(argv[0], "SE", "ES")) return matrices[5];
+	if (STRCASEEQ2(argv[0], "E",  "E"))  return matrices[6];
+	if (STRCASEEQ2(argv[0], "NE", "EN")) return matrices[7];
 	eprintf("unrecognised direction: %s\n", argv[0]);
 	return NULL;
 }
@@ -191,11 +284,6 @@ usage:
   Edge detection:     MATRIX(-1, -1, -1,   -1,  8, -1,    -1, -1, -1)
   Edge detection:     MATRIX( 0,  0,  0,   -1,  2, -1,     0,  0,  0) [H]
   Edge detection:     MATRIX( 0, -1,  0,    0,  2,  0,     0, -1,  0) [V]
-  Gradient detection: MATRIX(-1, -1, -1,    0,  0,  0,     1,  1,  1) [H]
-  Gradient detection: MATRIX(-1,  0,  1,   -1,  0,  1,    -1,  0,  1) [V]
-  Sobel operator:     MATRIX( 1,  2,  1,    0,  0,  0,    -1, -2, -1) [H]
-  Sobel operator:     MATRIX( 1,  0, -1,    2,  0, -2,     1,  0, -1) [V]
-  Emboss:             MATRIX(-2, -1,  0,   -1,  1,  1,     0,  1,  2)
   Edge enhance:       MATRIX( 0,  0,  0,   -1,  1,  0,     0,  0,  0)
  */
 

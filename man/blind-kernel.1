@@ -20,6 +20,85 @@ argument and is tuned with
 .IR parameter s.
 .SH KERNELS
 .TP
+.RI ' \fBbox\ blur\fP '\ [-w\  weight ]\ [ spread \ |\  x-spread \  y-spread ]
+Creates a box blur kernel. Unless
+.B -w
+is used, the kernel is unweighted, otherwise it has the specified
+.IR weight .
+The kernel will have the spread 1, the specified
+.IR spread ,
+or
+.I x-spread
+as the horizontal spread and
+.I y-spread
+as the vertical spread.
+.TP
+.BR emboss \ [\fIdirection\fP]
+Create an emboss kernel with the specified
+.IR direction .
+The
+.I direction
+must be
+.BR N ;
+.BR NW
+or
+.BR WN ;
+.BR W ;
+.BR SW
+or
+.BR WS ;
+.BR S ;
+.BR SE
+or
+.BR ES ;
+.BR E ;
+.BR NE
+or
+.BR EN .
+If no
+.I direction
+is specified,
+.B SE
+is used.
+.TP
+.RI \fBgaussian\fP\ [-s\  spread ]\ [-u]\  standard-deviation
+Creates a Gaussian blur kernel with the standard deviation
+.IR standard-deviation .
+If
+.B -u
+is used, the a Gaussian unsharpen kernel is created. If
+.B -s
+is specified, the specified
+.I spread
+will be used, otherwise the spread will be selected automatically.
+.TP
+.BI gradient\  direction
+Create a gradient detection kernel with the specified
+.IR direction .
+The
+.I direction
+must be
+.BR N ;
+.BR NW
+or
+.BR WN ;
+.BR W ;
+.BR SW
+or
+.BR WS ;
+.BR S
+or
+.BR H ;
+.BR SE
+or
+.BR ES ;
+.BR E
+or
+.BR V ;
+.BR NE
+or
+.BR EN .
+.TP
 .BI kirsch\  direction
 Create a Kirsch kernel with the specified
 .IR direction .
@@ -56,34 +135,37 @@ or
 or
 .BR EN .
 .TP
-.RI ' \fBbox\ blur\fP '\ [-w\  weight ]\ [ spread \ |\  x-spread \  y-spread ]
-Creates a box blur kernel. Unless
-.B -w
-is used, the kernel is unweighted, otherwise it has the specified
-.IR weight .
-The kernel will have the spread 1, the specified
-.IR spread ,
-or
-.I x-spread
-as the horizontal spread and
-.I y-spread
-as the vertical spread.
-.TP
 .BR sharpen \ [-i]
 Creates a sharpen kernel. If
 .B -i
 is used, an intensified sharpen kernel is created.
 .TP
-.RI \fBgaussian\fP\ [-s\  spread ]\ [-u]\  standard-deviation
-Creates a Gaussian blur kernel with the standard deviation
-.IR standard-deviation .
-If
-.B -u
-is used, the a Gaussian unsharpen kernel is created. If
-.B -s
-is specified, the specified
-.I spread
-will be used, otherwise the spread will be selected automatically.
+.BI sobel\  direction
+Create a Sobel operator kernel with the specified
+.IR direction .
+The
+.I direction
+must be
+.BR N
+or
+.BR H ;
+.BR NW
+or
+.BR WN ;
+.BR W
+or
+.BR V ;
+.BR SW
+or
+.BR WS ;
+.BR S ;
+.BR SE
+or
+.BR ES ;
+.BR E ;
+.BR NE
+or
+.BR EN .
 .SH OPTIONS
 .TP
 .B -a
