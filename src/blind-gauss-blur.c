@@ -1,16 +1,18 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-j jobs] [-s spread | -s 'auto'] [-achvy] sd-stream")
+USAGE("[-j jobs] [-s spread | -s 'auto'] [-acghvy] sd-stream")
 
 static int chroma = 0;
 static int noalpha = 0;
+static int glow = 0;
 static int vertical = 0;
 static int horizontal = 0;
 static int measure_y_only = 0;
 static int auto_spread = 0;
 static size_t jobs = 1;
 static size_t spread = 0;
+static void *original = NULL;
 
 /*
  * This is not a regular simple gaussian blur implementation.
@@ -126,6 +128,7 @@ static size_t spread = 0;
 		\
 		pixel_t *restrict clr = (pixel_t *)cbuf;\
 		pixel_t *restrict sig = (pixel_t *)sbuf;\
+		pixel_t *restrict orig = original;\
 		pixel_t *img = (pixel_t *)output;\
 		pixel_t c, k;\
 		size_t x1, y1, i1, x2, y2, i2;\
@@ -139,6 +142,8 @@ static size_t spread = 0;
 		x2end = colour->width;\
 		y2end = colour->height;\
 		\
+		if (glow)\
+			memcpy(orig, clr, colour->frame_size);\
 		if (chroma || !noalpha) {\
 			start = 0, end = colour->height;\
 			is_master = efork_jobs(&start, &end, jobs, &children);\
@@ -153,6 +158,12 @@ static size_t spread = 0;
 						clr[i1][2] *= clr[i1][3];\
 					}\
 				}\
+			}\
+			\
+			/* store original image */\
+			if (glow) {\
+				i1 = start * colour->width;\
+				memcpy(orig + i1, clr + i1, (end - start) * colour->width * sizeof(*clr));\
 			}\
 			\
 			/* convert colour model */\
@@ -247,6 +258,19 @@ static size_t spread = 0;
 			}\
 		}\
 		\
+		/* apply glow */\
+		if (glow) {\
+			i1 = start * colour->width;\
+			for (y1 = start; y1 < end; y1++) {\
+				for (x1 = 0; x1 < colour->width; x1++, i1++) {\
+					img[i1][0] = 1 - (1 - img[i1][0]) * (1 - orig[i1][0]);\
+					img[i1][1] = 1 - (1 - img[i1][1]) * (1 - orig[i1][1]);\
+					img[i1][2] = 1 - (1 - img[i1][2]) * (1 - orig[i1][2]);\
+					img[i1][3] = 1 - (1 - img[i1][3]) * (1 - orig[i1][3]);\
+				}\
+			}\
+		}\
+		\
 		/* unpremultiply alpha channel */\
 		i1 = start * colour->width;\
 		for (y1 = start; y1 < end; y1++) {\
@@ -301,6 +325,9 @@ main(int argc, char *argv[])
 	case 'c':
 		chroma = 1;
 		break;
+	case 'g':
+		glow = 1;
+		break;
 	case 'h':
 		horizontal = 1;
 		break;
@@ -340,8 +367,12 @@ main(int argc, char *argv[])
 	if (jobs > colour.height)
 		jobs = colour.height;
 
+	if (glow)
+		original = emalloc(colour.frame_size);
+
 	fprint_stream_head(stdout, &colour);
 	efflush(stdout, "<stdout>");
 	process_each_frame_two_streams(&colour, &sigma, STDOUT_FILENO, "<stdout>", process);
+	free(original);
 	return 0;
 }

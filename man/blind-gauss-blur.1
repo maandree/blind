@@ -10,7 +10,7 @@ blind-gauss-blur - Apply Gaussian blur to a video
 |
 -s
 .RB ' auto ']
-[-achvy]
+[-acghvy]
 .I sd-stream
 .SH DESCRIPTION
 .B blind-gauss-blur
@@ -45,6 +45,9 @@ video is opaque.
 .B -c
 Blur the chroma only, not the luma.
 .TP
+.B -g
+Add glow effect.
+.TP
 .B -h
 Blur horizontally only. Has no affect if -v is also
 specified.
@@ -75,7 +78,9 @@ as the standard deviation all channels.
 .SH REQUIREMENTS
 .B blind-gauss-blur
 requires enough free memory to load three full frames into
-memory. A frame requires 32 bytes per pixel it contains.
+memory. A frame requires 32 bytes per pixel it contains. If
+.B -g
+is used, four full frames are required.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-single-colour (1),

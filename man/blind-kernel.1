@@ -61,12 +61,16 @@ is specified,
 .B SE
 is used.
 .TP
-.RI \fBgaussian\fP\ [-s\  spread ]\ [-u]\  standard-deviation
+.RI \fBgaussian\fP\ [-s\  spread ]\ [-g\ |\ -u]\  standard-deviation
 Creates a Gaussian blur kernel with the standard deviation
 .IR standard-deviation .
 If
 .B -u
-is used, the a Gaussian unsharpen kernel is created. If
+is used, the a Gaussian unsharpen kernel is created.
+If
+.B -g
+is used, the a Gaussian blur kernel with glow effect is created.
+If
 .B -s
 is specified, the specified
 .I spread

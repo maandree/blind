@@ -223,13 +223,16 @@ kernel_gaussian(int argc, char *argv[], size_t *rows, size_t *cols, double **fre
 {
 	size_t spread = 0, y, x;
 	ssize_t xx, yy;
-	int unsharpen = 0;
+	int unsharpen = 0, glow = 0;
 	double sigma, value, c, k;
 	char *arg;
 
 #define argv0 arg
 	argc++, argv--;
 	ARGBEGIN {
+	case 'g':
+		glow = 1;
+		break;
 	case 's':
 		if (!(arg = ARGF()))
 			goto usage;
@@ -243,7 +246,7 @@ kernel_gaussian(int argc, char *argv[], size_t *rows, size_t *cols, double **fre
 	} ARGEND;
 #undef argv0
 
-	if (argc != 1)
+	if (argc != 1 || (unsharpen && glow))
 		goto usage;
 
 	sigma = etolf_arg("standard-deviation", argv[0]);
@@ -270,11 +273,13 @@ kernel_gaussian(int argc, char *argv[], size_t *rows, size_t *cols, double **fre
 
 	if (unsharpen)
 		(*free_this)[spread * *cols + spread] -= 2.0;
+	if (glow)
+		(*free_this)[spread * *cols + spread] += 1;
 
 	return *free_this;
 
 usage:
-	eprintf(SUBUSAGE("'gaussian' [-s spread] [-u] standard-deviation"));
+	eprintf(SUBUSAGE("'gaussian' [-s spread] [-g | -u] standard-deviation"));
 	return NULL;
 }
 

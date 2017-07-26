@@ -43,7 +43,7 @@ blind-from-video: add options to:
 
 blind-cone-gradient: add ability to make gradient superelliptic
 
-Add [-j jobs] to blind-from-video and blind-to-video.
+Add [-j jobs] to blind-from-video, blind-to-video, and blind-apply-kernel.
 
 long double is slightly faster than long.
 long double (xyza q) could be added as another format.
