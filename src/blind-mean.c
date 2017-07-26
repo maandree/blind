@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-g | -h | -H | -i | -l power | -L | -p power | -s power | -v | -z power] stream-1 stream-2 ...")
+USAGE("[-d | -g | -h | -H | -i | -l power-stream | -L | -p power-stream | -s power-stream | -v | -z power] stream-1 stream-2 ...")
 /* TODO add [-w weight-stream] for [-ghlpv] */
 
 /* Because the syntax for a function returning a function pointer is disgusting. */
@@ -18,6 +18,9 @@ typedef void (*process_func)(struct stream *streams, size_t n_streams, size_t n)
 #define LIST_MEANS(TYPE)\
 	/* [default] arithmetic mean */\
 	X(ARITHMETIC, arithmetic, sn = (TYPE)1 / sn, 0, img += val, img *= sn) \
+	/* standard deviation */\
+	X(STANDARD_DEVIATION, sd, sn = (TYPE)1 / sn, 0, (img += val * val, aux += val),\
+	  img = nnpow((img - aux * aux * sn) * sn, (TYPE)0.5))\
 	/* geometric mean */\
 	X(GEOMETRIC, geometric, sn = (TYPE)1 / sn, 1, img *= val, img = nnpow(img, sn))\
 	/* harmonic mean */\
@@ -30,32 +33,32 @@ typedef void (*process_func)(struct stream *streams, size_t n_streams, size_t n)
 	  img = auxs[0] == auxs[1] ? auxs[0] :\
 	        nnpow(nnpow(auxs[0], auxs[0]) / nnpow(auxs[1], auxs[1]), auxs[0] - auxs[1]) * a)\
 	/* Lehmer mean */\
-	X(LEHMER, lehmer, (a = (TYPE)power, b = a - (TYPE)1), 0,\
-	  (img += nnpow(val, a), aux += nnpow(val, b)), img /= aux)\
+	X(LEHMER, lehmer,, 0, (img += nnpow(val, *pows), aux += nnpow(val, *pows - (TYPE)1)), img /= aux)\
 	/* logarithmic mean */\
 	X(LOGARITHMIC, logarithmic,, 0, auxs[j] = val,\
 	  img = auxs[0] == auxs[1] ? auxs[0] : (!auxs[0] || !auxs[1]) ? (TYPE)0 :\
 	        (auxs[1] - auxs[0]) / log(auxs[1] / auxs[0]))\
 	/* power mean (Hölder mean) (m = 2 for root square mean; m = 3 for cubic mean) */\
-	X(POWER, power, (a = (TYPE)power, b = (TYPE)(1. / power), sn = (TYPE)1 / sn), 0,\
-	  img += nnpow(val, a), img = nnpow(img, b) * sn)\
+	X(POWER, power, sn = (TYPE)1 / sn, 0,\
+	  img += nnpow(val, *pows), img = nnpow(img, (TYPE)1 / *pows) * sn)\
 	/* Stolarsky mean */\
-	X(STOLARSKY, stolarsky, (a = (TYPE)power, b = (TYPE)(1. / (power - 1.))), 0, auxs[j] = val,\
+	X(STOLARSKY, stolarsky,, 0, auxs[j] = val,\
 	  img = auxs[0] == auxs[1] ? auxs[0] :\
-	        nnpow((nnpow(auxs[0], auxs[0]) - nnpow(auxs[1], auxs[1])) /\
-		      (a * (auxs[0] - auxs[1])), b))\
+	        nnpow((nnpow(auxs[0], *pows) - nnpow(auxs[1], *pows)) /\
+		      (*pows * (auxs[0] - auxs[1])), (TYPE)1 / (*pows - (TYPE)1)))\
 	/* variance */\
 	X(VARIANCE, variance, sn = (TYPE)1 / sn, 0, (img += val * val, aux += val),\
 	  img = (img - aux * aux * sn) * sn)\
 	/* Heinz mean */\
-	X(HEINZ, heinz, (a = (TYPE)power, b = (TYPE)1 - a), 0, auxs[j] = val,\
-	  img = (nnpow(auxs[0], a) * nnpow(auxs[1], b) + nnpow(auxs[0], b) * nnpow(auxs[1], 0)) / (TYPE)2)
+	X(HEINZ, heinz,, 0, auxs[j] = val,\
+	  img = (nnpow(auxs[0], *pows) * nnpow(auxs[1], (TYPE)1 - *pows) +\
+	         nnpow(auxs[0], (TYPE)1 - *pows) * nnpow(auxs[1], *pows)) / (TYPE)2)
 
 #define X(V, ...) V,
 enum method { LIST_MEANS() };
 #undef X
 
-static double power;
+static const char *power_file = NULL;
 
 #define aux (*auxs)
 #define MAKE_PROCESS(PIXFMT, TYPE,\
@@ -64,9 +67,12 @@ static double power;
 	process_##PIXFMT##_##NAME(struct stream *streams, size_t n_streams, size_t n)\
 	{\
 		size_t i, j;\
-		TYPE img, auxs[2], val, a, b, sn = (TYPE)n_streams;\
+		TYPE img, auxs[2], val, a, sn;\
+		TYPE *pows = power_file ? (TYPE *)(streams[n_streams - 1].buf) : NULL;\
+		n_streams -= (size_t)!!power_file;\
+		sn = (TYPE)n_streams;\
 		INIT;\
-		for (i = 0; i < n; i += sizeof(TYPE)) {\
+		for (i = 0; i < n; i += sizeof(TYPE), pows++) {\
 			img = auxs[0] = auxs[1] = INITIAL;\
 			for (j = 0; j < n_streams; j++) {\
 				val = *(TYPE *)(streams[j].buf + i);\
@@ -75,7 +81,7 @@ static double power;
 			FINALISE_SUBCELL;\
 			*(TYPE *)(streams->buf + i) = img;\
 		}\
-		(void) aux, (void) a, (void) b, (void) sn;\
+		(void) aux, (void) a, (void) pows, (void) sn;\
 	}
 #define X(...) MAKE_PROCESS(lf, double, __VA_ARGS__)
 LIST_MEANS(double)
@@ -103,7 +109,11 @@ main(int argc, char *argv[])
 	enum method method = ARITHMETIC;
 	int i, two = 0;
 
+
 	ARGBEGIN {
+	case 'd':
+		method = STANDARD_DEVIATION;
+		break;
 	case 'g':
 		method = GEOMETRIC;
 		break;
@@ -120,7 +130,7 @@ main(int argc, char *argv[])
 		break;
 	case 'l':
 		method = LEHMER;
-		power = etolf_flag('l', UARGF());
+		power_file = UARGF();
 		break;
 	case 'L':
 		method = LOGARITHMIC;
@@ -128,12 +138,12 @@ main(int argc, char *argv[])
 		break;
 	case 'p':
 		method = POWER;
-		power = etolf_flag('p', UARGF());
+		power_file = UARGF();
 		break;
 	case 's':
 		method = STOLARSKY;
 		two = 1;
-		power = etolf_flag('s', UARGF());
+		power_file = UARGF();
 		break;
 	case 'v':
 		method = VARIANCE;
@@ -141,7 +151,7 @@ main(int argc, char *argv[])
 	case 'z':
 		method = HEINZ;
 		two = 1;
-		power = etolf_flag('z', UARGF());
+		power_file = UARGF();
 		break;
 	default:
 		usage();
@@ -150,12 +160,14 @@ main(int argc, char *argv[])
 	if (argc < 2 || (argc > 2 && two))
 		usage();
 
-	streams = alloca((size_t)argc * sizeof(*streams));
+	streams = alloca((size_t)(argc + !!power_file) * sizeof(*streams));
 	for (i = 0; i < argc; i++) {
 		eopen_stream(streams + i, argv[i]);
 		if (streams[i].frames && streams[i].frames < frames)
 			frames = streams[i].frames;
 	}
+	if (power_file != NULL)
+		eopen_stream(streams + argc, power_file);
 
         if (streams->encoding == DOUBLE)
                 process = process_functions_lf[method];
@@ -166,6 +178,7 @@ main(int argc, char *argv[])
 	fprint_stream_head(stdout, streams);
 	efflush(stdout, "<stdout>");
 	streams->frames = tmp;
-	process_multiple_streams(streams, (size_t)argc, STDOUT_FILENO, "<stdout>", 1, process);
+	process_multiple_streams(streams, (size_t)(argc + !!power_file),
+	                         STDOUT_FILENO, "<stdout>", 1, process);
 	return 0;
 }

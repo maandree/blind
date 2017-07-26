@@ -3,10 +3,10 @@
 blind-spatial-mean - Calculate the mean over all pixel for each frame in a video
 .SH SYNOPSIS
 .B blind-spatial-mean
-[-g | -h | -l
-.I power
+[-d | -g | -h | -l
+.I power-stream
 | -p
-.I power
+.I power-stream
 | -v]
 .SH DESCRIPTION
 .B blind-spatial-mean
@@ -19,20 +19,26 @@ Unless otherwise specified, the arithmetic mean
 is calculated.
 .SH OPTIONS
 .TP
+.B -d
+Calculate the standard deviation.
+.TP
 .B -g
 Calculate the geometric mean.
 .TP
 .B -h
 Calculate the harmonic mean.
 .TP
-.BR -l \ \fIpower\fP
-Calculate the Lehmer mean with the specified
-.IR power .
+.BR -l \ \fIpower-stream\fP
+Calculate the Lehmer mean with the power
+specified in the same single-pixel frame
+in the video
+.IR power-stream .
 .TP
-.BR -p \ \fIpower\fP
+.BR -p \ \fIpower-stream\fP
 Calculate the power mean (Hölder mean) with
-the specified
-.IR power .
+the power specified in the same single-pixel
+frame in the video
+.IR power-stream .
 .TP
 .B -v
 Calculate the variance.

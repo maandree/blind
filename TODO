@@ -1,5 +1,3 @@
-blind-*-mean: replace power with power-stream
-
 blind-transform		affine transformation by matrix multiplication, -[xy] for tiling, -s for
 				improve quality on downscaling (pixels' neighbours must not change)
 blind-apply-map		remap pixels (distortion) using the X and Y values, -[xy] for tiling, -s for
