@@ -82,10 +82,10 @@ main(int argc, char *argv[])
 {
 	int normalise = 0;
 	double denominator = 1;
-	int null_x = 1, null_y = 1, null_z = 1, null_a = 1;
+	int id_x = 1, id_y = 1, id_z = 1, id_a = 1;
 	size_t rows, cols, y, x, n;
 	double *kernel, *kern, sum = 0, value;
-	double *buffer, *buf;
+	double *buffer, *buf, id_val;
 
 	ARGBEGIN {
 	case 'd':
@@ -95,23 +95,23 @@ main(int argc, char *argv[])
 		normalise = 1;
 		break;
 	case 'x':
-		null_x = 0;
+		id_x = 0;
 		break;
 	case 'y':
-		null_y = 0;
+		id_y = 0;
 		break;
 	case 'z':
-		null_z = 0;
+		id_z = 0;
 		break;
 	case 'a':
-		null_a = 0;
+		id_a = 0;
 		break;
 	default:
 		usage();
 	} ARGEND;
 
-	if (null_x && null_y && null_z && null_a)
-		null_x = null_y = null_z = null_a = 0;
+	if (id_x && id_y && id_z && id_a)
+		id_x = id_y = id_z = id_a = 0;
 
 	if (argc)
 		kernel = read_matrix_cmdline(argv, &rows, &cols);
@@ -136,11 +136,12 @@ main(int argc, char *argv[])
 	for (y = 0; y < rows; y++) {
 		buf = buffer;
 		for (x = 0; x < cols; x++) {
+			id_val = (x == cols / 2 && y == rows / 2) ? 1. : 0.;
 			value = *kern++ / denominator;
-			buf[0] = null_x ? 0.0 : value;
-			buf[1] = null_y ? 0.0 : value;
-			buf[2] = null_z ? 0.0 : value;
-			buf[3] = null_a ? 0.0 : value;
+			buf[0] = id_x ? id_val : value;
+			buf[1] = id_y ? id_val : value;
+			buf[2] = id_z ? id_val : value;
+			buf[3] = id_a ? id_val : value;
 			buf += 4;
 		}
 		ewriteall(STDOUT_FILENO, buffer, n, "<stdout>");
