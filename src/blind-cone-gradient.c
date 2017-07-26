@@ -96,7 +96,7 @@ PROCESS(struct stream *stream)
 				x = (TYPE)ix - x1;
 				if (!x && !y) {
 					v = 0.5;
-				} else {
+				} else { 
 					v = atan2(y, x);
 					v -= u;
 					v += 2 * (TYPE)M_PI;
@@ -112,7 +112,7 @@ PROCESS(struct stream *stream)
 					}
 				}
 				for (i = 0; i < stream->n_chan; i++)
-					buf[ptr][i] = x;
+					buf[ptr][i] = v;
 				if (++ptr == ELEMENTSOF(buf)) {
 					ewriteall(STDOUT_FILENO, buf, sizeof(buf), "<stdout>");
 					ptr = 0;

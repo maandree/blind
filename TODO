@@ -8,6 +8,7 @@ blind-find-frame	a graphical tool for locating frames, should highlight key fram
 blind-invert-chroma	invert the chroma
 blind-from-sent		convert a sent presentation to a one-frame-per-slide blind video
 
+blind-sigmoid		https://en.wikipedia.org/wiki/Sigmoid_function
 blind-kirsch		https://en.wikipedia.org/wiki/Kirsch_operator
 blind-gaussian-noise	https://en.wikipedia.org/wiki/Gaussian_noise
 blind-threshold		https://en.wikipedia.org/wiki/Thresholding_(image_processing)

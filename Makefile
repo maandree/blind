@@ -92,15 +92,16 @@ BIN =\
 	blind-temporal-arithm\
 	blind-temporal-mean\
 	blind-time-blur\
-	blind-triangular-wave\
 	blind-to-image\
 	blind-to-named\
 	blind-to-portable\
 	blind-to-text\
 	blind-to-video\
 	blind-translate\
+	blind-transition\
 	blind-transpose\
 	blind-triangle-tessellation\
+	blind-triangular-wave\
 	blind-unpremultiply\
 	blind-vector-projection\
 	blind-write-head

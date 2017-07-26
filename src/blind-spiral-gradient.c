@@ -162,7 +162,7 @@ PROCESS(struct stream *stream)
 				else
 					r = mod(r, 1 / (TYPE)spirals) * (TYPE)spirals + r - mod(r, (TYPE)1);
 				for (i = 0; i < stream->n_chan; i++)
-					buf[ptr][i] = x;
+					buf[ptr][i] = r;
 				if (++ptr == ELEMENTSOF(buf)) {
 					ewriteall(STDOUT_FILENO, buf, sizeof(buf), "<stdout>");
 					ptr = 0;
