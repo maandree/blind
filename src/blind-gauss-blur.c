@@ -263,10 +263,10 @@ static void *original = NULL;
 			i1 = start * colour->width;\
 			for (y1 = start; y1 < end; y1++) {\
 				for (x1 = 0; x1 < colour->width; x1++, i1++) {\
-					img[i1][0] = 1 - (1 - img[i1][0]) * (1 - orig[i1][0]);\
-					img[i1][1] = 1 - (1 - img[i1][1]) * (1 - orig[i1][1]);\
-					img[i1][2] = 1 - (1 - img[i1][2]) * (1 - orig[i1][2]);\
-					img[i1][3] = 1 - (1 - img[i1][3]) * (1 - orig[i1][3]);\
+					img[i1][0] += orig[i1][0];\
+					img[i1][1] += orig[i1][1];\
+					img[i1][2] += orig[i1][2];\
+					img[i1][3] += orig[i1][3];\
 				}\
 			}\
 		}\
