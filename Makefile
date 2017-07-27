@@ -97,8 +97,8 @@ BIN =\
 	blind-to-portable\
 	blind-to-text\
 	blind-to-video\
-	blind-translate\
 	blind-transition\
+	blind-translate\
 	blind-transpose\
 	blind-triangle-tessellation\
 	blind-triangular-wave\

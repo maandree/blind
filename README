@@ -303,11 +303,11 @@ UTILITIES
        blind-to-video(1)
               Converts blind video to a regular video
 
-       blind-translate(1)
-              Perform framewise translation of a video
-
        blind-transition(1)
               Turn a gradient video to transition-gradient video
+
+       blind-translate(1)
+              Perform framewise translation of a video
 
        blind-transpose(1)
               Transpose a video
