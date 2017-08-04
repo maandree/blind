@@ -37,6 +37,7 @@ main(int argc, char *argv[])
 	eopen_stream(&stream, NULL);
 
 	SELECT_PROCESS_FUNCTION(&stream);
+	CHECK_CHANS(&stream, == 3, == 1);
 
 	if (stream.width > 2 || stream.height > 2 || stream.width * stream.height != 2)
 		eprintf("<stdin>: each frame must contain exactly 2 pixels\n");

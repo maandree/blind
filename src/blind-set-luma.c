@@ -19,6 +19,9 @@ main(int argc, char *argv[])
 	eopen_stream(&luma, argv[0]);
 
 	SELECT_PROCESS_FUNCTION(&colour);
+	CHECK_CHANS(&colour, == 3, == 1);
+	CHECK_COLOUR_SPACE(&colour, CIEXYZ);
+
 	fprint_stream_head(stdout, &colour);
 	efflush(stdout, "<stdout>");
 	process_two_streams(&colour, &luma, STDOUT_FILENO, "<stdout>", process);

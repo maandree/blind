@@ -124,12 +124,16 @@ main(int argc, char *argv[])
 		}
 	}
 
+	CHECK_ALPHA_CHAN(&stream);
+	CHECK_COLOUR_SPACE(&stream, CIEXYZ);
 	if (stream.encoding == DOUBLE) {
 		ewriteall(STDOUT_FILENO, Mlf, sizeof(Mlf), "<stdout>");
-	} else {
+	} else if (stream.encoding == FLOAT) {
 		for (i = 0; i < ELEMENTSOF(Mlf); i++)
 			Mf[i] = (float)Mlf[i];
 		ewriteall(STDOUT_FILENO, Mf, sizeof(Mf), "<stdout>");
+	} else {
+		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 	}
 
 	return 0;

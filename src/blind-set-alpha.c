@@ -6,18 +6,18 @@ USAGE("[-i] alpha-stream")
 #define PROCESS(TYPE, INV)\
 	do {\
 		size_t i;\
-		TYPE a;\
-		for (i = 0; i < n; i += colour->pixel_size) {\
-			a = INV ((TYPE *)(alpha->buf + i))[1];\
-			a *= ((TYPE *)(alpha->buf + i))[3];\
-			((TYPE *)(colour->buf + i))[3] *= a;\
-		}\
+		TYPE *luma = (TYPE *)(alpha->buf) + alpha->luma_chan;\
+		TYPE *alph = (TYPE *)(alpha->buf) + alpha->alpha_chan;\
+		TYPE *out  = (TYPE *)(colour->buf) + colour->alpha_chan;\
+		n /= colour->chan_size;\
+		for (i = 0; i < n; i += colour->n_chan)\
+			out[i] *= (INV luma[i]) * alph[i];\
 	} while (0)
 
-static void process_xyza   (struct stream *colour, struct stream *alpha, size_t n) {PROCESS(double,);}
-static void process_xyza_i (struct stream *colour, struct stream *alpha, size_t n) {PROCESS(double, 1 -);}
-static void process_xyzaf  (struct stream *colour, struct stream *alpha, size_t n) {PROCESS(float,);}
-static void process_xyzaf_i(struct stream *colour, struct stream *alpha, size_t n) {PROCESS(float, 1 -);}
+static void process_lf  (struct stream *colour, struct stream *alpha, size_t n) {PROCESS(double,);}
+static void process_lf_i(struct stream *colour, struct stream *alpha, size_t n) {PROCESS(double, 1 -);}
+static void process_f   (struct stream *colour, struct stream *alpha, size_t n) {PROCESS(float,);}
+static void process_f_i (struct stream *colour, struct stream *alpha, size_t n) {PROCESS(float, 1 -);}
 
 int
 main(int argc, char *argv[])
@@ -40,10 +40,12 @@ main(int argc, char *argv[])
 	eopen_stream(&colour, NULL);
 	eopen_stream(&alpha, argv[0]);
 
-	if (!strcmp(colour.pixfmt, "xyza"))
-		process = invert ? process_xyza_i : process_xyza;
-	else if (!strcmp(colour.pixfmt, "xyza f"))
-		process = invert ? process_xyzaf_i : process_xyzaf;
+	CHECK_CHANS(&colour, != -1, != -1);
+	CHECK_ALPHA(&colour);
+	if (colour.encoding == DOUBLE)
+		process = invert ? process_lf_i : process_lf;
+	else if (colour.encoding == FLOAT)
+		process = invert ? process_f_i : process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 

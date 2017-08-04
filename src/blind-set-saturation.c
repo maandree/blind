@@ -41,10 +41,10 @@ USAGE("[-w] saturation-stream")
 		}\
 	} while (0)
 
-static void process_xyza   (struct stream *colour, struct stream *satur, size_t n) {PROCESS(double);}
-static void process_xyza_w (struct stream *colour, struct stream *satur, size_t n) {PROCESS_W(double);}
-static void process_xyzaf  (struct stream *colour, struct stream *satur, size_t n) {PROCESS(float);}
-static void process_xyzaf_w(struct stream *colour, struct stream *satur, size_t n) {PROCESS_W(float);}
+static void process_lf  (struct stream *colour, struct stream *satur, size_t n) {PROCESS(double);}
+static void process_lf_w(struct stream *colour, struct stream *satur, size_t n) {PROCESS_W(double);}
+static void process_f   (struct stream *colour, struct stream *satur, size_t n) {PROCESS(float);}
+static void process_f_w (struct stream *colour, struct stream *satur, size_t n) {PROCESS_W(float);}
 
 int
 main(int argc, char *argv[])
@@ -67,10 +67,12 @@ main(int argc, char *argv[])
 	eopen_stream(&colour, NULL);
 	eopen_stream(&satur, argv[0]);
 
-	if (!strcmp(colour.pixfmt, "xyza"))
-		process = whitepoint ? process_xyza_w : process_xyza;
-	else if (!strcmp(colour.pixfmt, "xyza f"))
-		process = whitepoint ? process_xyzaf_w : process_xyzaf;
+	CHECK_COLOUR_SPACE(&colour, CIEXYZ);
+	CHECK_CHANS(&colour, == 3, == 1);
+	if (colour.encoding == DOUBLE)
+		process = whitepoint ? process_lf_w : process_lf;
+	else if (colour.encoding == FLOAT)
+		process = whitepoint ? process_f_w : process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 

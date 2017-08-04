@@ -95,6 +95,8 @@ enopen_stream(int status, struct stream *stream, const char *file)
 int
 set_pixel_format(struct stream *stream, const char *pixfmt)
 {
+#define TEST_ENCODING_AGNOSTIC(FMT) (!strcmp(stream->pixfmt, FMT) || !strcmp(stream->pixfmt, FMT" f"))
+
 	if (pixfmt) {
 		pixfmt = get_pixel_format(pixfmt, "xyza");
 		if (strlen(pixfmt) >= sizeof(stream->pixfmt))
@@ -102,20 +104,92 @@ set_pixel_format(struct stream *stream, const char *pixfmt)
 		strcpy(stream->pixfmt, pixfmt);
 	}
 
+	stream->n_chan = 4;
+	stream->alpha = UNPREMULTIPLIED;
+	stream->encoding = DOUBLE;
+	stream->endian = HOST_ENDIAN;
+	stream->alpha_chan = 3;
+	stream->luma_chan = -1;
+
 	if (!strcmp(stream->pixfmt, "xyza")) {
-		stream->n_chan = 4;
-		stream->chan_size = sizeof(double);
 		stream->space = CIEXYZ;
-		stream->alpha = UNPREMULTIPLIED;
-		stream->encoding = DOUBLE;
 	} else if (!strcmp(stream->pixfmt, "xyza f")) {
-		stream->n_chan = 4;
-		stream->chan_size = sizeof(float);
 		stream->space = CIEXYZ;
-		stream->alpha = UNPREMULTIPLIED;
 		stream->encoding = FLOAT;
+	} else if (!strcmp(stream->pixfmt, "raw0")) {
+		stream->space = YUV_NONLINEAR;
+		stream->encoding = UINT16;
+		stream->endian = LITTLE_ENDIAN;
+		stream->alpha_chan = 0;
+		stream->luma_chan = 1;
+	} else if (!strcmp(stream->pixfmt, "raw1")) {
+		stream->space = YUV_NONLINEAR;
+		stream->encoding = UINT16;
+		stream->endian = LITTLE_ENDIAN;
+	} else if (!strcmp(stream->pixfmt, "raw2a") || !strcmp(stream->pixfmt, "raw2")) {
+		stream->space = YUV_NONLINEAR;
+		stream->alpha = stream->pixfmt[4] == 'a' ? UNPREMULTIPLIED : NO_ALPHA;
+		stream->encoding = UINT16;
+	} else if (TEST_ENCODING_AGNOSTIC("raw3") || TEST_ENCODING_AGNOSTIC("raw3a")) {
+		stream->space = YUV_NONLINEAR;
+		stream->alpha = stream->pixfmt[4] == 'a' ? UNPREMULTIPLIED : NO_ALPHA;
+		stream->encoding = strlen(stream->pixfmt) > 6 ? FLOAT : DOUBLE;
+	} else if (TEST_ENCODING_AGNOSTIC("raw4") || TEST_ENCODING_AGNOSTIC("raw4a")) {
+		stream->space = CIEXYZ_NONLINEAR;
+		stream->alpha = stream->pixfmt[4] == 'a' ? UNPREMULTIPLIED : NO_ALPHA;
+		stream->encoding = strlen(stream->pixfmt) > 6 ? FLOAT : DOUBLE;
+	} else if (TEST_ENCODING_AGNOSTIC("raw5") || TEST_ENCODING_AGNOSTIC("raw5a")) {
+		stream->space = SRGB_NONLINEAR;
+		stream->alpha = stream->pixfmt[4] == 'a' ? UNPREMULTIPLIED : NO_ALPHA;
+		stream->encoding = strlen(stream->pixfmt) > 6 ? FLOAT : DOUBLE;
+	} else if (TEST_ENCODING_AGNOSTIC("raw6") || TEST_ENCODING_AGNOSTIC("raw6a")) {
+		stream->space = SRGB;
+		stream->alpha = stream->pixfmt[4] == 'a' ? UNPREMULTIPLIED : NO_ALPHA;
+		stream->encoding = strlen(stream->pixfmt) > 6 ? FLOAT : DOUBLE;
 	} else {
 		return -1;
+	}
+
+	if (stream->alpha == NO_ALPHA) {
+		stream->n_chan -= 1;
+		stream->alpha_chan = -1;
+	}
+
+	if (stream->luma_chan == -1) {
+		switch (stream->space) {
+		case CIEXYZ:
+		case CIEXYZ_NONLINEAR:
+			stream->luma_chan = 1;
+			break;
+		case YUV_NONLINEAR:
+			stream->luma_chan = 0;
+			break;
+		default:
+			break;
+		}
+	}
+
+	switch (stream->encoding) {
+	case DOUBLE:
+		stream->chan_size = sizeof(double);
+		break;
+	case FLOAT:
+		stream->chan_size = sizeof(float);
+		break;
+	case UINT8:
+		stream->chan_size = sizeof(uint8_t);
+		break;
+	case UINT16:
+		stream->chan_size = sizeof(uint16_t);
+		break;
+	case UINT32:
+		stream->chan_size = sizeof(uint32_t);
+		break;
+	case UINT64:
+		stream->chan_size = sizeof(uint64_t);
+		break;
+	default:
+		abort();
 	}
 
 	stream->pixel_size = stream->n_chan * stream->chan_size;
@@ -123,6 +197,8 @@ set_pixel_format(struct stream *stream, const char *pixfmt)
 	stream->col_size   = stream->pixel_size * stream->height;
 	stream->frame_size = stream->pixel_size * stream->height * stream->width;
 	return 0;
+
+#undef TEST_ENCODING_AGNOSTIC
 }
 
 void
@@ -235,30 +311,107 @@ const char *
 get_pixel_format(const char *specified, const char *current)
 {
 	enum colour_space space;
-	enum encoding encoding;
+	enum alpha alpha = UNPREMULTIPLIED;
+	enum encoding encoding = DOUBLE;
+	enum endian endian = HOST_ENDIAN;
+	int alpha_first = 0;
 
 	if (!strcmp(current, "xyza"))
-		space = CIEXYZ, encoding = DOUBLE;
+		space = CIEXYZ;
 	else if (!strcmp(current, "xyza f"))
-		space = CIEXYZ, encoding = FLOAT;
+		space = CIEXYZ;
+	else if (!strcmp(current, "raw0"))
+		space = YUV_NONLINEAR, encoding = UINT16, endian = LITTLE_ENDIAN, alpha_first = 1;
+	else if (!strcmp(current, "raw1"))
+		space = YUV_NONLINEAR, encoding = UINT16, endian = LITTLE_ENDIAN;
+	else if (!strcmp(current, "raw2"))
+		space = YUV_NONLINEAR, encoding = UINT16, alpha = NO_ALPHA;
+	else if (!strcmp(current, "raw2a"))
+		space = YUV_NONLINEAR, encoding = UINT16;
+	else if (!strcmp(current, "raw3"))
+		space = YUV_NONLINEAR, alpha = NO_ALPHA;
+	else if (!strcmp(current, "raw3a"))
+		space = YUV_NONLINEAR;
+	else if (!strcmp(current, "raw4"))
+		space = CIEXYZ_NONLINEAR, alpha = NO_ALPHA;
+	else if (!strcmp(current, "raw4a"))
+		space = CIEXYZ_NONLINEAR;
+	else if (!strcmp(current, "raw5"))
+		space = SRGB_NONLINEAR, alpha = NO_ALPHA;
+	else if (!strcmp(current, "raw5a"))
+		space = SRGB_NONLINEAR;
+	else if (!strcmp(current, "raw6"))
+		space = SRGB, alpha = NO_ALPHA;
+	else if (!strcmp(current, "raw6a"))
+		space = SRGB;
 	else
 		return specified;
 
 	if (!strcmp(specified, "xyza"))
-		space = CIEXYZ;
-	else if (!strcmp(specified, "xyza f"))
-		return "xyza f";
+		space = CIEXYZ, alpha = UNPREMULTIPLIED;
 	else if (!strcmp(specified, "xyza !f"))
 		return "xyza";
 	else if (!strcmp(specified, "f"))
 		encoding = FLOAT;
 	else if (!strcmp(specified, "!f"))
 		encoding = DOUBLE;
+	else if (!strcmp(specified, "raw3 !f"))
+		return "raw3";
+	else if (!strcmp(specified, "raw3a !f"))
+		return "raw3a";
+	else if (!strcmp(specified, "raw4 !f"))
+		return "raw4";
+	else if (!strcmp(specified, "raw4a !f"))
+		return "raw4a";
+	else if (!strcmp(specified, "raw5 !f"))
+		return "raw5";
+	else if (!strcmp(specified, "raw5a !f"))
+		return "raw5a";
+	else if (!strcmp(specified, "raw6 !f"))
+		return "raw6";
+	else if (!strcmp(specified, "raw6a !f"))
+		return "raw6a";
+	else if (!strcmp(specified, "raw3"))
+		space = YUV_NONLINEAR, alpha = NO_ALPHA;
+	else if (!strcmp(specified, "raw4"))
+		space = CIEXYZ_NONLINEAR, alpha = NO_ALPHA;
+	else if (!strcmp(specified, "raw5"))
+		space = SRGB_NONLINEAR, alpha = NO_ALPHA;
+	else if (!strcmp(specified, "raw6"))
+		space = SRGB, alpha = NO_ALPHA;
+	else if (!strcmp(specified, "raw3a"))
+		space = YUV_NONLINEAR, alpha = UNPREMULTIPLIED;
+	else if (!strcmp(specified, "raw4a"))
+		space = CIEXYZ_NONLINEAR, alpha = UNPREMULTIPLIED;
+	else if (!strcmp(specified, "raw5a"))
+		space = SRGB_NONLINEAR, alpha = UNPREMULTIPLIED;
+	else if (!strcmp(specified, "raw6a"))
+		space = SRGB, alpha = UNPREMULTIPLIED;
 	else
 		return specified;
 
-	if (space == CIEXYZ)
+	if (space == CIEXYZ && alpha == UNPREMULTIPLIED)
 		return encoding == FLOAT ? "xyza f" : "xyza";
+	else if (space == YUV_NONLINEAR && alpha == UNPREMULTIPLIED && encoding == UINT16 && endian == LITTLE_ENDIAN)
+		return alpha_first ? "raw0" : "raw1";
+	else if (space == YUV_NONLINEAR && encoding == UINT16)
+		return alpha ? "raw2" : "raw2a";
+	else if (space == YUV_NONLINEAR && encoding == DOUBLE)
+		return alpha ? "raw3" : "raw3a";
+	else if (space == YUV_NONLINEAR && encoding == FLOAT)
+		return alpha ? "raw3 f" : "raw3a f";
+	else if (space == CIEXYZ_NONLINEAR && encoding == DOUBLE)
+		return alpha ? "raw4" : "raw4a";
+	else if (space == CIEXYZ_NONLINEAR && encoding == FLOAT)
+		return alpha ? "raw4 f" : "raw4a f";
+	else if (space == SRGB_NONLINEAR && encoding == DOUBLE)
+		return alpha ? "raw5" : "raw5a";
+	else if (space == SRGB_NONLINEAR && encoding == FLOAT)
+		return alpha ? "raw5 f" : "raw5a f";
+	else if (space == SRGB && encoding == DOUBLE)
+		return alpha ? "raw6" : "raw6a";
+	else if (space == SRGB && encoding == FLOAT)
+		return alpha ? "raw6 f" : "raw6a f";
 	else
 		return specified;
 }

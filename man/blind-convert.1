@@ -40,6 +40,108 @@ The same colour space as the input stream, but with
 each subpixel value is stored as a double-precision
 floating-point number using the local machines
 endianness.
+.TP
+.B raw0
+Use output from
+.BR ffmpeg (1)
+as-is, that is little-endian, 16-bit integer AY'UV.
+.TP
+.B raw1
+Little-endian, 16-bit integer Y'UVA.
+.TP
+.B raw2
+Host-endian, 16-bit integer Y'UV.
+.TP
+.B raw2a
+Host-endian, 16-bit integer Y'UVA.
+.TP
+.B raw3 f
+Host-endian, single-precision float-point Y'UV.
+.TP
+.B raw3 !f
+Host-endian, double-precision float-point Y'UV.
+.TP
+.B raw3
+Host-endian, double-precision float-point Y'UV,
+but single-precision float-point if input is
+single-precision float-point.
+.TP
+.B raw3a f
+Host-endian, single-precision float-point Y'UVA.
+.TP
+.B raw3a !f
+Host-endian, double-precision float-point Y'UVA.
+.TP
+.B raw3a
+Host-endian, double-precision float-point Y'UVA,
+but single-precision float-point if input is
+single-precision float-point.
+.TP
+.B raw4 f
+Host-endian, single-precision float-point XY'Z.
+.TP
+.B raw4 !f
+Host-endian, double-precision float-point XY'Z.
+.TP
+.B raw4
+Host-endian, double-precision float-point XY'Z,
+but single-precision float-point if input is
+single-precision float-point.
+.TP
+.B raw4a f
+Host-endian, single-precision float-point XY'ZA.
+.TP
+.B raw4a !f
+Host-endian, double-precision float-point XY'ZA.
+.TP
+.B raw4a 
+Host-endian, double-precision float-point XY'ZA,
+but single-precision float-point if input is
+single-precision float-point.
+.TP
+.B raw5 f
+Host-endian, single-precision float-point sR'G'B'.
+.TP
+.B raw5 !f
+Host-endian, double-precision float-point sR'G'B'.
+.TP
+.B raw5
+Host-endian, double-precision float-point sR'G'B',
+but single-precision float-point if input is
+single-precision float-point.
+.TP
+.B raw5a f
+Host-endian, single-precision float-point sR'G'B'A.
+.TP
+.B raw5a !f
+Host-endian, double-precision float-point sR'G'B'A.
+.TP
+.B raw5a
+Host-endian, double-precision float-point sR'G'B'A,
+but single-precision float-point if input is
+single-precision float-point.
+.TP
+.B raw6 f
+Host-endian, single-precision float-point sRGB.
+.TP
+.B raw6 !f
+Host-endian, double-precision float-point sRGB.
+.TP
+.B raw6
+Host-endian, double-precision float-point sRGB,
+but single-precision float-point if input is
+single-precision float-point.
+.TP
+.B raw6a f
+Host-endian, single-precision float-point sRGBA.
+.TP
+.B raw6a !f
+Host-endian, double-precision float-point sRGBA.
+.TP
+.B raw6a
+Host-endian, double-precision float-point sRGBA,
+but single-precision float-point if input is
+single-precision float-point.
 .SH SEE ALSO
 .BR blind (7)
 .SH AUTHORS

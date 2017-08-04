@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("([-f] count | 'inf') file")
+USAGE("([-f] count | 'inf') [file]")
 
 static size_t count = 0;
 static int inf;
@@ -76,7 +76,7 @@ main(int argc, char *argv[])
 		usage();
 	} ARGEND;
 
-	if (argc != 2)
+	if (argc < 1 || argc > 2)
 		usage();
 
 	if ((inf = !strcmp(argv[0], "inf"))) {
@@ -87,14 +87,17 @@ main(int argc, char *argv[])
 		count = etozu_arg("the count", argv[0], 0, SIZE_MAX);
 	}
 
-	eopen_stream(&stream, !strcmp(argv[1], "-") ? NULL : argv[1]);
+	if (argv[1] && !strcmp(argv[1], "-"))
+		argv[1] = NULL;
+
+	eopen_stream(&stream, argv[1]);
 	if (stream.frames && count > SIZE_MAX / stream.frames)
 		eprintf("%s: video is too long\n", stream.file);
 	stream.frames *= count;
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 
-	if (!strcmp(argv[1], "-")
+	if (!argv[1]
 	    ? (framewise ? repeat_stdin_framewise()       : repeat_stdin())
 	    : (framewise ? repeat_regular_file_framewise(): repeat_regular_file()))
 		if (!inf || errno != EPIPE)

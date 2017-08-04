@@ -13,7 +13,7 @@ blind-from-video - Converts a regular, cooked video to a blind video
 .IR height ]
 [-dL]
 .I input-file
-.I output-file
+.RI [ output-file ]
 .SH DESCRIPTION
 .B blind-from-video
 converts the video, in the file
@@ -34,6 +34,12 @@ It is unspecified what happens if
 .I input-file
 does not have exactly one video stream. All non-video streams,
 such as audio and subtitles are discarded.
+.P
+If
+.B output-file
+is omitted,
+.RB ' - '
+(stdout) is used.
 .SH OPTIONS
 .TP
 .B -d
@@ -44,11 +50,26 @@ drafting or if you will not modify the colours. If you use this
 flag, you should also use it in
 .BR blind-to-video (1),
 otherwise the colours will be modified.
+
+This is similar to
+.B -F raw
+and piping the output to
+.BR blind-convert (1)
+with
+.BR "-F raw4" ,
+however, the
+.B xyza
+is recorded instead of
+.BR raw4 .
 .TP
 .BR -F " "\fIpixel-format\fP
 Select pixel format, see
 .BR blind-convert (1)
-for more information.
+for more information. Pixel formats starting with
+.BR raw ,
+other than
+.BR raw0 ,
+are not supported.
 .TP
 .BR -h " "\fIheight\fP
 Change the height of the video to
@@ -84,6 +105,7 @@ Change the width of the video to
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-to-video (1),
+.BR blind-convert (1),
 .BR blind-split (1),
 .BR blind-rewrite-head (1)
 .SH AUTHORS

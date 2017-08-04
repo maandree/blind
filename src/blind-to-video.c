@@ -51,8 +51,11 @@ main(int argc, char *argv[])
 		process = process_lf;
 	else if (!strcmp(stream.pixfmt, "xyza f"))
 		process = process_f;
+	else if (!strcmp(stream.pixfmt, "raw0"))
+		process = NULL;
 	else
-		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
+		eprintf("pixel format %s is not supported, try converting to "
+		        "raw0 or xyza with blind-convert\n", stream.pixfmt);
 
 	epipe(pipe_rw);
 	pid = efork();
@@ -69,7 +72,10 @@ main(int argc, char *argv[])
 
 	close(pipe_rw[0]);
 	fd = pipe_rw[1];
-	process_stream(&stream, process);
+	if (process)
+		process_stream(&stream, process);
+	else
+		esend_stream(&stream, fd, "<subprocess>");
 	close(fd);
 
 	ewaitpid(pid, &status, 0);

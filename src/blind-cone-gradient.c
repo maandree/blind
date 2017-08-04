@@ -42,6 +42,7 @@ main(int argc, char *argv[])
 	eopen_stream(&stream, NULL);
 
 	SELECT_PROCESS_FUNCTION(&stream);
+	CHECK_N_CHAN(&stream, 4, 4);
 
 	if (stream.width > 3 || stream.height > 3 ||
 	    stream.width * stream.height < 2 ||

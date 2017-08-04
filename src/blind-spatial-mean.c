@@ -146,10 +146,13 @@ main(int argc, char *argv[])
 			eprintf("videos use incompatible pixel formats\n");
 	}
 
+	CHECK_N_CHAN(&stream, 4, 4);
         if (stream.encoding == DOUBLE)
                 process = process_functions_lf[method];
-        else
+        else if (stream.encoding == FLOAT)
                 process = process_functions_f[method];
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
 	if (DPRINTF_HEAD(STDOUT_FILENO, stream.frames, 1, 1, stream.pixfmt) < 0)
 		eprintf("dprintf:");

@@ -37,6 +37,9 @@ main(int argc, char *argv[])
 	eopen_stream(&right, argv[0]);
 
 	SELECT_PROCESS_FUNCTION(&left);
+	CHECK_ALPHA_CHAN(&left);
+	CHECK_N_CHAN(&left, 4, 4);
+
 	fprint_stream_head(stdout, &left);
 	efflush(stdout, "<stdout>");
 	process_two_streams(&left, &right, STDOUT_FILENO, "<stdout>", process);

@@ -67,6 +67,7 @@ main(int argc, char *argv[])
 	}
 
 	SELECT_PROCESS_FUNCTION(streams);
+	CHECK_N_CHAN(streams, 1, 4);
 
 	w = streams->width,  streams->width  = max_width;
 	h = streams->height, streams->height = max_height;

@@ -361,6 +361,8 @@ main(int argc, char *argv[])
 	eopen_stream(&sigma, argv[0]);
 
 	SELECT_PROCESS_FUNCTION(&colour);
+	CHECK_CHANS(&colour, == 3, == (measure_y_only ? 1 : colour.luma_chan));
+	CHECK_N_CHAN(&colour, 4, 4);
 
 	echeck_compat(&colour, &sigma);
 

@@ -64,16 +64,33 @@ enum dimension {
 };
 
 enum colour_space {
-	CIEXYZ
+	CIEXYZ,
+	CIEXYZ_NONLINEAR,
+	YUV_NONLINEAR,
+	SRGB_NONLINEAR,
+	SRGB
 };
 
 enum alpha {
-	UNPREMULTIPLIED
+	NO_ALPHA,
+	UNPREMULTIPLIED,
+	PREMULTIPLIED /* not used */
 };
 
 enum encoding {
 	FLOAT,
-	DOUBLE
+	DOUBLE,
+	LONG_DOUBLE, /* not used */
+	UINT8, /* not used */
+	UINT16,
+	UINT32, /* not used */
+	UINT64 /* not used */
+};
+
+enum endian {
+	HOST_ENDIAN,
+	LITTLE_ENDIAN,
+	BIG_ENDIAN /* not used */
 };
 
 struct stream {
@@ -87,6 +104,9 @@ struct stream {
 	enum colour_space space;
 	enum alpha alpha;
 	enum encoding encoding;
+	enum endian endian;
+	short int alpha_chan;
+	short int luma_chan;
 	int fd;
 	size_t ptr;
 	size_t xptr;

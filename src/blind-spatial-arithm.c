@@ -80,10 +80,13 @@ main(int argc, char *argv[])
 	eopen_stream(&stream, NULL);
 	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);
 
+	CHECK_N_CHAN(&stream, 4, 4);
 	if (stream.encoding == DOUBLE)
 		process = get_process_lf(argv[0]);
-	else
+	else if (stream.encoding == FLOAT)
 		process = get_process_f(argv[0]);
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
 	if (DPRINTF_HEAD(STDOUT_FILENO, stream.frames, 1, 1, stream.pixfmt) < 0)
 		eprintf("dprintf:");

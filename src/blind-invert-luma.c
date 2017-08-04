@@ -41,14 +41,14 @@ USAGE("[-iw] mask-stream")
 		}\
 	} while (0)
 
-static void process_xyza    (struct stream *colour, struct stream *mask, size_t n) {PROCESS(double,);}
-static void process_xyza_i  (struct stream *colour, struct stream *mask, size_t n) {PROCESS(double, 1 -);}
-static void process_xyza_w  (struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(double,);}
-static void process_xyza_iw (struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(double, 1 -);}
-static void process_xyzaf   (struct stream *colour, struct stream *mask, size_t n) {PROCESS(float,);}
-static void process_xyzaf_i (struct stream *colour, struct stream *mask, size_t n) {PROCESS(float, 1 -);}
-static void process_xyzaf_w (struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(float,);}
-static void process_xyzaf_iw(struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(float, 1 -);}
+static void process_lf   (struct stream *colour, struct stream *mask, size_t n) {PROCESS(double,);}
+static void process_lf_i (struct stream *colour, struct stream *mask, size_t n) {PROCESS(double, 1 -);}
+static void process_lf_w (struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(double,);}
+static void process_lf_iw(struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(double, 1 -);}
+static void process_f    (struct stream *colour, struct stream *mask, size_t n) {PROCESS(float,);}
+static void process_f_i  (struct stream *colour, struct stream *mask, size_t n) {PROCESS(float, 1 -);}
+static void process_f_w  (struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(float,);}
+static void process_f_iw (struct stream *colour, struct stream *mask, size_t n) {PROCESS_W(float, 1 -);}
 
 int
 main(int argc, char *argv[])
@@ -74,12 +74,14 @@ main(int argc, char *argv[])
 	eopen_stream(&colour, NULL);
 	eopen_stream(&mask, argv[0]);
 
-	if (!strcmp(colour.pixfmt, "xyza"))
-		process = invert ? whitepoint ? process_xyza_iw : process_xyza_i
-				 : whitepoint ? process_xyza_w  : process_xyza;
-	else if (!strcmp(colour.pixfmt, "xyza f"))
-		process = invert ? whitepoint ? process_xyzaf_iw : process_xyzaf_i
-				 : whitepoint ? process_xyzaf_w  : process_xyzaf;
+	CHECK_ALPHA(&colour);
+	CHECK_COLOUR_SPACE(&colour, CIEXYZ);
+	if (colour.encoding == DOUBLE)
+		process = invert ? whitepoint ? process_lf_iw : process_lf_i
+				 : whitepoint ? process_lf_w  : process_lf;
+	else if (colour.encoding == FLOAT)
+		process = invert ? whitepoint ? process_f_iw : process_f_i
+				 : whitepoint ? process_f_w  : process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", colour.pixfmt);
 

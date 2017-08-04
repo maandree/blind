@@ -1,5 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 #ifndef TYPE
+#define INCLUDE_UINT16
 #include "common.h"
 
 USAGE("")
@@ -32,7 +33,11 @@ PROCESS(struct stream *stream, size_t n)
 	size_t i;
 	TYPE *p = (TYPE *)(stream->buf);
 	for (i = 0, n /= stream->chan_size; i < n; i++)
+#ifdef INTEGER_TYPE
+		printf("%"PRINT_TYPE"%c", (PRINT_CAST)(p[i]), (i + 1) % stream->n_chan ? ' ' : '\n');
+#else
 		printf("%.25"PRINT_TYPE"%c", (PRINT_CAST)(p[i]), (i + 1) % stream->n_chan ? ' ' : '\n');
+#endif
 }
 
 #endif

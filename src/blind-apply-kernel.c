@@ -49,6 +49,8 @@ main(int argc, char *argv[])
 	eopen_stream(&kernel, argv[0]);
 
 	SELECT_PROCESS_FUNCTION(&colour);
+	CHECK_ALPHA_CHAN(&colour);
+	CHECK_N_CHAN(&colour, 4, 4);
 	if (colour.encoding != kernel.encoding || colour.n_chan != kernel.n_chan)
 		eprintf("videos use incompatible pixel formats");
 	if (per_pixel && !(kernel.width % colour.width || kernel.height % colour.height))

@@ -47,10 +47,13 @@ main(int argc, char *argv[])
 	diameter = etozu_arg("block-diameter", argv[0], 1, SIZE_MAX);
 
 	eset_pixel_format(&stream, pixfmt);
+	CHECK_N_CHAN(&stream, 4, 4);
 	if (stream.encoding == DOUBLE)
 		SET_XYZA(double);
-	else
+	else if (stream.encoding == FLOAT)
 		SET_XYZA(float);
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
 	stream.width  = (size_t)((double)diameter * sqrt(3.));
 	stream.height = diameter * 3 / 2;

@@ -19,6 +19,8 @@ main(int argc, char *argv[])
 	eopen_stream(&key, argv[0]);
 
 	SELECT_PROCESS_FUNCTION(&stream);
+	CHECK_ALPHA_CHAN(&stream);
+	CHECK_N_CHAN(&stream, 4, 4);
 	if (strcmp(stream.pixfmt, key.pixfmt))
 		eprintf("videos use incompatible pixel formats\n");
 

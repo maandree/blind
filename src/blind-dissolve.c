@@ -10,10 +10,10 @@ static int reverse = 0;
 
 #define PROCESS(TYPE)\
 	do {\
-		size_t i;\
+		size_t i = stream->alpha_chan * stream->chan_size;\
 		TYPE a = fm ? (TYPE)(reverse ? f : fm - f) / fm_##TYPE : (TYPE)0.5;\
-		for (i = 0; i < n; i += stream->pixel_size)\
-			((TYPE *)(stream->buf + i))[3] *= a;\
+		for (; i < n; i += stream->pixel_size)\
+			*(TYPE *)(stream->buf + i) *= a;\
 	} while (0)
 
 static void process_lf(struct stream *stream, size_t n, size_t f) {PROCESS(double);}
@@ -38,10 +38,8 @@ main(int argc, char *argv[])
 
 	eopen_stream(&stream, NULL);
 
-	if (stream.encoding == DOUBLE)
-		process = process_lf;
-	else
-		process = process_f;
+	SELECT_PROCESS_FUNCTION(&stream);
+	CHECK_CHANS(&stream, != -1, == stream.luma_chan);
 
 	if (!stream.frames)
 		eprintf("video's length is not recorded");

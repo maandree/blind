@@ -33,10 +33,10 @@ USAGE("[-bs] bottom-stream ... top-stream")
 		}\
 	} while (0)
 
-static void process_xyza   (struct stream *streams, size_t n_streams, size_t n) { PROCESS(double, 0); }
-static void process_xyza_b (struct stream *streams, size_t n_streams, size_t n) { PROCESS(double, 1); }
-static void process_xyzaf  (struct stream *streams, size_t n_streams, size_t n) { PROCESS(float, 0); }
-static void process_xyzaf_b(struct stream *streams, size_t n_streams, size_t n) { PROCESS(float, 1); }
+static void process_lf  (struct stream *streams, size_t n_streams, size_t n) { PROCESS(double, 0); }
+static void process_lf_b(struct stream *streams, size_t n_streams, size_t n) { PROCESS(double, 1); }
+static void process_f   (struct stream *streams, size_t n_streams, size_t n) { PROCESS(float, 0); }
+static void process_f_b (struct stream *streams, size_t n_streams, size_t n) { PROCESS(float, 1); }
 
 int
 main(int argc, char *argv[])
@@ -72,12 +72,14 @@ main(int argc, char *argv[])
 			frames = streams[i].frames;
 	}
 
-	if (!strcmp(streams->pixfmt, "xyza"))
-		process = blend ? process_xyza_b : process_xyza;
-	else if (!strcmp(streams->pixfmt, "xyza f"))
-		process = blend ? process_xyzaf_b : process_xyzaf;
+	if (streams->encoding == DOUBLE)
+		process = blend ? process_lf_b :process_lf;
+	else if (streams->encoding == FLOAT)
+		process = blend ? process_f_b : process_f;
 	else
 		eprintf("pixel format %s is not supported, try xyza\n", streams->pixfmt);
+	CHECK_ALPHA_CHAN(streams);
+	CHECK_N_CHAN(streams, 4, 4);
 
 	tmp = streams->frames, streams->frames = frames;
 	fprint_stream_head(stdout, streams);

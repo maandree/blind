@@ -105,10 +105,15 @@ main(int argc, char *argv[])
 			frames = streams[i].frames;
 	}
 
+	if (streams->alpha)
+		CHECK_ALPHA(streams);
+	CHECK_N_CHAN(streams, 1, 3 + !!streams->alpha);
 	if (streams->encoding == DOUBLE)
 		process = get_process_lf(operation);
-	else
+	else if (streams->encoding == FLOAT)
 		process = get_process_f(operation);
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", streams->pixfmt);
 
 	tmp = streams->frames, streams->frames = frames;
 	fprint_stream_head(stdout, streams);

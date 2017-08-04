@@ -59,6 +59,9 @@ main(int argc, char *argv[])
 
 	eset_pixel_format(&stream, pixfmt);
 	SELECT_PROCESS_FUNCTION(&stream);
+	CHECK_N_CHAN(&stream, 4, 4);
+	if (argc < 3)
+		CHECK_COLOUR_SPACE(&stream, CIEXYZ);
 
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");

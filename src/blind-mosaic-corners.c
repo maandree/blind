@@ -59,12 +59,12 @@ main(int argc, char *argv[])
 	colours[1] = alloca(stream.pixel_size);
 	memset(colours[0], 0, stream.pixel_size);
 
-	if (!strcmp(stream.pixfmt, "xyza")) {
+	if (stream.encoding == DOUBLE) {
 		((double *)(colours[1]))[0] = (double)1;
 		((double *)(colours[1]))[1] = (double)1;
 		((double *)(colours[1]))[2] = (double)1;
 		((double *)(colours[1]))[3] = (double)1;
-	} else if (!strcmp(stream.pixfmt, "xyza f")) {
+	} else if (stream.encoding == FLOAT) {
 		((float *)(colours[1]))[0] = (float)1;
 		((float *)(colours[1]))[1] = (float)1;
 		((float *)(colours[1]))[2] = (float)1;

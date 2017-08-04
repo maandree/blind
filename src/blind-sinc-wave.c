@@ -35,6 +35,8 @@ main(int argc, char *argv[])
 	}
 
 	SELECT_PROCESS_FUNCTION(&stream);
+	CHECK_CHANS(&stream, == 3, == 1);
+	CHECK_N_CHAN(&stream, 4, 4);
 
 	if (have_theta0 && strcmp(stream.pixfmt, theta0.pixfmt))
 		eprintf("videos use incompatible pixel formats\n");

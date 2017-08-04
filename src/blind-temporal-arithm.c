@@ -73,8 +73,10 @@ main(int argc, char *argv[])
 
 	if (stream.encoding == DOUBLE)
 		process = get_process_lf(argv[0]);
-	else
+	else if (stream.encoding == FLOAT)
 		process = get_process_f(argv[0]);
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
 	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);
 	img = emalloc(stream.frame_size);

@@ -109,7 +109,6 @@ main(int argc, char *argv[])
 	enum method method = ARITHMETIC;
 	int i, two = 0;
 
-
 	ARGBEGIN {
 	case 'd':
 		method = STANDARD_DEVIATION;
@@ -171,8 +170,10 @@ main(int argc, char *argv[])
 
         if (streams->encoding == DOUBLE)
                 process = process_functions_lf[method];
-        else
+        else if (streams->encoding == FLOAT)
                 process = process_functions_f[method];
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", streams->pixfmt);
 
 	tmp = streams->frames, streams->frames = frames;
 	fprint_stream_head(stdout, streams);

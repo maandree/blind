@@ -111,18 +111,23 @@ main(int argc, char *argv[])
 	cache = emalloc2(stream.width + 1, sizeof(*cache));
 	buf   = emalloc(stream.row_size);
 
+	if (argc > 3)
+		CHECK_ALPHA(&stream);
+	CHECK_N_CHAN(&stream, 1, 3 + !!stream.alpha);
 	if (stream.encoding == DOUBLE) {
 		colour_lf[0] = X;
 		colour_lf[1] = Y;
 		colour_lf[2] = Z;
 		colour_lf[3] = alpha;
 		process(colour_lf);
-	} else {
+	} else if (stream.encoding == FLOAT) {
 		colour_f[0] = (float)X;
 		colour_f[1] = (float)Y;
 		colour_f[2] = (float)Z;
 		colour_f[3] = (float)alpha;
 		process(colour_f);
+	} else {
+		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 	}
 
 	fshut(stdout, "<stdout>");

@@ -24,6 +24,8 @@ main(int argc, char *argv[])
 		usage();
 
 	eopen_stream(&stream, NULL);
+	CHECK_ALPHA_CHAN(&stream);
+	CHECK_N_CHAN(&stream, 4, 4);
 
 	xfd = eopen(argv[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	yfd = eopen(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0666);

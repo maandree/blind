@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#define INCLUDE_UINT16
 #include "common.h"
 
 /* Disable warnings in <math.h> */
@@ -8,6 +9,8 @@
 #endif
 
 USAGE("[-s]")
+
+static int strict = 1;
 
 #define CONV(ITYPE, OTYPE, SOTYPE, EXPONENT, HA2EXPONENT, FRACTION)\
 	do {\
@@ -62,7 +65,7 @@ USAGE("[-s]")
 		return ret;\
 	} while (0)
 
-#define PROCESS(ITYPE, OTYPE, BITS)\
+#define PROCESS_FLOAT(ITYPE, OTYPE, BITS)\
 	do {\
 		size_t i, n;\
 		ITYPE *ibuf = (ITYPE *)(stream->buf);\
@@ -70,15 +73,19 @@ USAGE("[-s]")
 			: alloca(sizeof(stream->buf) / sizeof(ITYPE) * sizeof(OTYPE));\
 		strict *= !USING_BINARY##BITS;\
 		if (!strict && sizeof(ITYPE) != sizeof(OTYPE))\
-			eprintf("-s is required on this machine\n");\
+			eprintf("-s is supported not on this machine\n");\
+		if (stream->endian == LITTLE_ENDIAN && !strict) {\
+			esend_stream(stream, STDOUT_FILENO, "<stdout>");\
+			break;\
+		}\
 		do {\
 			n = stream->ptr / sizeof(ITYPE);\
 			if (strict) {\
 				for (i = 0; i < n; i++)\
-					obuf[i] = htole##BITS(conv_##ITYPE(ibuf[i]));\
+					obuf[i] = htole(conv_##ITYPE(ibuf[i]));\
 			} else {\
 				for (i = 0; i < n; i++)\
-					obuf[i] = htole##BITS(*(OTYPE *)&ibuf[i]);\
+					obuf[i] = htole(*(OTYPE *)&ibuf[i]);\
 			}\
 			ewriteall(STDOUT_FILENO, obuf, n * sizeof(OTYPE), "<stdout>");\
 			n *= sizeof(ITYPE);\
@@ -88,18 +95,38 @@ USAGE("[-s]")
 			eprintf("%s: incomplete frame\n", stream->file);\
 	} while (0)
 
+#define PROCESS_INTEGER(TYPE)\
+	do {\
+		size_t i, n;\
+		TYPE *buf = (TYPE *)(stream->buf);\
+		if (stream->endian == LITTLE_ENDIAN) {\
+			esend_stream(stream, STDOUT_FILENO, "<stdout>");\
+			break;\
+		}\
+		do {\
+			n = stream->ptr / sizeof(TYPE);\
+			for (i = 0; i < n; i++)\
+				buf[i] = htole(buf[i]);\
+			n *= sizeof(TYPE);\
+			ewriteall(STDOUT_FILENO, buf, n, "<stdout>");\
+			memmove(stream->buf, stream->buf + n, stream->ptr -= n);\
+		} while (eread_stream(stream, SIZE_MAX));\
+		if (stream->ptr)\
+			eprintf("%s: incomplete frame\n", stream->file);\
+	} while (0)
+
 static uint64_t conv_double(double host) {CONV(double, uint64_t, int64_t, 11, 1023, 52);}
 static uint32_t conv_float (float  host) {CONV(float,  uint32_t, int32_t,  8,  127, 23);}
 
-static void process_lf(struct stream *stream, int strict) {PROCESS(double, uint64_t, 64);}
-static void process_f (struct stream *stream, int strict) {PROCESS(float,  uint32_t, 32);}
+static void process_lf (struct stream *stream) {PROCESS_FLOAT(double, uint64_t, 64);}
+static void process_f  (struct stream *stream) {PROCESS_FLOAT(float,  uint32_t, 32);}
+static void process_u16(struct stream *stream) {PROCESS_INTEGER(uint16_t);}
 
 int
 main(int argc, char *argv[])
 {
 	struct stream stream;
-	int strict = 1;
-	void (*process)(struct stream *stream, int strict);
+	void (*process)(struct stream *stream);
 
 	ARGBEGIN {
 	case 's':
@@ -113,10 +140,17 @@ main(int argc, char *argv[])
 		usage();
 
 	eopen_stream(&stream, NULL);
+#if defined(HOST_ENDIAN_IS_LITTLE_ENDIAN)
+	if (stream.endian == HOST_ENDIAN)
+		stream.endian = LITTLE_ENDIAN;
+#elif defined(HOST_ENDIAN_IS_BIG_ENDIAN)
+	if (stream.endian == HOST_ENDIAN)
+		stream.endian = BIG_ENDIAN;
+#endif
 
 	SELECT_PROCESS_FUNCTION(&stream);
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
-	process(&stream, strict);
+	process(&stream);
 	return 0;
 }

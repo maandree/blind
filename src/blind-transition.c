@@ -81,10 +81,14 @@ main(int argc, char *argv[])
 		echeck_compat(&stream, &softness);
 	}
 
+	CHECK_ALPHA(&stream);
+	CHECK_COLOUR_SPACE(&stream, CIEXYZ);
 	if (stream.encoding == DOUBLE)
 		process = process_lf;
-	else
+	else if (stream.encoding == FLOAT)
 		process = process_f;
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
 	if (!stream.frames)
 		eprintf("video's length is not recorded");

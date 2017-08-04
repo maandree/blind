@@ -154,8 +154,10 @@ main(int argc, char *argv[])
 
         if (stream.encoding == DOUBLE)
                 process = process_functions_lf[method];
-        else
+        else if (stream.encoding == FLOAT)
                 process = process_functions_f[method];
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
 	stream.frames = 1;
 	echeck_dimensions(&stream, WIDTH | HEIGHT, NULL);

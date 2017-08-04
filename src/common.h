@@ -69,10 +69,89 @@
 # define PIPE_BUF BUFSIZ
 #endif
 
+#ifndef DONT_INCLUDE_FLOAT
+# define SELECT_PROCESS_FUNCTION_FLOAT(stream) else if ((stream)->encoding == FLOAT) process = process_f
+#else
+# define SELECT_PROCESS_FUNCTION_FLOAT(stream) else if (0)
+#endif
+
+#ifndef DONT_INCLUDE_DOUBLE
+# define SELECT_PROCESS_FUNCTION_DOUBLE(stream) else if ((stream)->encoding == DOUBLE) process = process_lf
+#else
+# define SELECT_PROCESS_FUNCTION_DOUBLE(stream) else if (0)
+#endif
+
+#ifdef INCLUDE_LONG_DOUBLE
+# define SELECT_PROCESS_FUNCTION_LONG_DOUBLE(stream) else if ((stream)->encoding == LONG_DOUBLE) process = process_llf
+#else
+# define SELECT_PROCESS_FUNCTION_LONG_DOUBLE(stream) else if (0)
+#endif
+
+#ifdef INCLUDE_UINT8
+# define SELECT_PROCESS_FUNCTION_UINT8(stream) else if ((stream)->encoding == UINT8) process = process_u8
+#else
+# define SELECT_PROCESS_FUNCTION_UINT8(stream) else if (0)
+#endif
+
+#ifdef INCLUDE_UINT16
+# define SELECT_PROCESS_FUNCTION_UINT16(stream) else if ((stream)->encoding == UINT16) process = process_u16
+#else
+# define SELECT_PROCESS_FUNCTION_UINT16(stream) else if (0)
+#endif
+
+#ifdef INCLUDE_UINT32
+# define SELECT_PROCESS_FUNCTION_UINT32(stream) else if ((stream)->encoding == UINT32) process = process_u32
+#else
+# define SELECT_PROCESS_FUNCTION_UINT32(stream) else if (0)
+#endif
+
+#ifdef INCLUDE_UINT64
+# define SELECT_PROCESS_FUNCTION_UINT64(stream) else if ((stream)->encoding == UINT64) process = process_u64
+#else
+# define SELECT_PROCESS_FUNCTION_UINT64(stream) else if (0)
+#endif
+
 #define SELECT_PROCESS_FUNCTION(stream)\
 	do {\
-		if ((stream)->encoding == DOUBLE)\
-			process = process_lf;\
+		if ((stream)->endian != HOST_ENDIAN)\
+			eprintf("pixel format %s is not supported, try xyza\n", (stream)->pixfmt);\
+		SELECT_PROCESS_FUNCTION_FLOAT(stream);\
+		SELECT_PROCESS_FUNCTION_DOUBLE(stream);\
+		SELECT_PROCESS_FUNCTION_LONG_DOUBLE(stream);\
+		SELECT_PROCESS_FUNCTION_UINT8(stream);\
+		SELECT_PROCESS_FUNCTION_UINT16(stream);\
+		SELECT_PROCESS_FUNCTION_UINT32(stream);\
+		SELECT_PROCESS_FUNCTION_UINT64(stream);\
 		else\
-			process = process_f;\
+			eprintf("pixel format %s is not supported, try xyza\n", (stream)->pixfmt);\
+	} while (0)
+
+#define CHECK_ALPHA_CHAN(stream)\
+	do {\
+		if ((stream)->alpha_chan != 3)\
+			eprintf("pixel format %s is not supported, try xyza\n", (stream)->pixfmt);\
+	} while (0)
+
+#define CHECK_CHANS(stream, ALPHA, LUMA)\
+	do {\
+		if (!(((stream)->alpha_chan ALPHA) && ((stream)->luma_chan LUMA)))\
+			eprintf("pixel format %s is not supported, try xyza\n", (stream)->pixfmt);\
+	} while (0)
+
+#define CHECK_ALPHA(stream)\
+	do {\
+		if ((stream)->alpha != UNPREMULTIPLIED)\
+			eprintf("pixel format %s is not supported, try xyza\n", (stream)->pixfmt);\
+	} while (0)
+
+#define CHECK_COLOUR_SPACE(stream, colour_space)\
+	do {\
+		if ((stream)->space != (colour_space))\
+			eprintf("pixel format %s is not supported, try xyza\n", (stream)->pixfmt);\
+	} while (0)
+
+#define CHECK_N_CHAN(stream, low, high)\
+	do {\
+		if ((stream)->n_chan < (low) || (stream)->n_chan > (high))\
+			eprintf("pixel format %s is not supported, try xyza\n", (stream)->pixfmt);\
 	} while (0)

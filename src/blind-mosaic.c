@@ -158,8 +158,10 @@ main(int argc, char *argv[])
 	eopen_stream(&mosaic, argv[0]);
 
 	SELECT_PROCESS_FUNCTION(&colour);
-	echeck_compat(&colour, &mosaic);
+	CHECK_ALPHA(&colour);
+	CHECK_N_CHAN(&colour, 4, 4);
 
+	echeck_compat(&colour, &mosaic);
 	fprint_stream_head(stdout, &colour);
 	efflush(stdout, "<stdout>");
 	process_each_frame_two_streams(&colour, &mosaic, STDOUT_FILENO, "<stdout>", process);

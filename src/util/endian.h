@@ -9,6 +9,31 @@
 
 #if !defined(HAVE_ENDIAN_H) && !defined(HAVE_SYS_ENDIAN_H)
 
+# if defined(HOST_ENDIAN_IS_LITTLE_ENDIAN_16)
+#  if !defined(htole16)
+#   define htole16(x) (x)
+#  endif
+#  if !defined(htole16)
+#   define letoh16(x) (x)
+#  endif
+# endif
+# if defined(HOST_ENDIAN_IS_LITTLE_ENDIAN_32)
+#  if !defined(htole32)
+#   define htole32(x) (x)
+#  endif
+#  if !defined(htole32)
+#   define letoh32(x) (x)
+#  endif
+# endif
+# if defined(HOST_ENDIAN_IS_LITTLE_ENDIAN_64)
+#  if !defined(htole64)
+#   define htole16(x) (x)
+#  endif
+#  if !defined(htole64)
+#   define letoh16(x) (x)
+#  endif
+# endif
+
 # if !defined(htole16)
 #  define htole16 blind_htole16
 static inline uint16_t

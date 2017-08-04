@@ -29,6 +29,9 @@ main(int argc, char *argv[])
 	eopen_stream(&dual, argv[6]);
 
 	SELECT_PROCESS_FUNCTION(&stream);
+	CHECK_ALPHA_CHAN(&stream);
+	CHECK_N_CHAN(&stream, 4, 4);
+
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 	process_two_streams(&stream, &dual, STDOUT_FILENO, "<stdout>", process);

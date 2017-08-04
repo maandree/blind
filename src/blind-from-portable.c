@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#define INCLUDE_UINT16
 #include "common.h"
 
 USAGE("[-s]")
@@ -47,7 +48,7 @@ static int strict = 1;
 		return ret;\
 	} while (0)
 
-#define PROCESS(ITYPE, OTYPE, BITS)\
+#define PROCESS_FLOAT(ITYPE, OTYPE, BITS)\
 	do {\
 		size_t i, n;\
 		ITYPE *ibuf = (ITYPE *)(stream->buf);\
@@ -55,15 +56,19 @@ static int strict = 1;
 			: alloca(sizeof(stream->buf) / sizeof(ITYPE) * sizeof(OTYPE));\
 		strict *= !USING_BINARY##BITS;\
 		if (!strict && sizeof(ITYPE) != sizeof(OTYPE))\
-			eprintf("-s is required on this machine\n");\
+			eprintf("-s is supported not on this machine\n");\
+		if (stream->endian == HOST_ENDIAN && !strict) {\
+			esend_stream(stream, STDOUT_FILENO, "<stdout>");\
+			break;\
+		}\
 		do {\
 			n = stream->ptr / sizeof(ITYPE);\
 			if (strict) {\
 				for (i = 0; i < n; i++)\
-					obuf[i] = conv_##OTYPE(le##BITS##toh(ibuf[i]));\
+					obuf[i] = conv_##OTYPE(letoh(ibuf[i]));\
 			} else {\
 				for (i = 0; i < n; i++)\
-					obuf[i] = *(OTYPE *)&(ITYPE){le##BITS##toh(ibuf[i])};\
+					obuf[i] = *(OTYPE *)&(ITYPE){letoh(ibuf[i])};\
 			}\
 			ewriteall(STDOUT_FILENO, obuf, n * sizeof(OTYPE), "<stdout>");\
 			n *= sizeof(ITYPE);\
@@ -73,11 +78,32 @@ static int strict = 1;
 			eprintf("%s: incomplete frame\n", stream->file);\
 	} while (0)
 
+#define PROCESS_INTEGER(TYPE)\
+	do {\
+		size_t i, n;\
+		TYPE *buf = (TYPE *)(stream->buf);\
+		if (stream->endian == HOST_ENDIAN) {\
+			esend_stream(stream, STDOUT_FILENO, "<stdout>");\
+			break;\
+		}\
+		do {\
+			n = stream->ptr / sizeof(TYPE);\
+			for (i = 0; i < n; i++)\
+				buf[i] = letoh(buf[i]);\
+			n *= sizeof(TYPE);\
+			ewriteall(STDOUT_FILENO, buf, n, "<stdout>");\
+			memmove(stream->buf, stream->buf + n, stream->ptr -= n);\
+		} while (eread_stream(stream, SIZE_MAX));\
+		if (stream->ptr)\
+			eprintf("%s: incomplete frame\n", stream->file);\
+	} while (0)
+
 static double conv_double(uint64_t portable) {CONV(uint64_t, int64_t, double, 11, 1023, 52);}
 static float  conv_float (uint32_t portable) {CONV(uint32_t, int32_t, float,   8,  127, 23);}
 
-static void process_lf(struct stream *stream) {PROCESS(uint64_t, double, 64);}
-static void process_f (struct stream *stream) {PROCESS(uint32_t, float,  32);}
+static void process_lf (struct stream *stream) {PROCESS_FLOAT(uint64_t, double, 64);}
+static void process_f  (struct stream *stream) {PROCESS_FLOAT(uint32_t, float,  32);}
+static void process_u16(struct stream *stream) {PROCESS_INTEGER(uint16_t);}
 
 int
 main(int argc, char *argv[])
@@ -97,9 +123,15 @@ main(int argc, char *argv[])
 		usage();
 
 	eopen_stream(&stream, NULL);
+#if defined(HOST_ENDIAN_IS_LITTLE_ENDIAN)
+	if (stream.endian == LITTLE_ENDIAN)
+		stream.endian = HOST_ENDIAN;
+#elif defined(HOST_ENDIAN_IS_BIG_ENDIAN)
+	if (stream.endian == BIG_ENDIAN)
+		stream.endian = HOST_ENDIAN;
+#endif
 
 	SELECT_PROCESS_FUNCTION(&stream);
-
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 	process(&stream);

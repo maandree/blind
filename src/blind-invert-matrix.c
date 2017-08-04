@@ -58,11 +58,14 @@ main(int argc, char *argv[])
 	stream.width = width;
 	efflush(stdout, "<stdout>");
 
+	if (skip_ch[3] && stream.alpha_chan != -1)
+		CHECK_ALPHA_CHAN(&stream);
+	CHECK_N_CHAN(&stream, 1, 4);
 	one = alloca(stream.pixel_size);
-	if (!strcmp(stream.pixfmt, "xyza")) {
+	if (stream.encoding == DOUBLE) {
 		*(double *)one = 1;
 		process = process_lf;
-	} else if (!strcmp(stream.pixfmt, "xyza f")) {
+	} else if (stream.encoding == FLOAT) {
 		*(float *)one = 1;
 		process = process_f;
 	} else {

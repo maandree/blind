@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-F pixel-format] [-r frame-rate] [-w width -h height] [-dL] input-file output-file")
+USAGE("[-F pixel-format] [-r frame-rate] [-w width -h height] [-dL] input-file [output-file]")
 
 static int draft = 0;
 static void (*convert_segment)(char *buf, size_t n, int fd, const char *file);
@@ -153,16 +153,21 @@ convert(const char *infile, int outfd, const char *outfile, size_t width, size_t
 
 	close(pipe_rw[1]);
 
-	for (ptr = 0;;) {
-		if (!(n = eread(pipe_rw[0], buf + ptr, sizeof(buf) - ptr, "<subprocess>")))
-			break;
-		ptr += n;
-		n = ptr - (ptr % 8);
-		convert_segment(buf, n, outfd, outfile);
-		memmove(buf, buf + n, ptr -= n);
+	if (convert_segment) {
+		for (ptr = 0;;) {
+			if (!(n = eread(pipe_rw[0], buf + ptr, sizeof(buf) - ptr, "<subprocess>")))
+				break;
+			ptr += n;
+			n = ptr - (ptr % 8);
+			convert_segment(buf, n, outfd, outfile);
+			memmove(buf, buf + n, ptr -= n);
+		}
+		if (ptr)
+			eprintf("<subprocess>: incomplete frame\n");
+	} else {
+		while ((n = eread(pipe_rw[0], buf, sizeof(buf), "<subprocess>")))
+			ewriteall(outfd, buf, (size_t)n, outfile);
 	}
-	if (ptr)
-		eprintf("<subprocess>: incomplete frame\n");
 
 	close(pipe_rw[0]);
 	ewaitpid(pid, &status, 0);
@@ -208,19 +213,21 @@ main(int argc, char *argv[])
 		usage();
 	} ARGEND;
 
-	if (argc != 2 || !width != !height)
+	if (argc < 1 || argc > 2 || !width != !height)
 		usage();
 
 	infile = argv[0];
-	outfile = argv[1];
+	outfile = argv[1] ? argv[1] : "-";
 
 	pixfmt = get_pixel_format(pixfmt, "xyza");
 	if (!strcmp(pixfmt, "xyza"))
 		convert_segment = convert_segment_xyza;
 	else if (!strcmp(pixfmt, "xyza f"))
 		convert_segment = convert_segment_xyzaf;
+	else if (!strcmp(pixfmt, "raw0"))
+		convert_segment = NULL;
 	else
-		eprintf("pixel format %s is not supported, try xyza\n", pixfmt);
+		eprintf("pixel format %s is not supported, try xyza or raw0 and blind-convert\n", pixfmt);
 
 	if (!width)
 		get_metadata(infile, &width, &height);

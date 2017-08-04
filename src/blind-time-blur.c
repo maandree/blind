@@ -28,6 +28,9 @@ main(int argc, char *argv[])
 	eopen_stream(&alpha, argv[0]);
 
 	SELECT_PROCESS_FUNCTION(&colour);
+	CHECK_CHANS(&colour, == 3, == 1);
+	CHECK_N_CHAN(&colour, 4, 4);
+
 	echeck_compat(&colour, &alpha);
 	fprint_stream_head(stdout, &colour);
 	efflush(stdout, "<stdout>");
@@ -45,7 +48,7 @@ PROCESS(char *output, char *restrict cbuf, char *restrict abuf,
 	pixel_t *restrict clr = (pixel_t *)cbuf;
 	pixel_t *restrict alf = (pixel_t *)abuf;
 	pixel_t *img = (pixel_t *)output;
-	size_t i, n = colour->frame_size / sizeof(pixel_t);
+	size_t i, n = colour->width * colour->height;
 	TYPE a1, a2;
 
 	if (first) {

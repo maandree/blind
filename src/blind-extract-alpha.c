@@ -20,6 +20,8 @@ main(int argc, char *argv[])
 	fd = eopen(argv[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
 
 	SELECT_PROCESS_FUNCTION(&stream);
+	CHECK_CHANS(&stream, != -1, == stream.luma_chan);
+
 	fprint_stream_head(stdout, &stream);
 	efflush(stdout, "<stdout>");
 	if (dprint_stream_head(fd, &stream) < 0)
@@ -38,7 +40,7 @@ PROCESS(struct stream *stream, int fd, const char *fname)
 	TYPE a, *p, *b;
 	do {
 		n = stream->ptr / stream->pixel_size;
-		p = (TYPE *)(stream->buf) + stream->n_chan - 1;
+		p = (TYPE *)(stream->buf) + stream->luma_chan;
 		b = (TYPE *)buf;
 		for (i = 0; i < n; i++, p += stream->n_chan) {
 			a = *p, *p = 1;

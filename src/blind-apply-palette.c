@@ -35,6 +35,7 @@ main(int argc, char *argv[])
 	eopen_stream(&palette, argv[0]);
 
 	SELECT_PROCESS_FUNCTION(&stream);
+	CHECK_N_CHAN(&stream, 4, 4);
 
 	if (strcmp(stream.pixfmt, palette.pixfmt))
 		eprintf("videos use incompatible pixel formats\n");

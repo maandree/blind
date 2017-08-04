@@ -34,17 +34,10 @@ blind-preview		a graphical tool for previewing the output of a pipeline
 				should display the output for a selected frame or image
 				should have sliders to tune environment variables
 
-blind-from-video: add options to:
-	* just run ffmpeg just print the output
-	* convert output from the option above to blind's format,
-	  but stop after a selected number of frames
-	* like above, but instead of convert, simply read and
-	  print to stdout (up to user to direct to /dev/null
-	  for discarding)
-
 blind-cone-gradient: add ability to make gradient superelliptic
+blind-to-text, blind-from-text: support %a, %e, %g, and custom precision
 
-Add [-j jobs] to blind-from-video, blind-to-video, and blind-apply-kernel.
+Add [-j jobs] to blind-from-video, blind-to-video, blind-convert, and blind-apply-kernel.
 
 long double is slightly faster than long.
 long double (xyza q) could be added as another format.

@@ -40,6 +40,10 @@ main(int argc, char *argv[])
 	eopen_stream(&matrix, argv[0]);
 
 	SELECT_PROCESS_FUNCTION(&colour);
+	if (skip_alpha && colour.alpha_chan != -1)
+		CHECK_CHANS(&colour, == colour.n_chan - 1, == colour.luma_chan);
+	else
+		skip_alpha = 0;
 
 	if (strcmp(colour.pixfmt, matrix.pixfmt))
 		eprintf("videos use incompatible pixel formats\n");

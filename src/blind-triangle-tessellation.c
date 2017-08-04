@@ -63,10 +63,13 @@ main(int argc, char *argv[])
 	height = etozu_arg("block-height", argv[1], 1, SIZE_MAX);
 
 	eset_pixel_format(&stream, pixfmt);
+	CHECK_N_CHAN(&stream, 4, 4);
 	if (stream.encoding == DOUBLE)
 		SET_XYZA(double);
-	else
+	else if (stream.encoding == FLOAT)
 		SET_XYZA(float);
+	else
+		eprintf("pixel format %s is not supported, try xyza\n", stream.pixfmt);
 
 	stream.width  = 2 * width;
 	stream.height = 2 * height;

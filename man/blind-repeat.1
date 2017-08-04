@@ -7,7 +7,7 @@ blind-repeat - Repeat a video
 .I count
 |
 .RB ' inf ')
-.I file
+.RI [ file ]
 .SH DESCRIPTION
 .B blind-repeat
 write the a video to stdout that is a loop of the
@@ -34,6 +34,12 @@ will read stdin into memory; you are highly discouraged
 from using this unless stdin is a single frame, or known
 to only be a very small number of frames, is it can
 potentially use all of the computer's memory.
+.P
+If
+.I file
+is omitted,
+.RB ' - '
+is used.
 .SH OPTIONS
 .TP
 .B -f

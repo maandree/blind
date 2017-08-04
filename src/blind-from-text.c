@@ -1,5 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 #ifndef TYPE
+#define INCLUDE_UINT16
 #include "common.h"
 
 USAGE("")
