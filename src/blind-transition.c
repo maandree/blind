@@ -14,7 +14,7 @@ static struct stream softness;
 #define PROCESS(TYPE)\
 	do {\
 		size_t i, j = 0;\
-		TYPE a, s, t = fm ? (TYPE)(reverse ? fm - f : f) / fm_##TYPE : 0.5;\
+		TYPE a, s, t = fm ? (TYPE)(reverse ? fm - f : f) / fm_##TYPE : (TYPE)0.5;\
 		if (!softness_file) {\
 			for (i = 0; i < n; i += stream->pixel_size) {\
 				a = ((TYPE *)(stream->buf + i))[1];\

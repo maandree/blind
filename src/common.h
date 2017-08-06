@@ -66,7 +66,7 @@
 #endif
 
 #if !defined(PIPE_BUF)
-# define PIPE_BUF BUFSIZ
+# define PIPE_BUF 512
 #endif
 
 #ifndef DONT_INCLUDE_FLOAT
@@ -113,7 +113,7 @@
 
 #define SELECT_PROCESS_FUNCTION(stream)\
 	do {\
-		if ((stream)->endian != HOST_ENDIAN)\
+		if ((stream)->endian != HOST)\
 			eprintf("pixel format %s is not supported, try xyza\n", (stream)->pixfmt);\
 		SELECT_PROCESS_FUNCTION_FLOAT(stream);\
 		SELECT_PROCESS_FUNCTION_DOUBLE(stream);\

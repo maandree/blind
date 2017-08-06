@@ -41,7 +41,7 @@ main(int argc, char *argv[])
 
 	SELECT_PROCESS_FUNCTION(&colour);
 	if (skip_alpha && colour.alpha_chan != -1)
-		CHECK_CHANS(&colour, == colour.n_chan - 1, == colour.luma_chan);
+		CHECK_CHANS(&colour, == (short int)(colour.n_chan - 1), == colour.luma_chan);
 	else
 		skip_alpha = 0;
 

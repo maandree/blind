@@ -57,7 +57,7 @@ static int strict = 1;
 		strict *= !USING_BINARY##BITS;\
 		if (!strict && sizeof(ITYPE) != sizeof(OTYPE))\
 			eprintf("-s is supported not on this machine\n");\
-		if (stream->endian == HOST_ENDIAN && !strict) {\
+		if (stream->endian == HOST && !strict) {\
 			esend_stream(stream, STDOUT_FILENO, "<stdout>");\
 			break;\
 		}\
@@ -82,7 +82,7 @@ static int strict = 1;
 	do {\
 		size_t i, n;\
 		TYPE *buf = (TYPE *)(stream->buf);\
-		if (stream->endian == HOST_ENDIAN) {\
+		if (stream->endian == HOST) {\
 			esend_stream(stream, STDOUT_FILENO, "<stdout>");\
 			break;\
 		}\
@@ -124,11 +124,11 @@ main(int argc, char *argv[])
 
 	eopen_stream(&stream, NULL);
 #if defined(HOST_ENDIAN_IS_LITTLE_ENDIAN)
-	if (stream.endian == LITTLE_ENDIAN)
-		stream.endian = HOST_ENDIAN;
+	if (stream.endian == LITTLE)
+		stream.endian = HOST;
 #elif defined(HOST_ENDIAN_IS_BIG_ENDIAN)
-	if (stream.endian == BIG_ENDIAN)
-		stream.endian = HOST_ENDIAN;
+	if (stream.endian == BIG)
+		stream.endian = HOST;
 #endif
 
 	SELECT_PROCESS_FUNCTION(&stream);

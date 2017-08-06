@@ -139,19 +139,19 @@ degcos_f(float u)
 #define htole(A) (_Generic((A),\
 			   uint8_t: (A),\
 			    int8_t: (uint8_t)(A),\
-			   uint16_t: htole16(A),\
+			   uint16_t: htole16((uint16_t)(A)),\
 			    int16_t: (uint16_t)htole16((uint16_t)(A)),\
-			   uint32_t: htole32(A),\
+			   uint32_t: htole32((uint32_t)(A)),\
 			    int32_t: (uint32_t)htole32((uint32_t)(A)),\
-			   uint64_t: htole64(A),\
+			   uint64_t: htole64((uint64_t)(A)),\
 			    int64_t: (uint64_t)htole64((uint64_t)(A))))
 
 #define letoh(A) (_Generic((A),\
 			   uint8_t: (A),\
 			    int8_t: (uint8_t)(A),\
-			   uint16_t: le16toh(A),\
+			   uint16_t: le16toh((uint16_t)(A)),\
 			    int16_t: (uint16_t)le16toh((uint16_t)(A)),\
-			   uint32_t: le32toh(A),\
+			   uint32_t: le32toh((uint32_t)(A)),\
 			    int32_t: (uint32_t)le32toh((uint32_t)(A)),\
-			   uint64_t: le64toh(A),\
+			   uint64_t: le64toh((uint64_t)(A)),\
 			    int64_t: (uint64_t)le64toh((uint64_t)(A))))

@@ -10,7 +10,7 @@ static int reverse = 0;
 
 #define PROCESS(TYPE)\
 	do {\
-		size_t i = stream->alpha_chan * stream->chan_size;\
+		size_t i = (size_t)(stream->alpha_chan) * stream->chan_size;\
 		TYPE a = fm ? (TYPE)(reverse ? f : fm - f) / fm_##TYPE : (TYPE)0.5;\
 		for (; i < n; i += stream->pixel_size)\
 			*(TYPE *)(stream->buf + i) *= a;\

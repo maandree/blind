@@ -65,7 +65,6 @@ enum dimension {
 
 enum colour_space {
 	CIEXYZ,
-	CIEXYZ_NONLINEAR,
 	YUV_NONLINEAR,
 	SRGB_NONLINEAR,
 	SRGB
@@ -88,9 +87,9 @@ enum encoding {
 };
 
 enum endian {
-	HOST_ENDIAN,
-	LITTLE_ENDIAN,
-	BIG_ENDIAN /* not used */
+	HOST,
+	LITTLE,
+	BIG /* not used */
 };
 
 struct stream {

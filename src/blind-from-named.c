@@ -48,7 +48,7 @@ main(int argc, char *argv[])
 	int filedes = -1;
 	int tries = 11;
 	int sockfd, fd;
-	ssize_t n;
+	size_t n;
 
 	ARGBEGIN {
 	case 'a':
@@ -108,6 +108,6 @@ retry:
 	}
 
 	while ((n = eread(fd, buf, sizeof(buf), "<received file>")))
-		ewriteall(STDOUT_FILENO, buf, (size_t)n, "<stdout>");
+		ewriteall(STDOUT_FILENO, buf, n, "<stdout>");
 	return 0;
 }

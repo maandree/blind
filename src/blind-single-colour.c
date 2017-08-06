@@ -77,8 +77,7 @@ PROCESS(void)
 {
 	typedef TYPE pixel_t[4];
 	pixel_t buf[BUFSIZ / 4];
-	size_t x, y, n;
-	ssize_t r;
+	size_t x, y, n, r;
 	for (x = 0; x < ELEMENTSOF(buf); x++) {
 		buf[x][0] = (TYPE)X;
 		buf[x][1] = (TYPE)Y;
@@ -88,7 +87,7 @@ PROCESS(void)
 	while (inf || stream.frames--)
 		for (y = stream.height; y--;)
 			for (x = stream.width * sizeof(*buf); x;)
-				for (x -= n = MIN(sizeof(buf), x); n; n -= (size_t)r)
+				for (x -= n = MIN(sizeof(buf), x); n; n -= r)
 					r = ewrite(STDOUT_FILENO, buf, n, "<stdout>");
 }
 

@@ -86,10 +86,10 @@ main(int argc, char *argv[])
 			j = 1;
 			memcpy(found, here, pixsize);
 
-			dr = x != stream.width - 1 ? pixsize : tiled_x ? pixsize - stream.row_size : 0;
-			dl = x ? -pixsize : tiled_x ? stream.row_size - pixsize : 0;
-			dd = y != stream.height - 1 ? stream.row_size : tiled_y ? stream.row_size - stream.frame_size : 0;
-			du = y ? -stream.row_size : tiled_y ? stream.frame_size - stream.row_size : 0;
+			dr = (ssize_t)(x != stream.width - 1 ? pixsize : tiled_x ? pixsize - stream.row_size : 0);
+			dl = (ssize_t)(x ? -pixsize : tiled_x ? stream.row_size - pixsize : 0);
+			dd = (ssize_t)(y != stream.height - 1 ? stream.row_size : tiled_y ? stream.row_size - stream.frame_size : 0);
+			du = (ssize_t)(y ? -stream.row_size : tiled_y ? stream.frame_size - stream.row_size : 0);
 
 			memcpy(found + j++ * pixsize, here + dr, pixsize);
 			memcpy(found + j++ * pixsize, here + dl, pixsize);
