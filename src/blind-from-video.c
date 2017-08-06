@@ -186,7 +186,7 @@ main(int argc, char *argv[])
 	char *data;
 	const char *pixfmt = "xyza";
 	ssize_t headlen;
-	size_t length, frame_size;
+	size_t length, frame_size, pixel_size;
 	int outfd, skip_length = 0;
 	struct stat st;
 
@@ -220,23 +220,27 @@ main(int argc, char *argv[])
 	outfile = argv[1] ? argv[1] : "-";
 
 	pixfmt = get_pixel_format(pixfmt, "xyza");
-	if (!strcmp(pixfmt, "xyza"))
+	if (!strcmp(pixfmt, "xyza")) {
 		convert_segment = convert_segment_xyza;
-	else if (!strcmp(pixfmt, "xyza f"))
+		pixel_size = 4 * sizeof(double);
+	} else if (!strcmp(pixfmt, "xyza f")) {
 		convert_segment = convert_segment_xyzaf;
-	else if (!strcmp(pixfmt, "raw0"))
+		pixel_size = 4 * sizeof(float);
+	} else if (!strcmp(pixfmt, "raw0")) {
 		convert_segment = NULL;
-	else
+		pixel_size = 4 * sizeof(uint16_t);
+	} else {
 		eprintf("pixel format %s is not supported, try xyza or raw0 and blind-convert\n", pixfmt);
+	}
 
 	if (!width)
 		get_metadata(infile, &width, &height);
 	if (width > SIZE_MAX / height)
 		eprintf("video frame too large\n");
 	frame_size = width * height;
-	if (4 * sizeof(double) > SIZE_MAX / frame_size)
+	if (pixel_size > SIZE_MAX / frame_size)
 		eprintf("video frame too large\n");
-	frame_size *= 4 * sizeof(double);
+	frame_size *= pixel_size;
 
 	if (!strcmp(outfile, "-")) {
 		outfile = "<stdout>";
@@ -254,12 +258,17 @@ main(int argc, char *argv[])
 
 	convert(infile, outfd, outfile, width, height, frame_rate);
 
+	if (outfd == STDOUT_FILENO)
+		return 0;
+
 	if (fstat(outfd, &st))
 		eprintf("fstat %s:", outfile);
 	length = (size_t)(st.st_size);
 
+	if (skip_length)
+		length -= (size_t)headlen;
 	if (length % frame_size)
-		eprintf("<subprocess>: incomplete frame");
+		eprintf("<subprocess>: incomplete frame\n");
 	frames = length / frame_size;
 
 	if (!skip_length) {
