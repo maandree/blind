@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-f frames] width height pixel-format ...")
+NUSAGE(2, "[-f frames] width height pixel-format ...")
 
 int
 main(int argc, char *argv[])

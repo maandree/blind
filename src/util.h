@@ -15,9 +15,12 @@
 #define INTSTRLEN(TYPE)   ((sizeof(TYPE) == 1 ? 3 : (5 * sizeof(TYPE) / 2)) + ((TYPE)-1 < 1))
 
 #define USAGE(SYNOPSIS)\
+	NUSAGE(1, SYNOPSIS)
+
+#define NUSAGE(STATUS, SYNOPSIS)\
 	ATTRIBUTE_NORETURN\
 	static void usage(void)\
-	{ eprintf("usage: %s%s%s\n", argv0, *SYNOPSIS ? " " : "", SYNOPSIS); }
+	{ enprintf((STATUS), "usage: %s%s%s\n", argv0, *SYNOPSIS ? " " : "", SYNOPSIS); }
 
 #include "util/eprintf.h"
 #include "util/efflush.h"
