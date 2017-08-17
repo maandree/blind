@@ -46,6 +46,10 @@ long double is slightly faster than long.
 long double (xyza q) could be added as another format.
 unsigned char (xyza 8) could be added as another format, it's probably good for previewing
 
+blind-{convert,{from,to}-video} add options to cache result of:
+-	last pixel
+-	same pixel in previous frame
+
 
 HELP REQUIRED:
 	blind-z-map			create a Z-map video from two or more videos
