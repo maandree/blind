@@ -60,8 +60,9 @@ BIN =\
 	blind-multiply-matrices\
 	blind-next-frame\
 	blind-norm\
-	blind-quaternion-product\
+	blind-peek-head\
 	blind-premultiply\
+	blind-quaternion-product\
 	blind-radial-gradient\
 	blind-read-head\
 	blind-rectangle-tessellation\
