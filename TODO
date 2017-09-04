@@ -36,6 +36,7 @@ blind-concave-gradient	create a gradient in the shape of a concave lens
 blind-preview		a graphical tool for previewing the output of a pipeline
 				should display the output for a selected frame or image
 				should have sliders to tune environment variables
+---			tool from creating blockwise transitions
 
 blind-cone-gradient: add ability to make gradient superelliptic
 blind-to-text, blind-from-text: support %a, %e, %g, and custom precision
