@@ -369,6 +369,160 @@ get_pixel_format(const char *specified, const char *current)
 }
 
 
+const char *
+nselect_print_format(int status, const char *format, enum encoding encoding, const char *fmt)
+{
+	static char retbuf[512];
+	int with_plus = 0, inttyped = -1;
+	const char *f = "", *orig = fmt;
+	char *proto = alloca((fmt ? strlen(fmt) : 0) + sizeof("%+#.50llx")), *p;
+	char *ret = retbuf;
+	size_t n, len;
+
+	if (!orig)
+		goto check_done;
+
+	for (; *fmt == '+'; fmt++)
+		with_plus = 1;
+	f = fmt + strspn(fmt, "0123456789");
+	if (f[0] && f[1])
+		enprintf(status, "invalid format: %s\n", orig);
+
+	switch (*f) {
+	case '\0':
+		inttyped = -1;
+		break;
+	case 'd': case 'i':
+		inttyped = 1;
+		break;
+	case 'a': case 'A':
+	case 'e': case 'E':
+	case 'f': case 'F':
+	case 'g': case 'G':
+		inttyped = 0;
+		break;
+	default:
+		enprintf(status, "invalid format: %s\n", orig);
+	}
+
+	switch (encoding) {
+	case FLOAT:
+	case DOUBLE:
+	case LONG_DOUBLE:
+		if (inttyped == 1)
+			enprintf(status, "invalid format `%s' is incompatible with the video format\n", orig);
+		inttyped = 0;
+		break;
+	case UINT8:
+	case UINT16:
+	case UINT32:
+	case UINT64:
+		if (*f != *fmt)
+			enprintf(status, "invalid format: %s\n", orig);
+		if (inttyped == 0)
+			enprintf(status, "invalid format `%s' is incompatible with the video format\n", orig);
+		inttyped = 1;
+		break;
+	default:
+		abort();
+	}
+check_done:
+
+	p = proto;
+	*p++ = '%';
+	if (with_plus)
+		*p++ = '+';
+
+	if (orig && *f != *fmt) {
+		*p++ = '.';
+		p = stpncpy(p, fmt, (size_t)(f - fmt));
+	} else if (orig && inttyped && *f != 'a' && *f != 'A') {
+		*p++ = '.';
+		*p++ = '2';
+		*p++ = '5';
+	}
+
+	inttyped = 1;
+	switch (encoding) {
+	case FLOAT:
+		inttyped = 0;
+		break;
+	case DOUBLE:
+		*p++ = 'l';
+		inttyped = 0;
+		break;
+	case LONG_DOUBLE:
+		*p++ = 'L';
+		inttyped = 0;
+		break;
+	case UINT8:
+		fmt = PRIi8;
+		break;
+	case UINT16:
+		fmt = PRIi16;
+		break;
+	case UINT32:
+		fmt = PRIi32;
+		break;
+	case UINT64:
+		fmt = PRIi64;
+		break;
+	default:
+		abort();
+	}
+
+	if (inttyped)
+		while (*fmt == 'l')
+			*p++ = *fmt++;
+
+	switch (orig ? *f : '\0') {
+	case '\0':
+		*p++ = inttyped ? 'i' : 'f';
+		break;
+	case 'd': case 'i':
+		*p++ = 'i';
+		break;
+	case 'a': case 'A':
+		*p++ = 'a';
+		break;
+	case 'e': case 'E':
+		*p++ = 'e';
+		break;
+	case 'f': case 'F':
+		*p++ = 'f';
+		break;
+	case 'g': case 'G':
+		*p++ = 'g';
+		break;
+	}
+
+	*p = '\0';
+
+	len = strlen(proto);
+	for (n = 1, f = format; *f; f++) {
+		if (f[0] == '%' && f[1] == '!') {
+			f++;
+			n += len;
+		} else {
+			n++;
+		}
+	}
+
+	if (n > sizeof(retbuf))
+		ret = enmalloc(status, n);
+	for (p = ret, f = format; *f; f++) {
+		if (f[0] == '%' && f[1] == '!') {
+			f++;
+			p = stpcpy(p, proto);
+		} else {
+			*p++ = *f;
+		}
+	}
+
+	return ret;
+}
+
+
 int
 enread_segment(int status, struct stream *stream, void *buf, size_t n)
 {

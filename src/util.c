@@ -6,6 +6,7 @@ char *argv0;
 void
 weprintf(const char *fmt, ...)
 {
+	char end;
 	va_list ap;
 	va_start(ap, fmt);
 
@@ -14,9 +15,12 @@ weprintf(const char *fmt, ...)
 
 	vfprintf(stderr, fmt, ap);
 
-	if (fmt[0] && fmt[strlen(fmt)-1] == ':') {
+	end = *fmt ? strchr(fmt, '\0')[-1] : '\n';
+	if (end == ':') {
 		fputc(' ', stderr);
 		perror(NULL);
+	} else if (end != '\n') {
+		fputc('\n', stderr);
 	}
 
 	va_end(ap);

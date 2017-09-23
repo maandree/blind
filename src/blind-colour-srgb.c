@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 #include "common.h"
 
-USAGE("[-d depth] [-l] red green blue")
+USAGE("[-% format] [-d depth] [-l] red green blue")
 
 int
 main(int argc, char *argv[])
@@ -9,6 +9,7 @@ main(int argc, char *argv[])
 	unsigned long long int max;
 	double red, green, blue, X, Y, Z;
 	int depth = 8, linear = 0;
+	const char *fmt = NULL;
 
 	ARGBEGIN {
 	case 'd':
@@ -17,12 +18,17 @@ main(int argc, char *argv[])
 	case 'l':
 		linear = 1;
 		break;
+	case '%':
+		fmt = UARGF();
+		break;
 	default:
 		usage();
 	} ARGEND;
 
 	if (argc != 3)
 		usage();
+
+	fmt = select_print_format("%! %! %!\n", DOUBLE, fmt);
 
 	max   = 1ULL << (depth - 1);
 	max  |= max - 1;
@@ -36,7 +42,7 @@ main(int argc, char *argv[])
 	}
 
 	srgb_to_ciexyz(red, green, blue, &X, &Y, &Z);
-	printf("%.50lf %.50lf %.50lf\n", X, Y, Z);
+	printf(fmt, X, Y, Z);
 	efshut(stdout, "<stdout>");
 	return 0;
 }

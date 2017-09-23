@@ -3,6 +3,8 @@
 blind-to-text - Convert a video to text
 .SH SYNOPSIS
 .B blind-to-text
+[-%
+.IR format ]
 .SH DESCRIPTION
 .B blind-to-text
 reads a video from stdin and prints it
@@ -36,6 +38,43 @@ line, after the head, where the second
 frame begins. The pixels are printed
 from left to right, from top to bottom,
 and from first frame to last frame.
+.SH OPTIONS
+.TP
+.BR -% \ \fIformat\fP
+Selects in what format parameters are printed.
+.I format
+may include the prefix
+.B +
+that specified that non-negative values should be prefixed with a
+.BR + .
+After any prefix, there may be a positive number specifying
+the percision of the output, optionally followed by either of
+the letters
+.BR a ,
+.BR e ,
+.BR f ,
+other
+.B g
+(other their synonymous uppercases),
+or if the input is integer typed,
+.B d
+or
+.BR i ,
+at most once, with the same semantics as in
+.BR printf (3).
+.B f
+is used if this letter is omitted.
+The percision must be omitted the input is integer typed.
+
+If ommited,
+.B 25f
+or
+.B i
+is used. These defaults are selected for ease of
+interoperability with other software, however,
+.B a
+is recommeded to improve performance and remove
+truncation error.
 .SH SEE ALSO
 .BR blind (7),
 .BR blind-from-text (1),

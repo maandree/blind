@@ -3,6 +3,8 @@
 blind-colour-srgb - Convert sRGB for use with blind-single-colour(1) and blind-colour-matrix(1)
 .SH SYNOPSIS
 .B blind-colour-srgb
+[-%
+.IR format ]
 [-d
 .IR depth ]
 [-l]
@@ -37,6 +39,35 @@ unsigned integer with
 .I depth
 bits.
 .SH OPTIONS
+.TP
+.BR -% \ \fIformat\fP
+Selects in what format parameters are printed.
+.I format
+may include the prefix
+.B +
+that specified that non-negative values should be prefixed with a
+.BR + .
+After any prefix, there may be a positive number specifying
+the percision of the output, optionally followed by either of
+the letters
+.BR a ,
+.BR e ,
+.BR f ,
+other
+.B g
+(other their synonymous uppercases),
+at most once, with the same semantics as in
+.BR printf (3).
+.B f
+is used if this letter is omitted.
+
+If ommited,
+.B 25f
+is used. This default is selected for ease of
+interoperability with other software, however,
+.B a
+is recommeded to improve performance and remove
+truncation error.
 .TP
 .BR -d " "\fIdepth\fP
 If all three parameters are
