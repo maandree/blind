@@ -75,7 +75,7 @@ get_metadata(char *file, size_t *width, size_t *height)
 	do {\
 		typedef TYPE pixel_t[4];\
 		size_t i, ptr;\
-		TYPE y, u, v, max = (TYPE)UINT16_MAX, ymax = (TYPE)0xDAF4;\
+		TYPE y, u, v, max = (TYPE)0xFF00L, ymax = (TYPE)0xDAF4L;\
 		TYPE r, g, b;\
 		pixel_t pixels[1024];\
 		uint16_t *pix;\
@@ -97,6 +97,7 @@ get_metadata(char *file, size_t *width, size_t *height)
 			for (ptr = i = 0; ptr < n; ptr += 8) {\
 				pix = (uint16_t *)(buf + ptr);\
 				pixels[i][3] = le16toh(pix[0]) / max;\
+				pixels[i][3] = CLIP(0, pixels[i][3], 1);\
 				y = (TYPE)((long int)le16toh(pix[1]) - 0x1001L) / ymax;\
 				u = (TYPE)((long int)le16toh(pix[2]) - 0x8000L) / max;\
 				v = (TYPE)((long int)le16toh(pix[3]) - 0x8000L) / max;\

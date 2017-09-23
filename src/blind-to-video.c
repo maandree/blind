@@ -119,8 +119,8 @@ PROCESS(struct stream *stream, size_t n)
 			b = srgb_encode(b);
 			srgb_to_yuv(r, g, b, pixel + 0, pixel + 1, pixel + 2);
 			y = (long int)(pixel[0] * 0xDAF4L) + 0x1001L;
-			u = (long int)(pixel[1] * 0xFFFFL) + 0x8000L;
-			v = (long int)(pixel[2] * 0xFFFFL) + 0x8000L;
+			u = (long int)(pixel[1] * 0xFF00L) + 0x8000L;
+			v = (long int)(pixel[2] * 0xFF00L) + 0x8000L;
 			*pixels++ = htole((uint16_t)CLIP(0, a, 0xFFFFL));
 			*pixels++ = htole((uint16_t)CLIP(0, y, 0xFFFFL));
 			*pixels++ = htole((uint16_t)CLIP(0, u, 0xFFFFL));
