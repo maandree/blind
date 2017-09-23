@@ -472,7 +472,7 @@ check_done:
 	}
 
 	if (inttyped)
-		while (*fmt == 'l')
+		while (*fmt == 'l' || *fmt == 'L')
 			*p++ = *fmt++;
 
 	switch (orig ? *f : '\0') {
