@@ -75,7 +75,7 @@ get_metadata(char *file, size_t *width, size_t *height)
 	do {\
 		typedef TYPE pixel_t[4];\
 		size_t i, ptr;\
-		TYPE y, u, v, max = (TYPE)UINT16_MAX;\
+		TYPE y, u, v, max = (TYPE)UINT16_MAX, ymax = (TYPE)0xDAF4;\
 		TYPE r, g, b;\
 		pixel_t pixels[1024];\
 		uint16_t *pix;\
@@ -83,9 +83,9 @@ get_metadata(char *file, size_t *width, size_t *height)
 			for (ptr = i = 0; ptr < n; ptr += 8) {\
 				pix = (uint16_t *)(buf + ptr);\
 				pixels[i][3] = 1;\
-				y = (TYPE)((long int)(le16toh(pix[1])) -  16L * 256L);\
-				u = (TYPE)((long int)(le16toh(pix[2])) - 128L * 256L);\
-				v = (TYPE)((long int)(le16toh(pix[3])) - 128L * 256L);\
+				y = (TYPE)((long int)(le16toh(pix[1])) - 0x1001L);\
+				u = (TYPE)((long int)(le16toh(pix[2])) - 0x8000L);\
+				v = (TYPE)((long int)(le16toh(pix[3])) - 0x8000L);\
 				scaled_yuv_to_ciexyz(y, u, v, pixels[i] + 0,\
 						     pixels[i] + 1, pixels[i] + 2);\
 				if (++i == 1024) {\
@@ -97,9 +97,9 @@ get_metadata(char *file, size_t *width, size_t *height)
 			for (ptr = i = 0; ptr < n; ptr += 8) {\
 				pix = (uint16_t *)(buf + ptr);\
 				pixels[i][3] = le16toh(pix[0]) / max;\
-				y = (TYPE)((long int)le16toh(pix[1]) -  16L * 256L) / max;\
-				u = (TYPE)((long int)le16toh(pix[2]) - 128L * 256L) / max;\
-				v = (TYPE)((long int)le16toh(pix[3]) - 128L * 256L) / max;\
+				y = (TYPE)((long int)le16toh(pix[1]) - 0x1001L) / ymax;\
+				u = (TYPE)((long int)le16toh(pix[2]) - 0x8000L) / max;\
+				v = (TYPE)((long int)le16toh(pix[3]) - 0x8000L) / max;\
 				yuv_to_srgb(y, u, v, &r, &g, &b);\
 				r = srgb_decode(r);\
 				g = srgb_decode(g);\

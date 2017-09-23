@@ -1,5 +1,4 @@
-Why does blind-from-video produce darker images than blind-from-image and
-why does blind-to-video produce brighter images than blind-to-image?
+Conversion either from or to video changes the brightness of the primitives (but not greys)
 
 blind-transform		affine transformation by matrix multiplication, -[xy] for tiling, -s for
 				improve quality on downscaling (pixels' neighbours must not change)

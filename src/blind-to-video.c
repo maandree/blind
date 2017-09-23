@@ -99,9 +99,9 @@ PROCESS(struct stream *stream, size_t n)
 		for (ptr = 0; ptr < n; ptr += 4 * sizeof(TYPE)) {
 			pixel = (TYPE *)(buf + ptr);
 			ciexyz_to_scaled_yuv(pixel[0], pixel[1], pixel[2], &r, &g, &b);
-			y = (long int)r +  16L * 256L;
-			u = (long int)g + 128L * 256L;
-			v = (long int)b + 128L * 256L;
+			y = (long int)r + 0x1001L;
+			u = (long int)g + 0x8000L;
+			v = (long int)b + 0x8000L;
 			*pixels++ = 0xFFFFU;
 			*pixels++ = htole((uint16_t)CLIP(0, y, 0xFFFFL));
 			*pixels++ = htole((uint16_t)CLIP(0, u, 0xFFFFL));
@@ -118,9 +118,9 @@ PROCESS(struct stream *stream, size_t n)
 			g = srgb_encode(g);
 			b = srgb_encode(b);
 			srgb_to_yuv(r, g, b, pixel + 0, pixel + 1, pixel + 2);
-			y = (long int)(pixel[0] * 0xFFFFL) +  16L * 256L;
-			u = (long int)(pixel[1] * 0xFFFFL) + 128L * 256L;
-			v = (long int)(pixel[2] * 0xFFFFL) + 128L * 256L;
+			y = (long int)(pixel[0] * 0xDAF4L) + 0x1001L;
+			u = (long int)(pixel[1] * 0xFFFFL) + 0x8000L;
+			v = (long int)(pixel[2] * 0xFFFFL) + 0x8000L;
 			*pixels++ = htole((uint16_t)CLIP(0, a, 0xFFFFL));
 			*pixels++ = htole((uint16_t)CLIP(0, y, 0xFFFFL));
 			*pixels++ = htole((uint16_t)CLIP(0, u, 0xFFFFL));

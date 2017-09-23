@@ -47,12 +47,12 @@ static size_t
 remove_alpha_u16(uint16_t *buf, size_t n)
 {
 	size_t i, j;
-	long int a, max = (long int)UINT16_MAX;
+	long int a, max = (long int)UINT16_MAX, ymax = 0xDAF4L;
 	for (i = j = 0; i < n; i += 4, j += 3) {
 		a = (long int)(buf[i + 3]);
-		buf[j + 0] = (uint16_t)(((long int)(buf[i + 0]) -  16L * 256L) * a / max +  16L * 256L);
-		buf[j + 1] = (uint16_t)(((long int)(buf[i + 1]) - 128L * 256L) * a / max + 128L * 256L);
-		buf[j + 2] = (uint16_t)(((long int)(buf[i + 2]) - 128L * 256L) * a / max + 128L * 256L);
+		buf[j + 0] = (uint16_t)(((long int)(buf[i + 0]) - 0x1001L) * a / ymax + 0x1001L);
+		buf[j + 1] = (uint16_t)(((long int)(buf[i + 1]) - 0x8000L) * a /  max + 0x8000L);
+		buf[j + 2] = (uint16_t)(((long int)(buf[i + 2]) - 0x8000L) * a /  max + 0x8000L);
 	}
 	return j;
 }
@@ -108,12 +108,12 @@ raw1_to_raw0(uint16_t *buf, size_t n)
 #define RAW2_TO_RAW3(TYPE, WITH_ALPHA)\
 	do {\
 		size_t i;\
-		TYPE max = (TYPE)UINT16_MAX;\
+		TYPE max = (TYPE)UINT16_MAX, ymax = (TYPE)0xDAF4;\
 		if (sizeof(*in) > sizeof(*out)) {\
 			for (i = 0; i < n; i += 3 + WITH_ALPHA) {\
-				out[i + 0] = (TYPE)((long int)(in[i + 0]) -  16L * 256L) / max;\
-				out[i + 1] = (TYPE)((long int)(in[i + 1]) - 128L * 256L) / max;\
-				out[i + 2] = (TYPE)((long int)(in[i + 2]) - 128L * 256L) / max;\
+				out[i + 0] = (TYPE)((long int)(in[i + 0]) - 0x1001L) / ymax;\
+				out[i + 1] = (TYPE)((long int)(in[i + 1]) - 0x8000L) /  max;\
+				out[i + 2] = (TYPE)((long int)(in[i + 2]) - 0x8000L) /  max;\
 				if (WITH_ALPHA)\
 					out[i + 3] = (TYPE)(in[i + 3]) / max;\
 			}\
@@ -121,9 +121,9 @@ raw1_to_raw0(uint16_t *buf, size_t n)
 			for (i = n; i; i -= 3 + WITH_ALPHA) {\
 				if (WITH_ALPHA)\
 					out[i - 1] = (TYPE)(in[i - 1]) / max;\
-				out[i - 1 - WITH_ALPHA] = (TYPE)((long int)(in[i - 1 - WITH_ALPHA]) - 128L * 256L) / max;\
-				out[i - 2 - WITH_ALPHA] = (TYPE)((long int)(in[i - 2 - WITH_ALPHA]) - 128L * 256L) / max;\
-				out[i - 3 - WITH_ALPHA] = (TYPE)((long int)(in[i - 3 - WITH_ALPHA]) -  16L * 256L) / max;\
+				out[i - 1 - WITH_ALPHA] = (TYPE)((long int)(in[i - 1 - WITH_ALPHA]) - 0x8000L) /  max;\
+				out[i - 2 - WITH_ALPHA] = (TYPE)((long int)(in[i - 2 - WITH_ALPHA]) - 0x8000L) /  max;\
+				out[i - 3 - WITH_ALPHA] = (TYPE)((long int)(in[i - 3 - WITH_ALPHA]) - 0x1001L) / ymax;\
 			}\
 		}\
 	} while (0)
@@ -136,13 +136,13 @@ static void raw2a_to_raw3a_f (uint16_t *in, float  *out, size_t n) { RAW2_TO_RAW
 #define RAW3_TO_RAW2(TYPE, WITH_ALPHA)\
 	do {\
 		size_t i;\
-		TYPE max = (TYPE)UINT16_MAX;\
+		TYPE max = (TYPE)UINT16_MAX, ymax = (TYPE)0xDAF4;\
 		long int y, u, v;\
 		if (sizeof(*in) > sizeof(*out)) {\
 			for (i = 0; i < n; i += 3 + WITH_ALPHA) {\
-				y = (long int)(in[i + 0] * max) +  16L * 256L;\
-				u = (long int)(in[i + 1] * max) + 128L * 256L;\
-				v = (long int)(in[i + 2] * max) + 128L * 256L;\
+				y = (long int)(in[i + 0] * ymax) + 0x1001L;\
+				u = (long int)(in[i + 1] *  max) + 0x8000L;\
+				v = (long int)(in[i + 2] *  max) + 0x8000L;\
 				out[i + 0] = (uint16_t)CLIP(0, y, 0xFFFFL);\
 				out[i + 1] = (uint16_t)CLIP(0, u, 0xFFFFL);\
 				out[i + 2] = (uint16_t)CLIP(0, v, 0xFFFFL);\
@@ -157,9 +157,9 @@ static void raw2a_to_raw3a_f (uint16_t *in, float  *out, size_t n) { RAW2_TO_RAW
 					v = (long int)(in[i - 1] * max);\
 					out[i - 1] = (uint16_t)CLIP(0, v, 0xFFFFL); \
 				}\
-				v = (long int)(in[i - 1 - WITH_ALPHA] * max) + 128L * 256L;\
-				u = (long int)(in[i - 2 - WITH_ALPHA] * max) + 128L * 256L;\
-				y = (long int)(in[i - 3 - WITH_ALPHA] * max) +  16L * 256L;\
+				v = (long int)(in[i - 1 - WITH_ALPHA] *  max) + 0x8000L;\
+				u = (long int)(in[i - 2 - WITH_ALPHA] *  max) + 0x8000L;\
+				y = (long int)(in[i - 3 - WITH_ALPHA] * ymax) + 0x1001L;\
 				out[i - 1 - WITH_ALPHA] = (uint16_t)CLIP(0, v, 0xFFFFL);\
 				out[i - 2 - WITH_ALPHA] = (uint16_t)CLIP(0, u, 0xFFFFL);\
 				out[i - 3 - WITH_ALPHA] = (uint16_t)CLIP(0, y, 0xFFFFL);\
