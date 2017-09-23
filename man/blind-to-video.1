@@ -41,6 +41,13 @@ such as frame rate, geometry, and format, of the input video.
 Beginners are recommended to use
 .B -c:v libx264 -preset veryslow -crf 0 -pix_fmt yuv444p --
 .IR output-file .
+.P
+If your output video need include an alpha channel, the codec
+.BR ffvhuff .
+Not all video players support videos with transparency.
+.BR mpv (1)
+is a good media player for previewing videos with transparency,
+however it distorts colour somewhat.
 .SH OPTIONS
 .TP
 .B -d
